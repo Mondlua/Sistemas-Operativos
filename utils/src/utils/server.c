@@ -7,7 +7,7 @@ int iniciar_servidor(char* PUERTO)
 {
 
 	int socket_servidor;
-	int err;
+	//int err;
 
 	struct addrinfo hints, *server_info;
 
@@ -16,14 +16,14 @@ int iniciar_servidor(char* PUERTO)
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 
-	err = getaddrinfo(NULL, PUERTO, &hints, &server_info);
+	getaddrinfo(NULL, PUERTO, &hints, &server_info);
 
 	socket_servidor = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
 
 
-	err= bind(socket_servidor, server_info->ai_addr, server_info->ai_addrlen);
+	bind(socket_servidor, server_info->ai_addr, server_info->ai_addrlen);
 
-	err= listen(socket_servidor, SOMAXCONN);
+	listen(socket_servidor, SOMAXCONN);
 
 	log_trace(logger, "Listo para escuchar a mi cliente");
 	
