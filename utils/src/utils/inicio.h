@@ -1,5 +1,5 @@
-#ifndef UTILS_INICIO_H_
-#define UTILS_INICIO_H_
+#ifndef UTILSINICIO_H
+#define UTILSINICIO_H
 
 #include <stdlib.h>
 #include <stdio.h>

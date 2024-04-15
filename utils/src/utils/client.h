@@ -1,5 +1,5 @@
-#ifndef UTILS_H_
-#define UTILS_H_
+#ifndef UTILSH
+#define UTILSH
 
 #include<stdio.h>
 #include<stdlib.h>
@@ -11,22 +11,23 @@
 #include<commons/log.h>
 #include<commons/config.h>
 
+
 typedef enum
 {
-	MENSAJE,
-	PAQUETE
-}op_code;
+    MENSAJE,
+    PAQUETE
+}opcode;
 
 typedef struct
 {
-	int size;
-	void* stream;
+    int size;
+    void* stream;
 } t_buffer;
 
 typedef struct
 {
-	op_code codigo_operacion;
-	t_buffer* buffer;
+    op_code codigo_operacion;
+    t_buffer* buffer;
 } t_paquete;
 
 
@@ -39,4 +40,4 @@ void enviar_paquete(t_paquete* paquete, int socket_cliente);
 void liberar_conexion(int socket_cliente);
 void eliminar_paquete(t_paquete* paquete);
 
-#endif /* UTILS_H_ */
+#endif /* UTILS_H */
