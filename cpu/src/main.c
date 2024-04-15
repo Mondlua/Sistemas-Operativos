@@ -21,8 +21,8 @@ int main(void){
 
     cpu_log = iniciar_logger("cpu.log","cpu");
     cpu_config = iniciar_config("cpu.config");
-    //log_info(cpu_log, "hola");
-	/*
+    
+	// cliente a memoria
 	ip_memoria = config_get_string_value(cpu_config,"IP_MEMORIA");
 	puerto_cpu_dispatch = config_get_string_value(cpu_config, "PUERTO_CPU_DISPATCH");
 	puerto_cpu_interrupt = config_get_string_value(cpu_config, "PUERTO_CPU_INTERRUPT");
@@ -31,9 +31,10 @@ int main(void){
 
 	conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
 
-*/
+return 0; 
+}
 /// servidor cpu de kernel 
-    char* puerto;
+  /*  char* puerto;
     int cpu_server;
 
     puerto = config_get_string_value(cpu_config ,"PUERTO_ESCUCHA_DISPATCH");
@@ -45,3 +46,4 @@ int main(void){
     return 0;
 
 }
+*/

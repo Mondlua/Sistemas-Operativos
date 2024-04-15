@@ -24,17 +24,17 @@ int main(void) {
     kernel_log = iniciar_logger("kernel.log","kernel");
     kernel_config = iniciar_config("kernel.config");
     
-	/*
-	//ip_memoria = config_get_string_value(kernel_config,"IP_MEMORIA");
-	//ip_cpu = config_get_string_value(kernel_config, "IP_CPU");
+	//cliente a memoria
+	ip_memoria = config_get_string_value(kernel_config,"IP_MEMORIA");
+	ip_cpu = config_get_string_value(kernel_config, "IP_CPU");
 	puerto_cpu_dispatch = config_get_string_value(kernel_config, "PUERTO_CPU_DISPATCH");
 	puerto_cpu_interrupt = config_get_string_value(kernel_config, "PUERTO_CPU_INTERRUPT");
 	puerto_memoria = config_get_string_value(kernel_config, "PUERTO_MEMORIA");
 	puerto_escucha = config_get_string_value(kernel_config, "PUERTO_ESCUCHA");
 
-
 	conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
-*/
+    return 0;
+}
 //////// servidor kernel con i/o
   /*  char* puerto;
     int kernel_server;
@@ -45,7 +45,7 @@ int main(void) {
     esperar_cliente(kernel_server, kernel_log);
 */
 //cliente kernel con cpu
-    ip_cpu = config_get_string_value(kernel_config,"IP_CPU");
+   /* ip_cpu = config_get_string_value(kernel_config,"IP_CPU");
 	puerto_cpu_dispatch = config_get_string_value(kernel_config, "PUERTO_CPU_DISPATCH");
 	puerto_cpu_interrupt = config_get_string_value(kernel_config, "PUERTO_CPU_INTERRUPT");
 	puerto_escucha = config_get_string_value(kernel_config, "PUERTO_ESCUCHA");
@@ -56,4 +56,4 @@ int main(void) {
     return 0;
 }
 
-
+*/
