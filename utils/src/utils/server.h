@@ -17,15 +17,20 @@
 typedef enum
 {
     MENSAJE,
-    PAQUETE
+    PAQUETE,
+//?
+    CREAR_PROCESO,
+    FINALIZAR_PROCESO,
+    ACCEDER_TABLAS_P,
+    AJUSTAR_TAMANIO,
+    ACCEDER_ESPACIO_U
 }op_code;
 
 void* recibir_buffer(int*, int);
-
 int iniciar_servidor(char*, t_log*);
 int esperar_cliente(int, t_log*);
 t_list* recibir_paquete(int);
 void recibir_mensaje(int, t_log*);
 int recibir_operacion(int);
 
-#endif //UTILS_H 
+#endif
