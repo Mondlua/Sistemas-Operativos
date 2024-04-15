@@ -8,12 +8,13 @@ int main(void) {
 	t_config* memoria_config;
     char* puerto;
     int memoria_server;
+
     memoria_log = iniciar_logger("memoria.log","memoria");
     memoria_config = iniciar_config("memoria.config");
-    puerto = config_get_string_value(puerto ,"PUERTO_ESCUCHA");
-    memoria_server = iniciar_servidor(puerto);
+    puerto = config_get_string_value(memoria_config ,"PUERTO_ESCUCHA");
+    memoria_server = iniciar_servidor(puerto, memoria_log);
     log_info(memoria_log, "Modulo memoria lista para recibir a kernel");
-    esperar_cliente(memoria_server);
+    esperar_cliente(memoria_server, memoria_log);
 
     return 0;
 }
