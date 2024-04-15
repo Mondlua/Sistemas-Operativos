@@ -1,5 +1,5 @@
-#ifndef UTILSH
-#define UTILSH
+#ifndef UTILS_H_
+#define UTILS_H_
 
 #include<stdio.h>
 #include<stdlib.h>
@@ -18,14 +18,14 @@ typedef enum
 {
     MENSAJE,
     PAQUETE
-}opcode;
+}op_code;
 
-void* recibir_buffer(int, int);
+void* recibir_buffer(int*, int);
 
-int iniciar_servidor(char, t_log);
-int esperar_cliente(int, t_log);
+int iniciar_servidor(char*, t_log*);
+int esperar_cliente(int, t_log*);
 t_list* recibir_paquete(int);
-void recibir_mensaje(int, t_log);
+void recibir_mensaje(int, t_log*);
 int recibir_operacion(int);
 
-#endif / UTILS_H */
+#endif //UTILS_H 
