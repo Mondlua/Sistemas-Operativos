@@ -33,7 +33,26 @@ int main(void) {
 	puerto_escucha = config_get_string_value(kernel_config, "PUERTO_ESCUCHA");
 
 	conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+    handshake_memoria(conexion_memoria,kernel_log);
     return 0;
+}
+
+void handshake_memoria(int conexion_memoria, t_log* kernel_log){
+    size_t bytes;
+
+    int32_t handshake = 1;
+    int32_t result;
+
+    bytes = send(conexion_memoria, &handshake, sizeof(int32_t), 0);
+    bytes = recv(conexion_memoria, &result, sizeof(int32_t), MSG_WAITALL);
+
+    if (result == 0) {
+        log_info(kernel_log, "hanshake ok");
+    // Handshake OK
+    } else {
+    // Handshake ERROR
+    log_info(kernel_log,"error handshake");
+}
 }
 //////// servidor kernel con i/o
   /*  char* puerto;

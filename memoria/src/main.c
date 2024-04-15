@@ -15,10 +15,33 @@ int main(void) {
     puerto = config_get_string_value(memoria_config ,"PUERTO_ESCUCHA");
     memoria_server = iniciar_servidor(puerto, memoria_log);
     log_info(memoria_log, "Modulo memoria lista para recibir");
+    
     while (server_escuchar(memoria_log, "memoria", memoria_server));
-
+    
     //esperar_cliente(memoria_server, memoria_log);
 
-
+   // handshake_kernel(conexion);
     return 0;
+
+ 
 }
+
+void handshake_kernel(int fd_conexion){
+    size_t bytes;
+
+    int32_t handshake;
+    int32_t resultOk = 0;
+    int32_t resultError = -1;
+
+    if(fd_conexion != -1){
+
+    bytes = recv(fd_conexion, &handshake, sizeof(int32_t), MSG_WAITALL);
+    if (handshake == 1) {
+    bytes = send(fd_conexion, &resultOk, sizeof(int32_t), 0);
+    } else {
+    bytes = send(fd_conexion, &resultError, sizeof(int32_t), 0);
+    }
+
+    }
+}
+
