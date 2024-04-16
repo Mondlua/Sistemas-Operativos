@@ -1,7 +1,4 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <utils/server.h>
-#include <utils/inicio.h>
+#include <utils/comunicacion.h>
 
 typedef struct
 {
@@ -69,9 +66,9 @@ void atender_cliente(void *void_args)
         }
 
         // Errores
-        case -1:
+      /*  case -1:   [mas arriba esta el caso de desconeccion]
             log_error(logger, "Cliente desconectado de %s...", server_name);
-            return;
+            return;*/
         default:
             log_error(logger, "Algo anduvo mal en el server de %s", server_name);
             log_info(logger, "Cop: %d", cop);
@@ -86,20 +83,23 @@ void atender_cliente(void *void_args)
 
 int server_escuchar(t_log *logger, char *server_name, int server_socket)
 {
-    int client_socket = esperar_cliente(server_socket, logger);
+    while (1){
+        
+        int client_socket = esperar_cliente(server_socket, logger);
 
-    if (client_socket != -1) // != error
-    {
-        log_info(logger, "cree hilo");
+        if (client_socket != -1) // != error
+        {
+            log_info(logger, "cree hilo");
 
-        pthread_t hilo;
-        t_atender_cliente_args *args = malloc(sizeof(t_atender_cliente_args));
-        args->log = logger;
-        args->c_socket = client_socket;
-        args->server_name = server_name;
+            pthread_t hilo;
+            t_atender_cliente_args *args = malloc(sizeof(t_atender_cliente_args));
+            args->log = logger;
+            args->c_socket = client_socket;
+            args->server_name = server_name;
  
-        pthread_create(&hilo, NULL, (void *)atender_cliente,  (void*) args); //castear, lo convierto arg a tipo void*
-        pthread_detach(hilo); //  hilo se ejecuta de manera independiente, el recurso del hilo se liberará automáticamente 
+            pthread_create(&hilo, NULL, (void *)atender_cliente,  (void*) args); //castear, lo convierto arg a tipo void*
+            pthread_detach(hilo); //  hilo se ejecuta de manera independiente, el recurso del hilo se liberará automáticamente 
+        }
     }
-    return client_socket;
+    return 0;
 }
