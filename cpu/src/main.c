@@ -35,17 +35,10 @@ int main(void){
     // CPU DISPATCH server
     cpu_dispatch_server = iniciar_servidor(puerto_cpu_dispatch, cpu_log);
     log_info(cpu_log, "Modulo CPU dispatch lista para recibir a KERNEL");
-    // server_escuchar(cpu_log, "cpu", cpu_dispatch_server);
+    cpu_interrupt_server = iniciar_servidor(puerto_cpu_interrupt, cpu_log);
+    log_info(cpu_log, "Modulo CPU interrupt lista para recibir a KERNEL");
     esperar_cliente(cpu_dispatch_server, cpu_log);
-
-    // CPU INTERRUPT server
-
-    //cpu_interrupt_server = iniciar_servidor(puerto_cpu_interrupt, cpu_log);
-   // log_info(cpu_log, "Modulo CPU interrupt lista para recibir a KERNEL");
-    //server_escuchar(cpu_log, "cpu",cpu_interrupt_server );
-
-     
-   // esperar_cliente(cpu_interrupt_server, cpu_log);
+    esperar_cliente(cpu_interrupt_server, cpu_log);
 
     return 0;
 
