@@ -1,13 +1,5 @@
 #include <utils/comunicacion.h>
 
-typedef struct
-{
-    t_log *log;
-    int c_socket;
-    char *server_name;
-
-} t_atender_cliente_args;
-
 void atender_cliente(void *void_args)
 {
     t_atender_cliente_args *args = (t_atender_cliente_args *)void_args;
