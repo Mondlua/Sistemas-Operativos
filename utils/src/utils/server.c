@@ -1,6 +1,5 @@
 #include "server.h"
-
-
+#include <utils/comunicacion.h>
 int iniciar_servidor(char* PUERTO, t_log* logger)
 {
 
@@ -36,7 +35,7 @@ int esperar_cliente(int socket_servidor, t_log* logger)
     int socket_cliente;
     socket_cliente = accept(socket_servidor, NULL, NULL);
     log_info(logger, "Se conecto un cliente!");
-
+    rcv_handshake(socket_cliente);
     return socket_cliente;
 }
 

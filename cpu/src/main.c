@@ -3,6 +3,7 @@
 #include<utils/client.h>
 #include<utils/inicio.h>
 #include<utils/server.h>
+#include <utils/comunicacion.h>
 
 int main(void){
     int cpu_dispatch_server;
@@ -28,15 +29,23 @@ int main(void){
 	puerto_cpu_interrupt = config_get_string_value(cpu_config, "PUERTO_ESCUCHA_INTERRUPT");
 	puerto_memoria = config_get_string_value(cpu_config, "PUERTO_MEMORIA");
 	conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
-    log_info(cpu_log, "Cpu conectado a Memoria");
-
-    // server
+    log_info(cpu_log, "CPU conectado a MEMORIA");
+    send_handshake(conexion_memoria, cpu_log, "CPU / MEMORIA");
+    
+    // CPU DISPATCH server
     cpu_dispatch_server = iniciar_servidor(puerto_cpu_dispatch, cpu_log);
-    log_info(cpu_log, "Modulo cpu dispatch lista para recibir a kernel");
-    cpu_interrupt_server = iniciar_servidor(puerto_cpu_interrupt, cpu_log);
-    log_info(cpu_log, "Modulo cpu interrupt lista para recibir a kernel");
+    log_info(cpu_log, "Modulo CPU dispatch lista para recibir a KERNEL");
+    // server_escuchar(cpu_log, "cpu", cpu_dispatch_server);
     esperar_cliente(cpu_dispatch_server, cpu_log);
-    esperar_cliente(cpu_interrupt_server, cpu_log);
+
+    // CPU INTERRUPT server
+
+    //cpu_interrupt_server = iniciar_servidor(puerto_cpu_interrupt, cpu_log);
+   // log_info(cpu_log, "Modulo CPU interrupt lista para recibir a KERNEL");
+    //server_escuchar(cpu_log, "cpu",cpu_interrupt_server );
+
+     
+   // esperar_cliente(cpu_interrupt_server, cpu_log);
 
     return 0;
 

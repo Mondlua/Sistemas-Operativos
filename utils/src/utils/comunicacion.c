@@ -95,3 +95,44 @@ int server_escuchar(t_log *logger, char *server_name, int server_socket)
     }
     return 0;
 }
+
+bool rcv_handshake(int fd_conexion){
+    size_t bytes;
+
+    int32_t handshake;
+    int32_t resultOk = 0;
+    int32_t resultError = -1;
+
+    if(fd_conexion != -1){
+
+        bytes = recv(fd_conexion, &handshake, sizeof(int32_t), MSG_WAITALL);
+        if (handshake == 1) {
+        bytes = send(fd_conexion, &resultOk, sizeof(int32_t), 0);
+        } else {
+        bytes = send(fd_conexion, &resultError, sizeof(int32_t), 0);
+        }
+    }
+
+    return true;
+}
+
+bool send_handshake(int conexion, t_log* logger, const char* conexion_name){
+    size_t bytes;
+
+    int32_t handshake = 1;
+    int32_t result;
+
+    bytes = send(conexion, &handshake, sizeof(int32_t), 0);
+    bytes = recv(conexion, &result, sizeof(int32_t), MSG_WAITALL);
+
+    if (result == 0) {
+        log_info(logger, "Handshake OK de %s", conexion_name);
+    // Handshake OK
+    } 
+    else {
+    // Handshake ERROR
+    log_info(logger,"Error handshake de %s", conexion_name);
+    
+    }   
+    return true;
+}
