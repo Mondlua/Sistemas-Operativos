@@ -5,36 +5,30 @@
 
 int main(void) {
     int conexion_memoria;
+    int conexion_kernel;
+    char* ip_kernel; 
     char* ip_memoria;
     char* puerto_memoria;
-
-    char* ip_kernel;
     char* puerto_kernel;
-    int conexion_kernel;
+    
 
-
-	char* puerto_escucha;
     t_log* entradasalida_log;
 	t_config* entradasalida_config;
 
     entradasalida_log = iniciar_logger("entradasalida.log","entradasalida");
     entradasalida_config = iniciar_config("entradasalida.config");
     
-	// cliente i/o con memoria
+	//Entrada salida como cliente
 	ip_memoria = config_get_string_value(entradasalida_config,"IP_MEMORIA");
-	puerto_memoria = config_get_string_value(entradasalida_config, "PUERTO_MEMORIA");
-    conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
-    return 0;
-}
-// cliente i/o con kernel
-    /*ip_kernel= config_get_string_value(entradasalida_config,"IP_KERNEL");
+    ip_kernel= config_get_string_value(entradasalida_config,"IP_KERNEL");
+    puerto_memoria = config_get_string_value(entradasalida_config, "PUERTO_MEMORIA");
     puerto_kernel = config_get_string_value(entradasalida_config, "PUERTO_KERNEL");
 
-	puerto_escucha = config_get_string_value(entradasalida_config, "PUERTO_ESCUCHA");
-
+    //Conexiones
+    conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+    log_info(entradasalida_log, "I/O conectado a memoria");
     conexion_kernel = crear_conexion(ip_kernel, puerto_kernel);
-
-
+    log_info(entradasalida_log, "I/O conectado a kernel");
+    
     return 0;
 }
-*/
