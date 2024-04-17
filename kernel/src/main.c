@@ -42,12 +42,11 @@ int main(void) {
     
     conexion_cpu_dispatch = crear_conexion(ip_cpu, puerto_cpu_dispatch);
     log_info(kernel_log, "KERNEL se conectó a CPU dispatch");
-    send_handshake(conexion_cpu_dispatch, kernel_log, "KERNEL / CPU DISPATCH");
-
-    /*conexion_cpu_interrupt = crear_conexion(ip_cpu, puerto_cpu_interrupt);
+    conexion_cpu_interrupt = crear_conexion(ip_cpu, puerto_cpu_interrupt);
     log_info(kernel_log, "KERNEL se conectó a CPU interrupt");
+    send_handshake(conexion_cpu_dispatch, kernel_log, "KERNEL / CPU DISPATCH");
     send_handshake(conexion_cpu_interrupt, kernel_log, "KERNEL / CPU INTERRUPT");
-*/
+
     //kernel como servidor
     kernel_server = iniciar_servidor(puerto_escucha, kernel_log);
     log_info(kernel_log, "Modulo kernel listo para recibir clientes");
