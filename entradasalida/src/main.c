@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <utils/client.h>
 #include <utils/inicio.h>
+#include <utils/comunicacion.h>
 
 int main(void) {
     int conexion_memoria;
@@ -26,9 +27,12 @@ int main(void) {
 
     //Conexiones
     conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
-    log_info(entradasalida_log, "I/O conectado a memoria");
+    log_info(entradasalida_log, "I/O conectado a MEMORIA");
+    send_handshake(conexion_memoria, entradasalida_log, " I/O / MEMORIA");
+
     conexion_kernel = crear_conexion(ip_kernel, puerto_kernel);
-    log_info(entradasalida_log, "I/O conectado a kernel");
+    log_info(entradasalida_log, "I/O conectado a KERNEL");
+    send_handshake(conexion_kernel, entradasalida_log, "I/O / KERNEL");
     
     return 0;
 }

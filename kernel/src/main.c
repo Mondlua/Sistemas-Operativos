@@ -37,36 +37,22 @@ int main(void) {
     
     //conexiones
 	conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
-    log_info(kernel_log, "Kernel se conectó a memoria");
+    log_info(kernel_log, "KERNEL se conectó a MEMORIA");
+    send_handshake(conexion_memoria, kernel_log, "KERNEL / MEMORIA");
+    
     conexion_cpu_dispatch = crear_conexion(ip_cpu, puerto_cpu_dispatch);
-    log_info(kernel_log, "Kernel se conectó a cpu dispatch");
-    conexion_cpu_interrupt = crear_conexion(ip_cpu, puerto_cpu_interrupt);
-    log_info(kernel_log, "Kernel se conectó a cpu interrupt");
+    log_info(kernel_log, "KERNEL se conectó a CPU dispatch");
+    send_handshake(conexion_cpu_dispatch, kernel_log, "KERNEL / CPU DISPATCH");
 
+    /*conexion_cpu_interrupt = crear_conexion(ip_cpu, puerto_cpu_interrupt);
+    log_info(kernel_log, "KERNEL se conectó a CPU interrupt");
+    send_handshake(conexion_cpu_interrupt, kernel_log, "KERNEL / CPU INTERRUPT");
+*/
     //kernel como servidor
     kernel_server = iniciar_servidor(puerto_escucha, kernel_log);
     log_info(kernel_log, "Modulo kernel listo para recibir clientes");
     server_escuchar(kernel_log, "Kernel", kernel_server);
 
-
-   // handshake_memoria(conexion_memoria,kernel_log);
     return 0;
 }
 
-void handshake_memoria(int conexion_memoria, t_log* kernel_log){
-    size_t bytes;
-
-    int32_t handshake = 1;
-    int32_t result;
-
-    bytes = send(conexion_memoria, &handshake, sizeof(int32_t), 0);
-    bytes = recv(conexion_memoria, &result, sizeof(int32_t), MSG_WAITALL);
-
-    if (result == 0) {
-        log_info(kernel_log, "hanshake ok");
-    // Handshake OK
-    } else {
-    // Handshake ERROR
-    log_info(kernel_log,"error handshake");
-}
-}
