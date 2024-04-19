@@ -18,10 +18,12 @@ t_config* iniciar_config(char* ruta)
     t_config* nuevo_config;
 
     nuevo_config = config_create(ruta);
-    if (nuevo_config == NULL) {
+    if (nuevo_config == NULL) 
+    {
         printf("No se pudo crear el config");
 
         exit(1);
     }
+    
     return nuevo_config;
 }
