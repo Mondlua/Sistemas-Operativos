@@ -5,30 +5,38 @@
 #include <utils/comunicacion.h>
 
 int main(void) {
-    int conexion_memoria;
-    int conexion_kernel;
-    char* ip_kernel; 
-    char* ip_memoria;
-    char* puerto_memoria;
-    char* puerto_kernel;
-    
 
     t_log* entradasalida_log;
-	t_config* entradasalida_config;
+	t_config* entradasalida_config;   
+
+    int conexion_memoria;
+    char* ip_memoria;
+    char* puerto_memoria;   
+
+    int conexion_kernel;
+    char* ip_kernel; 
+    char* puerto_kernel;
+    
 
     entradasalida_log = iniciar_logger("entradasalida.log","entradasalida");
     entradasalida_config = iniciar_config("entradasalida.config");
     
-	//Entrada salida como cliente
-	ip_memoria = config_get_string_value(entradasalida_config,"IP_MEMORIA");
-    ip_kernel= config_get_string_value(entradasalida_config,"IP_KERNEL");
+
+	/* I/O - Cliente */
+
+    // Extraer configs
+
+	ip_memoria = config_get_string_value(entradasalida_config,"IP_MEMORIA");  
     puerto_memoria = config_get_string_value(entradasalida_config, "PUERTO_MEMORIA");
+
+    ip_kernel= config_get_string_value(entradasalida_config,"IP_KERNEL");
     puerto_kernel = config_get_string_value(entradasalida_config, "PUERTO_KERNEL");
 
-    //Conexiones
+    // Establecer conexiones
+
     conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
     log_info(entradasalida_log, "I/O conectado a MEMORIA");
-    send_handshake(conexion_memoria, entradasalida_log, " I/O / MEMORIA");
+    send_handshake(conexion_memoria, entradasalida_log, "I/O / MEMORIA");
 
     conexion_kernel = crear_conexion(ip_kernel, puerto_kernel);
     log_info(entradasalida_log, "I/O conectado a KERNEL");
