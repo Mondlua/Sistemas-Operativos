@@ -10,16 +10,10 @@
 #include <unistd.h>
 #include <string.h>
 
-
 typedef enum
 {
     MENSAJE,
     PAQUETE,
-    CREAR_PROCESO,
-    FINALIZAR_PROCESO,
-    ACCEDER_TABLAS_P,
-    AJUSTAR_TAMANIO,
-    ACCEDER_ESPACIO_U
 }op_code;
 
 
@@ -34,8 +28,6 @@ typedef struct
     op_code codigo_operacion;
     t_buffer* buffer;
 } t_paquete;
-
-
 
 
 void* recibir_buffer(int*, int);

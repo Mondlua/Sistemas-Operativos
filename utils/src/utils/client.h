@@ -11,8 +11,7 @@
 #include<commons/log.h>
 #include<commons/config.h>
 
-
 int crear_conexion(char* ip, char* puerto);
 void liberar_conexion(int socket_cliente);
 
-#endif /* UTILS_H */
+#endif

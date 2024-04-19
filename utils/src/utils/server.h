@@ -10,9 +10,7 @@
 #include<string.h>
 #include<assert.h>
 
-
 int iniciar_servidor(char*, t_log*);
 int esperar_cliente(int, t_log*);
-
 
 #endif
