@@ -65,6 +65,8 @@ int server_escuchar(t_log *logger, char *server_name, int server_socket)
     return 0;
 }
 
+/* PROTOCOLO */
+
 bool rcv_handshake(int fd_conexion){
     size_t bytes;
 
@@ -95,13 +97,12 @@ bool send_handshake(int conexion, t_log* logger, const char* conexion_name){
     bytes = recv(conexion, &result, sizeof(int32_t), MSG_WAITALL);
 
     if (result == 0) {
-        log_info(logger, "Handshake OK de %s", conexion_name);
+    log_info(logger, "Handshake OK de %s", conexion_name);
     // Handshake OK
     } 
     else {
     // Handshake ERROR
-    log_info(logger,"Error handshake de %s", conexion_name);
-    
+    log_info(logger,"Error handshake de %s", conexion_name); 
     }   
     return true;
 }

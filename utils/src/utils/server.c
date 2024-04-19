@@ -4,7 +4,6 @@
 int iniciar_servidor(char* PUERTO, t_log* logger)
 {
     int socket_servidor;
-    int err;
 
     struct addrinfo hints, *server_info;
 
