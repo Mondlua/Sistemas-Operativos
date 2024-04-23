@@ -14,27 +14,42 @@
 
 extern t_log* kernel_log;
 extern t_config* kernel_config;
-typedef struct t_pcb
-{
-    uint32_t pid;
-    int p_counter;
-    int quantum;
-    int registros[];// lu y martin
-    proceso_estado estado; 
-    int* tabla_paginas;
-    char* algoritmo_planif;
 
-} t_pcb;
+extern  t_queue* colaNew;
+extern  t_queue* colaReady;
+extern  t_queue* colaExec;
+extern  t_queue* colaBlocked;
+extern  t_queue* colaExit;
 
-typedef enum proceso_estado
+typedef enum t_proceso_estado
 {
     NEW,
     READY,
     EXEC,
     BLOCK,
     EXIT_PROCESS
-} proceso_estado;
+} t_proceso_estado;
 
+typedef struct t_pcb
+{
+    uint32_t pid;
+    int p_counter;
+    int quantum;
+    int registros;// lu y martin
+    t_proceso_estado estado; 
+    int* tabla_paginas;
+    char* algoritmo_planif;
+
+} t_pcb;
+
+void iniciar_proceso (/*const char *nombre_archivo*/);
+
+void proceso_estado();
+
+void inicializar_colas_estados();
+
+void multiprogramacion(int nuevo_grado);
+t_pcb* crear_nuevo_pcb(int *pid_contador);
 
 
 #endif

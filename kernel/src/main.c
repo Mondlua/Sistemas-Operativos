@@ -1,5 +1,14 @@
 #include <main.h>
 
+t_log* kernel_log; 
+t_config* kernel_config;
+t_queue* colaNew;
+t_queue* colaReady;
+t_queue* colaExec;
+t_queue* colaBlocked;
+t_queue* colaExit;
+
+
 int main(void) {
 
     //t_log* kernel_log;
@@ -63,37 +72,42 @@ int main(void) {
 
     /* KERNEL - PCB */
 
+    // Inicializo Colas de Estado //ver  si es necesario para execute y exit
 
+    inicializar_colas_estados();
+    iniciar_proceso();
+    proceso_estado();
+
+    
     return 0;
 }
 
 // INICIAR PROCESO //
 
 
-void iniciar_proceso (const char *nombre_archivo){
+void iniciar_proceso (/*const char *nombre_archivo*/){
 
-    FILE* archivo;
+    //FILE* archivo;
     t_pcb* pcb;
 
-    archivo = fopen(nombre_archivo, "r");
+    // archivo = fopen(nombre_archivo, "r");
 
-    if (archivo == NULL) {
+    /*if (archivo == NULL) {
         log_error(kernel_log, "No se pudo abrir el archivo.\n");
         return;
     }
-
+*/
     static int pid_contador = 0;
 
-    //CREAR PCB EN ESTADO NEW
-
-    pcb = nuevo_pcb(&pid_contador);
+    pcb = crear_nuevo_pcb(&pid_contador);
+    queue_push(colaNew,pcb);
 
     //avisar a memoria
 
-    fclose(archivo);
+    //fclose(archivo);
 }
 
-t_pcb* nuevo_pcb(int *pid_contador){
+t_pcb* crear_nuevo_pcb(int *pid_contador){
 
     t_pcb* nuevo_pcb = malloc(sizeof(t_pcb)); 
     
@@ -107,7 +121,7 @@ t_pcb* nuevo_pcb(int *pid_contador){
     nuevo_pcb->quantum =  config_get_int_value(kernel_config,"QUANTUM");
     nuevo_pcb->tabla_paginas = NULL;  
     nuevo_pcb->algoritmo_planif= config_get_string_value(kernel_config,"ALGORITMO_PLANIFICACION");
-    nuevo_pcb->estado = NEW;   //zoe 
+    nuevo_pcb->estado = NEW;
     
     log_info(kernel_log, "Se crea el proceso %d en NEW",*pid_contador);
     
@@ -129,19 +143,44 @@ void finalizar_proceso(int pid){}
 
 void multiprogramacion(int nuevo_grado){
     
-    config_set_value(kernel_config,"GRADO_MULTIPROGRAMACION", nuevo_grado);
+    config_set_value(kernel_config,"GRADO_MULTIPROGRAMACION", (char*) nuevo_grado);
 
-    int cambio_ok=config_get_value(kernel_config,"GRADO_MULTIPROGRAMACION");
+    int cambio_ok=config_get_int_value(kernel_config,"GRADO_MULTIPROGRAMACION");
     
     if(cambio_ok==nuevo_grado){
         log_info(kernel_log, "Se cambio el grado de multiprogramacion a %d", nuevo_grado);
     }else {
         log_warning(kernel_log, "No se pudo cambiar el grado de multiprogramacion");
     }
-    return 0;
 }
 
-void inicializarEstados(){
+void inicializar_colas_estados(){
+    colaNew = queue_create();
+    colaReady = queue_create();
+    colaExec = queue_create();
+    colaBlocked = queue_create();
+    colaExit = queue_create();
+}
+
+void proceso_estado(){
+    
+    // MOSTRAR COLA NEW
+    // MOSTRAR COLA READY
+    // MOSTRAR COLA EXEC
+    // MOSTRAR COLA BLOCKED
+    // MOSTRAS COLA EXIT
+
+    int tamanio_cola = queue_size(colaNew);
+    int contador = 0;
+    
+   // while(contador < tamanio_cola){
+        t_pcb* pcb_apunta = colaNew->elements;
+        int pid = pcb_apunta->pid;
+
+        log_info(kernel_log, "PID: %d", pid);
+
+        //contador++;
+   // }
 
 }
 
