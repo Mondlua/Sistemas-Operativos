@@ -26,8 +26,8 @@ typedef enum t_proceso_estado
     NEW,
     READY,
     EXEC,
-    BLOCK,
-    EXIT_PROCESS
+    BLOCKED,
+    EXIT
 } t_proceso_estado;
 
 typedef struct t_pcb
@@ -49,7 +49,8 @@ void proceso_estado();
 void inicializar_colas_estados();
 
 void multiprogramacion(int nuevo_grado);
-t_pcb* crear_nuevo_pcb(int *pid_contador);
-
+t_pcb* crear_nuevo_pcb(uint32_t *pid_contador);
+void mostrar_estado_cola(t_queue* cola, t_proceso_estado estado);
+char* estado_a_string(t_proceso_estado estado);
 
 #endif

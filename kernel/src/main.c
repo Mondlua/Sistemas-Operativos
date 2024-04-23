@@ -34,16 +34,16 @@ int main(void) {
 	/* KERNEL - Cliente */
 
     // Extraer configs
-
+    /*
 	ip_memoria = config_get_string_value(kernel_config,"IP_MEMORIA");
 	puerto_memoria = config_get_string_value(kernel_config, "PUERTO_MEMORIA");
     
 	ip_cpu = config_get_string_value(kernel_config, "IP_CPU");
 	puerto_cpu_dispatch = config_get_string_value(kernel_config, "PUERTO_CPU_DISPATCH");
 	puerto_cpu_interrupt = config_get_string_value(kernel_config, "PUERTO_CPU_INTERRUPT");
-    
+    */
     // Establecer conexiones
-
+/*
 	conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
     log_info(kernel_log, "KERNEL se conectó a MEMORIA");
     send_handshake(conexion_memoria, kernel_log, "KERNEL / MEMORIA");
@@ -56,27 +56,29 @@ int main(void) {
     log_info(kernel_log, "KERNEL se conectó a CPU INTERRUPT");
     send_handshake(conexion_cpu_interrupt, kernel_log, "KERNEL / CPU INTERRUPT");
 
-
+    */
  	/* KERNEL - Servidor */
-
+    /*
     // Extraer configs
 
     puerto_escucha = config_get_string_value(kernel_config, "PUERTO_ESCUCHA");
-
+*/
     // Inicio server
-
+/*
     kernel_server = iniciar_servidor(puerto_escucha, kernel_log);
     log_info(kernel_log, "KERNEL listo para recibir clientes");
     server_escuchar(kernel_log, "kernel", kernel_server);
-
-
+    
+    */
     /* KERNEL - PCB */
 
     // Inicializo Colas de Estado //ver  si es necesario para execute y exit
 
-    inicializar_colas_estados();
+   inicializar_colas_estados();
     iniciar_proceso();
-    proceso_estado();
+    iniciar_proceso();
+
+   proceso_estado();
 
     
     return 0;
@@ -97,7 +99,7 @@ void iniciar_proceso (/*const char *nombre_archivo*/){
         return;
     }
 */
-    static int pid_contador = 0;
+    static uint32_t pid_contador = 0;
 
     pcb = crear_nuevo_pcb(&pid_contador);
     queue_push(colaNew,pcb);
@@ -107,7 +109,7 @@ void iniciar_proceso (/*const char *nombre_archivo*/){
     //fclose(archivo);
 }
 
-t_pcb* crear_nuevo_pcb(int *pid_contador){
+t_pcb* crear_nuevo_pcb(uint32_t *pid_contador){
 
     t_pcb* nuevo_pcb = malloc(sizeof(t_pcb)); 
     
@@ -123,7 +125,7 @@ t_pcb* crear_nuevo_pcb(int *pid_contador){
     nuevo_pcb->algoritmo_planif= config_get_string_value(kernel_config,"ALGORITMO_PLANIFICACION");
     nuevo_pcb->estado = NEW;
     
-    log_info(kernel_log, "Se crea el proceso %d en NEW",*pid_contador);
+    log_info(kernel_log, "Se crea el proceso con PID = %u en NEW", nuevo_pcb->pid);
     
     (*pid_contador)++;
 
@@ -164,23 +166,58 @@ void inicializar_colas_estados(){
 
 void proceso_estado(){
     
-    // MOSTRAR COLA NEW
-    // MOSTRAR COLA READY
-    // MOSTRAR COLA EXEC
-    // MOSTRAR COLA BLOCKED
-    // MOSTRAS COLA EXIT
-
-    int tamanio_cola = queue_size(colaNew);
-    int contador = 0;
-    
-   // while(contador < tamanio_cola){
-        t_pcb* pcb_apunta = colaNew->elements;
-        int pid = pcb_apunta->pid;
-
-        log_info(kernel_log, "PID: %d", pid);
-
-        //contador++;
-   // }
+    mostrar_estado_cola(colaNew, NEW);
+    mostrar_estado_cola(colaReady,READY);
+    mostrar_estado_cola(colaExec,EXEC);
+    mostrar_estado_cola(colaBlocked,BLOCKED);
+    mostrar_estado_cola(colaExit,EXIT);
 
 }
 
+void mostrar_estado_cola(t_queue* cola, t_proceso_estado estado){
+
+    int tamanio_cola = queue_size(cola);
+    int contador = 0;
+
+    if(tamanio_cola != 0)
+    {    
+
+        log_info(kernel_log, "Los PID en la COLA %s son:",estado_a_string(estado));
+
+        while(contador < tamanio_cola){
+
+         t_pcb* pcb_apunta = queue_pop(cola);
+        
+         if(pcb_apunta != NULL){
+            uint32_t pid = pcb_apunta->pid;    
+            queue_push(colaNew,pcb_apunta);
+         log_info(kernel_log, "PID: %u", pid);
+         }
+         
+        contador++;
+        }
+    }
+    else{
+
+     log_warning(kernel_log, "La COLA %s esta VACIA", estado_a_string(estado));
+     
+    }
+    
+}
+
+char* estado_a_string(t_proceso_estado estado)
+{
+    switch(estado){
+        case 0:
+            return "NEW";
+        case 1:
+            return "READY";
+        case 2:
+            return "EXEC";
+        case 3:
+          return "BLOCKED";
+        case 4:
+            return "EXIT";
+
+    }
+}
