@@ -2,8 +2,8 @@
 
 int main(void) {
 
-    t_log* kernel_log;
-	t_config* kernel_config;    
+    //t_log* kernel_log;
+	//t_config* kernel_config;    
     int kernel_server;
     char* puerto_escucha;
 
@@ -22,7 +22,6 @@ int main(void) {
     kernel_log = iniciar_logger("kernel.log","kernel");
     kernel_config = iniciar_config("kernel.config");
     
-
 	/* KERNEL - Cliente */
 
     // Extraer configs
@@ -61,10 +60,15 @@ int main(void) {
     log_info(kernel_log, "KERNEL listo para recibir clientes");
     server_escuchar(kernel_log, "kernel", kernel_server);
 
+
+    /* KERNEL - PCB */
+
+
     return 0;
 }
 
 // INICIAR PROCESO //
+
 
 void iniciar_proceso (const char *nombre_archivo){
 
@@ -74,31 +78,40 @@ void iniciar_proceso (const char *nombre_archivo){
     archivo = fopen(nombre_archivo, "r");
 
     if (archivo == NULL) {
-        printf("ERROR: No se pudo abrir el archivo.\n");
+        log_error(kernel_log, "No se pudo abrir el archivo.\n");
         return;
     }
 
+    static int pid_contador = 0;
+
     //CREAR PCB EN ESTADO NEW
-    pcb = nuevo_pcb(1);
-    
+
+    pcb = nuevo_pcb(&pid_contador);
+
     //avisar a memoria
 
     fclose(archivo);
 }
 
-t_pcb* nuevo_pcb(int num_pid){
+t_pcb* nuevo_pcb(int *pid_contador){
 
     t_pcb* nuevo_pcb = malloc(sizeof(t_pcb)); 
     
     if (nuevo_pcb == NULL) {
+        log_warning(kernel_log,"Se creo un PCB NULL\n");
         return NULL;
-      }
-      
-    nuevo_pcb->pid = num_pid;
-    nuevo_pcb->p_counter = 0;
-    nuevo_pcb->quantum = 0;/// EXTRAER DEL CONFIG 
+    }
+    
+    nuevo_pcb->pid = *pid_contador;
+    nuevo_pcb->p_counter = 0; //ver de donde salen todas las instrucciones
+    nuevo_pcb->quantum =  config_get_int_value(kernel_config,"QUANTUM");
     nuevo_pcb->tabla_paginas = NULL;  
-    //nuevo_pcb->estado = NEW;   
+    nuevo_pcb->algoritmo_planif= config_get_string_value(kernel_config,"ALGORITMO_PLANIFICACION");
+    nuevo_pcb->estado = NEW;   //zoe 
+    
+    log_info(kernel_log, "Se crea el proceso %d en NEW",*pid_contador);
+    
+    (*pid_contador)++;
 
     return nuevo_pcb;
 }
@@ -109,3 +122,26 @@ void liberar_pcb(t_pcb* pcb) {
         free(pcb);            
     }
 }
+
+void finalizar_proceso(int pid){}
+
+////CAMBIO MULTIPROGRAMACION /////
+
+void multiprogramacion(int nuevo_grado){
+    
+    config_set_value(kernel_config,"GRADO_MULTIPROGRAMACION", nuevo_grado);
+
+    int cambio_ok=config_get_value(kernel_config,"GRADO_MULTIPROGRAMACION");
+    
+    if(cambio_ok==nuevo_grado){
+        log_info(kernel_log, "Se cambio el grado de multiprogramacion a %d", nuevo_grado);
+    }else {
+        log_warning(kernel_log, "No se pudo cambiar el grado de multiprogramacion");
+    }
+    return 0;
+}
+
+void inicializarEstados(){
+
+}
+
