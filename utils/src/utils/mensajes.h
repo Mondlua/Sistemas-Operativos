@@ -14,6 +14,7 @@ typedef enum
 {
     MENSAJE,
     PAQUETE,
+    INTERFAZ,
 }op_code;
 
 
@@ -39,5 +40,7 @@ t_paquete* crear_paquete(void);
 void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
 void enviar_paquete(t_paquete* paquete, int socket_cliente);
 void eliminar_paquete(t_paquete* paquete);
+void enviar_interfaz(char* mensaje, int socket_cliente);
+void recibir_interfaz(int socket_cliente, t_log* logger);
 
 #endif
