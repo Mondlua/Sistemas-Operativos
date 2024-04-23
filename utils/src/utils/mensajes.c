@@ -31,6 +31,14 @@ void recibir_mensaje(int socket_cliente, t_log* logger)
     free(buffer);
 }
 
+void recibir_interfaz(int socket_cliente, t_log* logger)
+{
+    int size;
+    char* buffer = recibir_buffer(&size, socket_cliente);
+    log_info(logger, "Interfaz conectada: %s", buffer);
+    free(buffer);
+}
+
 t_list* recibir_paquete(int socket_cliente)
 {
     int size;
@@ -88,6 +96,25 @@ void enviar_mensaje(char* mensaje, int socket_cliente)
 	eliminar_paquete(paquete);
 }
 
+void enviar_interfaz(char* mensaje, int socket_cliente)
+{
+	t_paquete* paquete = malloc(sizeof(t_paquete));
+
+	paquete->codigo_operacion = INTERFAZ;
+	paquete->buffer = malloc(sizeof(t_buffer));
+	paquete->buffer->size = strlen(mensaje) + 1;
+	paquete->buffer->stream = malloc(paquete->buffer->size);
+	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
+
+	int bytes = paquete->buffer->size + 2*sizeof(int);
+
+	void* a_enviar = serializar_paquete(paquete, bytes);
+
+	send(socket_cliente, a_enviar, bytes, 0);
+
+	free(a_enviar);
+	eliminar_paquete(paquete);
+}
 
 void crear_buffer(t_paquete* paquete)
 {

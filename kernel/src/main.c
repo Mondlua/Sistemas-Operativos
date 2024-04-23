@@ -33,14 +33,13 @@ int main(void) {
 
 	ip_memoria = config_get_string_value(kernel_config,"IP_MEMORIA");
 	puerto_memoria = config_get_string_value(kernel_config, "PUERTO_MEMORIA");
-    
 	ip_cpu = config_get_string_value(kernel_config, "IP_CPU");
 	puerto_cpu_dispatch = config_get_string_value(kernel_config, "PUERTO_CPU_DISPATCH");
 	puerto_cpu_interrupt = config_get_string_value(kernel_config, "PUERTO_CPU_INTERRUPT");
     
     // Establecer conexiones
 
-	conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+	/*conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
     log_info(kernel_log, "KERNEL se conectó a MEMORIA");
     send_handshake(conexion_memoria, kernel_log, "KERNEL / MEMORIA");
     
@@ -51,7 +50,7 @@ int main(void) {
     conexion_cpu_interrupt = crear_conexion(ip_cpu, puerto_cpu_interrupt);
     log_info(kernel_log, "KERNEL se conectó a CPU INTERRUPT");
     send_handshake(conexion_cpu_interrupt, kernel_log, "KERNEL / CPU INTERRUPT");
-
+*/
 
  	/* KERNEL - Servidor */
 
@@ -64,7 +63,7 @@ int main(void) {
     kernel_server = iniciar_servidor(puerto_escucha, kernel_log);
     log_info(kernel_log, "KERNEL listo para recibir clientes");
     server_escuchar(kernel_log, "kernel", kernel_server);
-
+    recibir_interfaz(kernel_server, kernel_log);
 
     return 0;
 }

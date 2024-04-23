@@ -10,10 +10,10 @@ void atender_cliente(void *void_args)
 
     free(args);
 
-    op_code cop = recibir_operacion(client_socket);
 
     while (client_socket != -1)
-    {
+    {   
+        op_code cop = recibir_operacion(client_socket);
 
         if (cop == -1)
         {
@@ -21,7 +21,7 @@ void atender_cliente(void *void_args)
             return;
         }
 
-        switch (cop)
+        switch (cop) 
         {
         case MENSAJE:
         {
@@ -29,13 +29,20 @@ void atender_cliente(void *void_args)
 
             break;
         }
+        case INTERFAZ:
+        {
+            recibir_interfaz(client_socket, logger);
+            break;
+        }
 
         default:
             log_error(logger, "Algo anduvo mal en el server de %s", server_name);
             log_info(logger, "Cop: %d", cop);
-            return;
+            
+            break;
             
         }
+        
     }
 
     log_warning(logger, "El cliente se desconecto de %s server", server_name);

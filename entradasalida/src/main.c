@@ -1,8 +1,5 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <utils/client.h>
-#include <utils/inicio.h>
-#include <utils/comunicacion.h>
+#include "main.h"
+
 
 int main(void) {
 
@@ -17,6 +14,9 @@ int main(void) {
     char* ip_kernel; 
     char* puerto_kernel;
     
+    char* interfaz;
+    int tiempo;
+
 
     entradasalida_log = iniciar_logger("entradasalida.log","entradasalida");
     entradasalida_config = iniciar_config("entradasalida.config");
@@ -34,13 +34,19 @@ int main(void) {
 
     // Establecer conexiones
 
-    conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+   /* conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
     log_info(entradasalida_log, "I/O conectado a MEMORIA");
     send_handshake(conexion_memoria, entradasalida_log, "I/O / MEMORIA");
-
+*/
     conexion_kernel = crear_conexion(ip_kernel, puerto_kernel);
     log_info(entradasalida_log, "I/O conectado a KERNEL");
     send_handshake(conexion_kernel, entradasalida_log, "I/O / KERNEL");
-    
+
+    // Interfaces
+    interfaz = config_get_string_value(entradasalida_config, "TIPO_INTERFAZ");
+    tiempo = config_get_int_value(entradasalida_config, "TIEMPO_UNIDAD_TRABAJO");
+    log_info(entradasalida_log, "el tiempo es %i" ,tiempo);
+    enviar_interfaz(interfaz, conexion_kernel);
+
     return 0;
 }
