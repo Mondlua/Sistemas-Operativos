@@ -1,8 +1,4 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <utils/client.h>
-#include <utils/inicio.h>
-#include <utils/comunicacion.h>
+#include <main.h>
 
 int main(void) {
 
@@ -65,7 +61,51 @@ int main(void) {
     log_info(kernel_log, "KERNEL listo para recibir clientes");
     server_escuchar(kernel_log, "kernel", kernel_server);
 
-
     return 0;
 }
 
+// INICIAR PROCESO //
+
+void iniciar_proceso (const char *nombre_archivo){
+
+    FILE* archivo;
+    t_pcb* pcb;
+
+    archivo = fopen(nombre_archivo, "r");
+
+    if (archivo == NULL) {
+        printf("ERROR: No se pudo abrir el archivo.\n");
+        return;
+    }
+
+    //CREAR PCB EN ESTADO NEW
+    pcb = nuevo_pcb(1);
+    
+    //avisar a memoria
+
+    fclose(archivo);
+}
+
+t_pcb* nuevo_pcb(int num_pid){
+
+    t_pcb* nuevo_pcb = malloc(sizeof(t_pcb)); 
+    
+    if (nuevo_pcb == NULL) {
+        return NULL;
+      }
+      
+    nuevo_pcb->pid = num_pid;
+    nuevo_pcb->p_counter = 0;
+    nuevo_pcb->quantum = 0;/// EXTRAER DEL CONFIG 
+    nuevo_pcb->tabla_paginas = NULL;  
+    //nuevo_pcb->estado = NEW;   
+
+    return nuevo_pcb;
+}
+
+void liberar_pcb(t_pcb* pcb) {
+    if (pcb != NULL) {
+        free(pcb->tabla_paginas);  
+        free(pcb);            
+    }
+}
