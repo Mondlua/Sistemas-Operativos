@@ -74,13 +74,14 @@ int main(void) {
 
     // Inicializo Colas de Estado //ver  si es necesario para execute y exit
 
-   inicializar_colas_estados();
+    inicializar_colas_estados();
     iniciar_proceso();
     iniciar_proceso();
 
-   proceso_estado();
+    proceso_estado();
 
-    
+    finalizar_proceso(1);
+
     return 0;
 }
 
@@ -191,7 +192,7 @@ void mostrar_estado_cola(t_queue* cola, t_proceso_estado estado){
          if(pcb_apunta != NULL){
             uint32_t pid = pcb_apunta->pid;    
             queue_push(colaNew,pcb_apunta);
-         log_info(kernel_log, "PID: %u", pid);
+            log_info(kernel_log, "PID: %u", pid);
          }
          
         contador++;
@@ -204,8 +205,8 @@ void mostrar_estado_cola(t_queue* cola, t_proceso_estado estado){
     }
     
 }
-
-char* estado_a_string(t_proceso_estado estado)
+/// funcion para especificar cual elemento del enum es (estado)
+char* estado_a_string(t_proceso_estado estado) 
 {
     switch(estado){
         case 0:
@@ -221,3 +222,76 @@ char* estado_a_string(t_proceso_estado estado)
 
     }
 }
+
+void finalizar_proceso(uint32_t num_pid){
+
+    if(find_queue(num_pid,colaNew)){
+        borrarElemento(colaNew,num_pid);
+    }
+    mostrar_estado_cola(colaNew, NEW);
+
+}
+
+/*bool buscar_pid_cola(uint32_t num_pid,t_queue* procesos_cola){
+    
+   t_link_element* actual = procesos_cola->elements->head;
+    while (actual != NULL) {
+        uint32_t* dato = actual->data;
+        if (*dato == num_pid) {
+            return 1; 
+        }
+        actual = actual->next;
+    }
+    return 0; 
+}*/
+
+// Devuelve 1. TRUE o 0. FALSE si encuentra el elemento en la cola COMMONS QUEUE
+int find_queue((void*) elem, t_queue* cola){
+
+    if (cola == NULL || cola->elements == NULL || cola->elements->head == NULL) {
+        return 0; 
+    }
+
+    t_link_element* actual = cola->elements->head;
+
+    while (actual != NULL) {
+        int* dato = (int*) actual->data;
+        if (*dato == *((int*) elem)) {
+            return 1; 
+        }
+        actual = actual->next;
+    }
+    return 0; 
+}
+
+    
+/*void borrarElemento(t_queue *cola, uint32_t elemento) {
+    t_link_element *actual = cola->elements->head;
+    t_link_element *anterior = NULL;
+
+    // Buscar el elemento en la cola
+    while (actual != NULL && actual->data != elemento) {
+        anterior = actual;
+        actual = actual->next;
+    }
+
+    // Si se encontró el elemento
+    if (actual != NULL) {
+        // Si el elemento es el primero en la cola
+        if (anterior == NULL) {
+            cola->elements->head = actual->next;
+        } else {
+            anterior->next = actual->next;
+        }
+
+        free(actual->data); // Liberar la memoria de la estructura almacenada
+        free(actual); // Liberar la memoria del elemento de enlace
+        cola->elements->elements_count--;
+        printf("Elemento eliminado de la cola.\n");
+    } else {
+        printf("El elemento no está presente en la cola.\n");
+    }
+}*/
+
+
+
