@@ -337,6 +337,12 @@ t_pcb* buscar_pcb(uint32_t num_pid){
     return buscado;
 }
 
-void enviar_contexto_cpu(uint32_t pid){
+void enviar_contexto_cpu(uint32_t num_pid){
+
+    t_pcb* pcb = buscar_pcb(num_pid);
+    t_paquete* paquete_pcb = crear_paquete();
+    agregar_a_paquete(paquete_pcb, pcb, sizeof(pcb));
+
+    // CONTINUAR
 
 }
