@@ -260,19 +260,6 @@ void finalizar_proceso(uint32_t num_pid)
     }
 }
 
-/*bool buscar_pid_cola(uint32_t num_pid,t_queue* procesos_cola){
-
-   t_link_element* actual = procesos_cola->elements->head;
-    while (actual != NULL) {
-        uint32_t* dato = actual->data;
-        if (*dato == num_pid) {
-            return 1;
-        }
-        actual = actual->next;
-    }
-    return 0;
-}*/
-
 // Devuelve 1. TRUE o 0. FALSE si encuentra el elemento en la cola COMMONS QUEUE //Ver
 int find_queue(uint32_t elem, t_queue *cola)
 {
