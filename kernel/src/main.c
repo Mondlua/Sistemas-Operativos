@@ -249,21 +249,12 @@ char *estado_a_string(t_proceso_estado estado)
 
 void finalizar_proceso(uint32_t num_pid)
 {
-
-    for (t_proceso_estado estado = NEW; estado <= EXIT; estado++)
-    {
-        t_queue *cola = cola_de_estado(estado);
-        if (find_queue(num_pid, cola) == 1)
-        {
-            borrar_pcb_cola(num_pid, cola);
-        }
-    }
+    borrar_pcb(num_pid);
 }
 
 // Devuelve 1. TRUE o 0. FALSE si encuentra el elemento en la cola COMMONS QUEUE //Ver
 int find_queue(uint32_t elem, t_queue *cola)
 {
-
     if (queue_is_empty(cola))
     {
         return 0;
@@ -283,15 +274,30 @@ int find_queue(uint32_t elem, t_queue *cola)
     return 0;
 }
 
-void borrar_pcb_cola(uint32_t num_pid, t_queue *cola)
-{
+t_queue* cola_pcb(uint32_t num_pid){
 
+    t_queue* buscado = NULL;
+    for (t_proceso_estado estado = NEW; estado <= EXIT; estado++)
+    {
+        t_queue* cola = cola_de_estado(estado);
+        if (find_queue(num_pid, cola) == 1)
+        {
+            buscado = cola;
+        }
+    }
+    if(buscado == NULL){
+        log_error(kernel_log, "No se pudo encontrar el PCB de PID: %u", num_pid);
+    }
+    return buscado;
+}
+
+void borrar_pcb(uint32_t num_pid)
+{
+    t_queue* cola = cola_pcb(num_pid);
     int tamanio_cola = queue_size(cola);
     int contador = 0;
 
-    if (tamanio_cola != 0)
-    {
-        while (contador < tamanio_cola)
+    while (contador < tamanio_cola)
         {
 
             t_pcb *pcb_apunta = queue_pop(cola);
@@ -300,7 +306,6 @@ void borrar_pcb_cola(uint32_t num_pid, t_queue *cola)
             {
                 // No lo vuelve a encolar 
                 // Ver liberar memoria, recursos, y archivos
-                free(pcb_apunta);
             }
             else
             {
@@ -308,9 +313,30 @@ void borrar_pcb_cola(uint32_t num_pid, t_queue *cola)
             }
             contador++;
         }
-    }
-    else
-    {
-        log_warning(kernel_log, "La COLA para borrar PCB de PID %u esta VACIA", num_pid);
-    }
+}
+
+t_pcb* buscar_pcb(uint32_t num_pid){
+
+    t_queue* cola = cola_pcb(num_pid);
+    int tamanio_cola = queue_size(cola);
+    int contador = 0;
+
+    t_pcb* buscado;
+
+    while (contador < tamanio_cola)
+        {
+            t_pcb *pcb_apunta = queue_pop(cola);
+
+            if (pcb_apunta->pid == num_pid)
+            {
+                buscado = pcb_apunta;
+            }
+            queue_push(cola, pcb_apunta);
+            contador++;
+        }
+    return buscado;
+}
+
+void enviar_contexto_cpu(uint32_t pid){
+
 }
