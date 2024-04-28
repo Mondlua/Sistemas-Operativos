@@ -4,6 +4,7 @@
 #include <utils/inicio.h>
 #include <utils/comunicacion.h>
 #include <consola.h>
+#include<io.h>
 
 int main(void) {
 
@@ -22,7 +23,7 @@ int main(void) {
 	
     int conexion_cpu_dispatch;
     int conexion_cpu_interrupt;
-
+    interfaces = list_create();
 
     kernel_log = iniciar_logger("kernel.log","kernel");
     kernel_config = iniciar_config("kernel.config");
@@ -56,18 +57,19 @@ int main(void) {
  	/* KERNEL - Servidor */
 
     // Extraer configs
-
-  /*  puerto_escucha = config_get_string_value(kernel_config, "PUERTO_ESCUCHA");
+    
+   puerto_escucha = config_get_string_value(kernel_config, "PUERTO_ESCUCHA");
 
     // Inicio server
 
     kernel_server = iniciar_servidor(puerto_escucha, kernel_log);
     log_info(kernel_log, "KERNEL listo para recibir clientes");
-    server_escuchar(kernel_log, "kernel", kernel_server);*/
-
-    leer_consola(kernel_log);
-
-    //recibir_interfaz(kernel_server, kernel_log);
+    consola_interactiva(kernel_log);
+    pthread_t io = atender_peticion_IO("pepe", "34", kernel_server);
+    server_escuchar(kernel_log, "kernel", kernel_server);
+    pthread_detach(io);
+    
+    
 
     return 0;
 }

@@ -1,5 +1,7 @@
 #include <utils/comunicacion.h>
 
+t_list* interfaces;
+
 void atender_cliente(void *void_args)
 {
     t_atender_cliente_args *args = (t_atender_cliente_args *)void_args;
@@ -10,7 +12,7 @@ void atender_cliente(void *void_args)
 
     free(args);
 
-
+    
     while (client_socket != -1)
     {   
         op_code cop = recibir_operacion(client_socket);
@@ -31,8 +33,16 @@ void atender_cliente(void *void_args)
         }
         case INTERFAZ:
         {
-            recibir_interfaz(client_socket, logger);
+            
+            char* interfaz = recibir_interfaz(client_socket, logger);
+            list_add(interfaces, interfaz);
+    
             break;
+        }
+        case AVISO_DESCONEXION:
+        {
+            char* interfaz = recibir_desconexion(client_socket, logger);
+            list_remove_element(interfaces, interfaz);
         }
 
         default:
@@ -68,10 +78,11 @@ int server_escuchar(t_log *logger, char *server_name, int server_socket)
             pthread_create(&hilo, NULL, (void *)atender_cliente,  (void*) args); //castear, lo convierto arg a tipo void*
             pthread_detach(hilo); //  hilo se ejecuta de manera independiente, el recurso del hilo se libera automáticamente 
         }
+        else{
+            break;} //borrar luego
     }
     return 0;
 }
-
 /* PROTOCOLO */
 
 bool rcv_handshake(int fd_conexion){

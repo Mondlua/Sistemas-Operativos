@@ -8,7 +8,6 @@
 #include <inttypes.h>
 #include <commons/log.h>
 #include <pthread.h>
-
 #include <utils/mensajes.h>
 
 typedef struct
@@ -18,6 +17,8 @@ typedef struct
     char *server_name;
 
 } t_atender_cliente_args;
+
+extern t_list* interfaces;
 
 int server_escuchar(t_log* logger, char* server_name, int server_socket);
 bool rcv_handshake(int fd_conexion);
