@@ -11,7 +11,7 @@ void atender_cliente(void *void_args)
     free(args);
 
     op_code cop = recibir_operacion(client_socket);
-
+    t_list* lista;
     while (client_socket != -1)
     {
 
@@ -29,7 +29,13 @@ void atender_cliente(void *void_args)
 
             break;
         }
-
+        /*case PAQUETE:
+        {
+            lista = recibir_paquete(client_socket);
+			log_info(logger, "Me llegaron los siguientes valores:\n");
+			list_iterate(lista, (void*) iterator);
+			break;
+        }*/
         default:
             log_error(logger, "Algo anduvo mal en el server de %s", server_name);
             log_info(logger, "Cop: %d", cop);
@@ -106,3 +112,7 @@ bool send_handshake(int conexion, t_log* logger, const char* conexion_name){
     }   
     return true;
 }
+
+/*void iterator(char* value) {
+	log_info(logger,"%s", value);
+}*/
