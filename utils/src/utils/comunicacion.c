@@ -11,7 +11,7 @@ void atender_cliente(void *void_args)
     free(args);
 
     op_code cop = recibir_operacion(client_socket);
-    t_list* lista;
+    t_pcb* pcb;
     while (client_socket != -1)
     {
 
@@ -29,13 +29,14 @@ void atender_cliente(void *void_args)
 
             break;
         }
-        /*case PAQUETE:
+        case PAQUETE:
         {
-            lista = recibir_paquete(client_socket);
-			log_info(logger, "Me llegaron los siguientes valores:\n");
-			list_iterate(lista, (void*) iterator);
+            pcb = recibir_pcb(client_socket);
+			log_info(logger, "Me llego el pcb cuyo pid es %u", pcb->pid);
+			
+            //list_iterate(lista, (void*) iterator);
 			break;
-        }*/
+        }
         default:
             log_error(logger, "Algo anduvo mal en el server de %s", server_name);
             log_info(logger, "Cop: %d", cop);
@@ -116,3 +117,35 @@ bool send_handshake(int conexion, t_log* logger, const char* conexion_name){
 /*void iterator(char* value) {
 	log_info(logger,"%s", value);
 }*/
+t_pcb* recibir_pcb(int socket_cliente) {
+    t_list* valores_paquete = recibir_paquete(socket_cliente);
+    if (valores_paquete == NULL) {
+        return NULL;
+    }
+
+    t_pcb* pcb = malloc(sizeof(t_pcb));
+    
+    
+    pcb->pid = *((uint32_t *) list_get(valores_paquete, 0)) ;
+    pcb->p_counter = *((int*) list_get(valores_paquete, 1));
+    pcb -> quantum = *((int*) list_get(valores_paquete, 2));
+    pcb -> estado = *((t_proceso_estado*) list_get(valores_paquete, 3));
+
+
+ /*   int desplazamiento = 0;
+    memcpy(&(pcb->pid), paquete->buffer->stream + desplazamiento, sizeof(uint32_t));
+    desplazamiento += sizeof(uint32_t);
+    memcpy(&(pcb->p_counter), paquete->buffer->stream + desplazamiento, sizeof(int));
+    desplazamiento += sizeof(int);
+    memcpy(&(pcb->quantum), paquete->buffer->stream + desplazamiento, sizeof(int));
+    desplazamiento += sizeof(int);
+  
+    memcpy(&(pcb->estado), paquete->buffer->stream + desplazamiento, sizeof(t_proceso_estado));
+    desplazamiento += sizeof(t_proceso_estado);
+
+    pcb->algoritmo_planif = malloc(paquete->buffer->size - desplazamiento);
+    memcpy(pcb->algoritmo_planif, paquete->buffer->stream + desplazamiento, paquete->buffer->size - desplazamiento);
+*/
+    list_destroy(valores_paquete);
+    return pcb;
+}
