@@ -22,5 +22,7 @@ typedef struct
 int server_escuchar(t_log* logger, char* server_name, int server_socket);
 bool rcv_handshake(int fd_conexion);
 bool send_handshake(int conexion, t_log* logger, const char* conexion_name);
+t_pcb* recibir_pcb(int socket_cliente);
+
 
 #endif
