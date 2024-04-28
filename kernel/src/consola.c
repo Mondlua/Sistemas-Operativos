@@ -1,16 +1,28 @@
 #include "consola.h"
 
+void consola_interactiva(t_log* logger){
+   pthread_t consola;
+    int resultado_creacion = pthread_create(&consola, NULL, leer_consola, (void *)logger);
+    if (resultado_creacion != 0) {
+        fprintf(stderr, "Error: No se pudo crear el hilo. Código de error: %d\n", resultado_creacion);
+    return 1;
+    }
+    pthread_detach(consola);
+}
 
-void leer_consola(t_log* logger)
+void* leer_consola(void *arg) 
 {
-	char* leido;
-    do
-    {   free(leido);
+    t_log *logger = (t_log *)arg;
+    char* leido;
+    while (1) {  
         leido = readline("> ");
-        funciones(leido, logger);
-    } while (!string_is_empty(leido));
-    
-	free(leido);
+    if (string_is_empty(leido)) {
+        break; 
+        }
+    funciones(leido, logger);
+    free(leido);
+    }
+    pthread_exit(NULL);
 }
 
 void funciones(char* leido, t_log* logger) {
@@ -42,7 +54,7 @@ void ejecutar_script(char* path, t_log* logger){
 void iniciar_proceso(char* path, t_log* logger){
     log_info(logger, ">> Se crea el proceso %s en NEW", path);
 }
-void finalizar_proceso(int pid, t_log* logger){
+void finalizar_proceso(uint32_t pid, t_log* logger){
     log_info(logger, ">> Se finaliza proceso %i", pid);
 }
 void iniciar_planificacion(t_log* logger){

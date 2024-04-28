@@ -31,12 +31,14 @@ void recibir_mensaje(int socket_cliente, t_log* logger)
     free(buffer);
 }
 
-void recibir_interfaz(int socket_cliente, t_log* logger)
+char* recibir_interfaz(int socket_cliente, t_log* logger)
 {
     int size;
     char* buffer = recibir_buffer(&size, socket_cliente);
     log_info(logger, "Interfaz conectada: %s", buffer);
-    free(buffer);
+   // free(buffer);
+   return buffer;
+   free(buffer);
 }
 
 t_list* recibir_paquete(int socket_cliente)
@@ -114,6 +116,35 @@ void enviar_interfaz(char* mensaje, int socket_cliente)
 
 	free(a_enviar);
 	eliminar_paquete(paquete);
+}
+
+void aviso_desconexion(char* mensaje, int socket_cliente){
+	t_paquete* paquete = malloc(sizeof(t_paquete));
+
+	paquete->codigo_operacion = AVISO_DESCONEXION;
+	paquete->buffer = malloc(sizeof(t_buffer));
+	paquete->buffer->size = strlen(mensaje) + 1;
+	paquete->buffer->stream = malloc(paquete->buffer->size);
+	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
+
+	int bytes = paquete->buffer->size + 2*sizeof(int);
+
+	void* a_enviar = serializar_paquete(paquete, bytes);
+
+	send(socket_cliente, a_enviar, bytes, 0);
+
+	free(a_enviar);
+	eliminar_paquete(paquete);
+}
+
+char* recibir_desconexion(int socket_cliente, t_log* logger)
+{
+    int size;
+    char* buffer = recibir_buffer(&size, socket_cliente);
+    log_info(logger, "Interfaz desconectada: %s", buffer);
+   // free(buffer);
+   return buffer;
+   free(buffer);
 }
 
 void crear_buffer(t_paquete* paquete)
