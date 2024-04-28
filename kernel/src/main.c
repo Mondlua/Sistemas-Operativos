@@ -1,5 +1,14 @@
 #include "main.h"
 
+t_log* kernel_log;
+t_config* kernel_config;
+
+t_queue* colaNew;
+t_queue* colaReady;
+t_queue* colaExec;
+t_queue* colaBlocked;
+t_queue* colaExit;
+
 int main(void)
 {
 

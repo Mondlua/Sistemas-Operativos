@@ -24,6 +24,14 @@ t_pcb *crear_nuevo_pcb(uint32_t *pid_contador)
 
     return nuevo_pcb;
 }
+void inicializar_colas_estados()
+{
+    colaNew = queue_create();
+    colaReady = queue_create();
+    colaExec = queue_create();
+    colaBlocked = queue_create();
+    colaExit = queue_create();
+}
 
 void liberar_pcb(t_pcb *pcb)
 {
@@ -32,15 +40,6 @@ void liberar_pcb(t_pcb *pcb)
         free(pcb->tabla_paginas);
         free(pcb);
     }
-}
-
-void inicializar_colas_estados()
-{
-    colaNew = queue_create();
-    colaReady = queue_create();
-    colaExec = queue_create();
-    colaBlocked = queue_create();
-    colaExit = queue_create();
 }
 
 t_queue *cola_de_estado(t_proceso_estado estado)
@@ -58,6 +57,8 @@ t_queue *cola_de_estado(t_proceso_estado estado)
         return colaBlocked;
     case 4:
         return colaExit;
+    default:
+        return 0;
     }
 }
 
@@ -104,6 +105,8 @@ char *estado_a_string(t_proceso_estado estado)
         return "BLOCKED";
     case 4:
         return "EXIT";
+    default:
+        return 0;
     }
 }
 
