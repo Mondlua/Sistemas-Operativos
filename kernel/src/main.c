@@ -34,16 +34,16 @@ int main(void)
     /* KERNEL - Cliente */
 
     // Extraer configs
-    /*
+    
     ip_memoria = config_get_string_value(kernel_config,"IP_MEMORIA");
     puerto_memoria = config_get_string_value(kernel_config, "PUERTO_MEMORIA");
 
     ip_cpu = config_get_string_value(kernel_config, "IP_CPU");
     puerto_cpu_dispatch = config_get_string_value(kernel_config, "PUERTO_CPU_DISPATCH");
     puerto_cpu_interrupt = config_get_string_value(kernel_config, "PUERTO_CPU_INTERRUPT");
-    */
+    
     // Establecer conexiones
-    /*
+    
         conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
         log_info(kernel_log, "KERNEL se conectó a MEMORIA");
         send_handshake(conexion_memoria, kernel_log, "KERNEL / MEMORIA");
@@ -56,41 +56,43 @@ int main(void)
         log_info(kernel_log, "KERNEL se conectó a CPU INTERRUPT");
         send_handshake(conexion_cpu_interrupt, kernel_log, "KERNEL / CPU INTERRUPT");
 
-        */
+        
     /* KERNEL - Servidor */
-    /*
+    
     // Extraer configs
 
     puerto_escucha = config_get_string_value(kernel_config, "PUERTO_ESCUCHA");
-*/
+
     // Inicio server
-    /*
+    
         kernel_server = iniciar_servidor(puerto_escucha, kernel_log);
         log_info(kernel_log, "KERNEL listo para recibir clientes");
         server_escuchar(kernel_log, "kernel", kernel_server);
 
-        */
+        
     /* KERNEL - PCB */
 
     // Inicializo Colas de Estado //ver  si es necesario para execute y exit
 
     inicializar_colas_estados();
-    iniciar_proceso();
-    iniciar_proceso();
-
+    t_pcb* nuevo_pcb = iniciar_proceso();
+    //iniciar_proceso();
+    enviar_pcb_cpu(nuevo_pcb,conexion_cpu_dispatch);
+/*
     uint32_t x=1;
     //uint32_t y = 0;
 
     proceso_estado();
     finalizar_proceso(x);
     proceso_estado();
+*/
 
     return 0;
 }
 
 // INICIAR PROCESO //
 
-void iniciar_proceso(/*const char *nombre_archivo*/)
+t_pcb* iniciar_proceso(/*const char *nombre_archivo*/)
 {
 
     // FILE* archivo;
@@ -107,10 +109,10 @@ void iniciar_proceso(/*const char *nombre_archivo*/)
 
     pcb = crear_nuevo_pcb(&pid_contador);
     queue_push(colaNew, pcb);
-
     // avisar a memoria
 
     // fclose(archivo);
+    return pcb;
 }
 
 t_pcb *crear_nuevo_pcb(uint32_t *pid_contador)
@@ -274,7 +276,7 @@ int find_queue(uint32_t elem, t_queue *cola)
     return 0;
 }
 
-t_queue* cola_pcb(uint32_t num_pid){
+t_queue* cola_pcb(uint32_t num_pid){ //buscar cola en cada estado
 
     t_queue* buscado = NULL;
     for (t_proceso_estado estado = NEW; estado <= EXIT; estado++)
@@ -337,12 +339,24 @@ t_pcb* buscar_pcb(uint32_t num_pid){
     return buscado;
 }
 
-void enviar_contexto_cpu(uint32_t num_pid){
+void enviar_pcb_cpu(t_pcb* pcb, int socket_cliente){
 
-    t_pcb* pcb = buscar_pcb(num_pid);
+   /* t_pcb* pcb = buscar_pcb(num_pid);
     t_paquete* paquete_pcb = crear_paquete();
     agregar_a_paquete(paquete_pcb, pcb, sizeof(pcb));
-
+*/
     // CONTINUAR
+    t_paquete* paquete = crear_paquete();
+    agregar_a_paquete(paquete, &(pcb->pid), sizeof(uint32_t));
+    agregar_a_paquete(paquete, &(pcb->p_counter), sizeof(int));
+    agregar_a_paquete(paquete, &(pcb->quantum), sizeof(int));
+    agregar_a_paquete(paquete, &(pcb->registros), sizeof(int));
+    agregar_a_paquete(paquete, &(pcb->estado), sizeof(t_proceso_estado));
+    agregar_a_paquete(paquete, pcb->tabla_paginas, sizeof(int) * pcb->registros);
+    agregar_a_paquete(paquete, pcb->algoritmo_planif, sizeof(pcb->algoritmo_planif));
+
+    enviar_paquete(paquete, socket_cliente);
+
+    eliminar_paquete(paquete);
 
 }
