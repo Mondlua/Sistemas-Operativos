@@ -19,11 +19,20 @@ t_pcb* iniciar_proceso(/*const char *nombre_archivo*/)
 
     pcb = crear_nuevo_pcb(&pid_contador);
     queue_push(colaNew, pcb);
+    int grado_actual = config_get_int_value(kernel_config, "GRADO_MULTIPROGRAMACION");
+
+    if(nivel_multiprog<grado_actual){
+        queue_pop(colaNew,pcb);
+        queue_push(colaReady,pcb);
+        log_info(kernel_log,"Proceso con pid %u pasado a la cola de Ready",pcb->pid)
+    }
     // avisar a memoria
 
     // fclose(archivo);
     return pcb;
 }
+
+
 
 /* PROCESO_ESTADO */
 

@@ -12,4 +12,6 @@ extern  t_queue* colaExec;
 extern  t_queue* colaBlocked;
 extern  t_queue* colaExit;
 
+int nivel_multiprog;
+
 #endif

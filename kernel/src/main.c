@@ -9,6 +9,8 @@ t_queue* colaExec;
 t_queue* colaBlocked;
 t_queue* colaExit;
 
+int nivel_multiprog=queue_size(colaReady)+queue_size(colaBlocked)+queue_size(colaExec);
+
 int main(void)
 {
 
@@ -71,7 +73,9 @@ int main(void)
     kernel_server = iniciar_servidor(puerto_escucha, kernel_log);
     log_info(kernel_log, "KERNEL listo para recibir clientes");
     server_escuchar(kernel_log, "kernel", kernel_server);
-    
+    char *algoritmo=config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
+    fifo();
+
     return 0;
 }
 

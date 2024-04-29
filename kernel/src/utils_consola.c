@@ -209,3 +209,9 @@ void enviar_pcb_cpu(t_pcb* pcb, int socket_cliente){
     eliminar_paquete(paquete);
 
 }
+
+/*void cambiar_cola(t_pcb* pcb,t_proceso_estado nuevo_estado){
+    t_queue* cola_actual= cola_de_estado(pcb->estado);
+    queue_pop();
+    pcb->estado=nuevo_estado;
+}*/

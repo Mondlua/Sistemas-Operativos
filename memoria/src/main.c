@@ -1,13 +1,10 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <utils/inicio.h>
-#include <utils/comunicacion.h>
+#include "main.h"
+
+t_log* memoria_log;
+t_config* memoria_config;
 
 int main(void) {
-
-    t_log* memoria_log;
-	t_config* memoria_config;
-
+    
     char* puerto;
     int memoria_server;
 
@@ -24,10 +21,26 @@ int main(void) {
 
     // Inicio server 
 
-    memoria_server = iniciar_servidor(puerto, memoria_log);
+    /*memoria_server = iniciar_servidor(puerto, memoria_log);
     log_info(memoria_log, "MEMORIA lista para recibir clientes");
-    server_escuchar(memoria_log, "memoria", memoria_server);
+    server_escuchar(memoria_log, "memoria", memoria_server);*/
+    int tam_memoria=config_get_int_value(memoria_config, "TAM_MEMORIA");
+    int tam_pagina=config_get_int_value(memoria_config, "TAM_PAGINA");
+    tabla_paginas* tabla=inicializar_tabla(tam_pagina,tam_memoria);
+    if (tabla == NULL) {
+    log_info(memoria_log,"tabla vacia");
+    }
+    log_info(memoria_log,"tabla pags: %d", tabla->cant_paginas );
 
+    pagina *pag_actual = tabla->paginas; 
+    //log_info(memoria_log,"pagina: %d", pag_actual);
+    /*int numdepag = 0;
+    while (numdepag < tabla->cant_paginas) {
+        log_info(memoria_log,"pag: %d",pag_actual->nro_pagina);
+        numdepag++;
+        pag_actual = (pagina *)((char*)pag_actual + sizeof(pagina)); 
+    }*/
     return 0;
 }
+
 
