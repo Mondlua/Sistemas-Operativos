@@ -64,12 +64,20 @@ int main(void) {
 
     kernel_server = iniciar_servidor(puerto_escucha, kernel_log);
     log_info(kernel_log, "KERNEL listo para recibir clientes");
+
+    t_atender_cliente_args args;
+    args.log = kernel_log;
+    args.c_socket = kernel_server;
+    args.server_name = "Kernel"; // Ejemplo de nombre de servidor
+    pthread_t hilo;
+    pthread_create(&hilo, NULL, (void *)server_escuchar, (void *)&args);
+   
     consola_interactiva(kernel_log);
-    pthread_t io = atender_peticion_IO("pepe", "34", kernel_server);
-    server_escuchar(kernel_log, "kernel", kernel_server);
-    pthread_detach(io);
-    
-    
+    //server_escuchar(kernel_log, "kernel", kernel_server);
+    //pthread_t io = atender_peticion_IO("pepe", "34", kernel_server);
+    sleep(10);
+   // validar_peticion("pepe","33");
+    pthread_join(hilo, NULL);
 
     return 0;
 }

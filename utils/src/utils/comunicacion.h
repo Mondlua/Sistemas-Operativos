@@ -19,8 +19,9 @@ typedef struct
 } t_atender_cliente_args;
 
 extern t_list* interfaces;
+//extern int fd_interfaz;
 
-int server_escuchar(t_log* logger, char* server_name, int server_socket);
+int server_escuchar(void *arg);
 bool rcv_handshake(int fd_conexion);
 bool send_handshake(int conexion, t_log* logger, const char* conexion_name);
 
