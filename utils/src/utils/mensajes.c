@@ -38,7 +38,6 @@ char* recibir_interfaz(int socket_cliente, t_log* logger)
     log_info(logger, "Interfaz conectada: %s", buffer);
    // free(buffer);
    return buffer;
-   free(buffer);
 }
 
 t_list* recibir_paquete(int socket_cliente)
@@ -92,10 +91,14 @@ void enviar_mensaje(char* mensaje, int socket_cliente)
 
 	void* a_enviar = serializar_paquete(paquete, bytes);
 
-	send(socket_cliente, a_enviar, bytes, 0);
+    int resultado_send = send(socket_cliente, a_enviar, bytes, MSG_NOSIGNAL);  // Evita la generación de SIGPIPE
 
-	free(a_enviar);
-	eliminar_paquete(paquete);
+    if (resultado_send == -1) {
+        fprintf(stderr, "Error al enviar el mensaje: socket cerrado.\n");
+    }
+
+    free(a_enviar);
+    eliminar_paquete(paquete);
 }
 
 void enviar_interfaz(char* mensaje, int socket_cliente)
