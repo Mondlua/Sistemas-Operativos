@@ -61,6 +61,7 @@ int main(void){
     log_info(cpu_log, "CPU INTERRUPT listo para recibir a KERNEL");
     esperar_cliente(cpu_interrupt_server, cpu_log);
 
+    
     return 0;
 
 }

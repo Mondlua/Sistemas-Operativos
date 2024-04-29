@@ -14,6 +14,7 @@
 #include <commons/collections/queue.h>
 
 
-t_pcb* recibir_pcb(int socket_cliente); 
+
+//t_pcb* recibir_pcb(int socket_cliente); 
 
 #endif
