@@ -10,7 +10,13 @@ void atender_cliente(void *void_args)
     t_log *logger = args->log;
     int client_socket = args->c_socket;
     char *server_name = args->server_name;
-    int fd_interfaz = 0;
+
+
+    free(args);
+
+    op_code cop = recibir_operacion(client_socket);
+    t_pcb* pcb;
+
     while (client_socket != -1)
     {   
         op_code cop = recibir_operacion(client_socket);
@@ -29,6 +35,13 @@ void atender_cliente(void *void_args)
 
             break;
         }
+        case PAQUETE:
+        {/*
+            pcb = recibir_pcb(client_socket);
+			log_info(logger, "Me llego el pcb cuyo pid es %u", pcb->pid);
+			break;*/
+        }
+
         case INTERFAZ:
         {
            // int fd_interfaz = client_socket;
@@ -43,6 +56,7 @@ void atender_cliente(void *void_args)
             char* interfaz = recibir_desconexion(client_socket, logger);
             list_remove_element(interfaces, interfaz);
         }
+
 
         default:
             log_error(logger, "Algo anduvo mal en el server de %s", server_name);
@@ -126,3 +140,22 @@ bool send_handshake(int conexion, t_log* logger, const char* conexion_name){
     }   
     return true;
 }
+
+/*t_pcb* recibir_pcb(int socket_cliente) {
+    t_list* valores_paquete = recibir_paquete(socket_cliente);
+    if (valores_paquete == NULL) {
+        return NULL;
+    }
+
+    t_pcb* pcb = malloc(sizeof(t_pcb));
+    
+
+    pcb->pid = *((uint32_t *) list_get(valores_paquete, 0)) ;
+    pcb->p_counter = *((int*) list_get(valores_paquete, 1));
+    pcb -> quantum = *((int*) list_get(valores_paquete, 2));
+    pcb -> estado = *((t_proceso_estado*) list_get(valores_paquete, 3));
+
+    list_destroy(valores_paquete);
+    return pcb;
+}
+*/

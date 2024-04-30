@@ -1,0 +1,26 @@
+#include "ciclo_inst.h"
+
+void inicializar_registro(t_pcb* pcb)
+{
+    cpu_registros *registros = pcb->registros;
+    registros= malloc(sizeof(cpu_registros));
+    registros->PC = malloc(sizeof(4));
+    registros->AX = malloc(sizeof(1));
+    registros->BX = malloc(sizeof(1));
+    registros->CX = malloc(sizeof(1));
+    registros->DX = malloc(sizeof(1));
+    registros->EAX = malloc(sizeof(4));
+    registros->EBX = malloc(sizeof(4));
+    registros->ECX = malloc(sizeof(4));
+    registros->EDX = malloc(sizeof(4));
+    registros->SI = malloc(sizeof(4));
+    registros->DI = malloc(sizeof(4));
+}
+
+char* fetch(t_pcb* pcb){
+    //pedirle a mem instruccion y mandarle el pcounter
+    //nos llega instruccion de memoria
+    char* instruccion;
+    pcb->p_counter++;
+    return instruccion;
+}
