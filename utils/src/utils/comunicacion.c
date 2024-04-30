@@ -1,5 +1,8 @@
 #include <utils/comunicacion.h>
 
+t_list* interfaces;
+//int fd_interfaz;
+
 void atender_cliente(void *void_args)
 {
     t_atender_cliente_args *args = (t_atender_cliente_args *)void_args;
@@ -8,12 +11,15 @@ void atender_cliente(void *void_args)
     int client_socket = args->c_socket;
     char *server_name = args->server_name;
 
+
     free(args);
 
     op_code cop = recibir_operacion(client_socket);
     t_pcb* pcb;
+
     while (client_socket != -1)
-    {
+    {   
+        op_code cop = recibir_operacion(client_socket);
 
         if (cop == -1)
         {
@@ -21,7 +27,7 @@ void atender_cliente(void *void_args)
             return;
         }
 
-        switch (cop)
+        switch (cop) 
         {
         case MENSAJE:
         {
@@ -35,20 +41,43 @@ void atender_cliente(void *void_args)
 			log_info(logger, "Me llego el pcb cuyo pid es %u", pcb->pid);
 			break;*/
         }
+
+        case INTERFAZ:
+        {
+           // int fd_interfaz = client_socket;
+            printf("int %i  ", fd_interfaz);
+            char* interfaz = recibir_interfaz(client_socket, logger);
+            list_add(interfaces, interfaz);
+            
+            break;
+        }
+        case AVISO_DESCONEXION:
+        {
+            char* interfaz = recibir_desconexion(client_socket, logger);
+            list_remove_element(interfaces, interfaz);
+        }
+
+
         default:
             log_error(logger, "Algo anduvo mal en el server de %s", server_name);
             log_info(logger, "Cop: %d", cop);
-            return;
+            
+            break;
             
         }
+        
     }
 
     log_warning(logger, "El cliente se desconecto de %s server", server_name);
     return;
 }
 
-int server_escuchar(t_log *logger, char *server_name, int server_socket)
-{
+int server_escuchar(void* arg)
+{   
+    t_atender_cliente_args*args = (t_atender_cliente_args*)arg;
+    t_log *logger = args->log;
+    char *server_name = args->server_name;
+    int server_socket = args->c_socket;
     while (1){
         
         int client_socket = esperar_cliente(server_socket, logger);
@@ -58,7 +87,6 @@ int server_escuchar(t_log *logger, char *server_name, int server_socket)
             log_info(logger, "cree hilo");
 
             pthread_t hilo;
-            t_atender_cliente_args *args = malloc(sizeof(t_atender_cliente_args));
             args->log = logger;
             args->c_socket = client_socket;
             args->server_name = server_name;
@@ -69,8 +97,9 @@ int server_escuchar(t_log *logger, char *server_name, int server_socket)
     }
     return 0;
 }
-
 /* PROTOCOLO */
+
+
 
 bool rcv_handshake(int fd_conexion){
     size_t bytes;
