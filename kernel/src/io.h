@@ -21,7 +21,8 @@ typedef struct
 } atender_peticion_args;
 
 
-pthread_t atender_peticion_IO(char* interfaz, char* tiempo, int server);
-void* validar_peticion(void*);
+/*pthread_t atender_peticion_IO(char* interfaz, char* tiempo, int server);
+void* validar_peticion(void*);*/
+void validar_peticion(char* interfaz, char* tiempo);
 
 #endif
