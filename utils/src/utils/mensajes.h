@@ -14,6 +14,8 @@ typedef enum
 {
     MENSAJE,
     PAQUETE,
+    INTERFAZ,
+    AVISO_DESCONEXION,
 }op_code;
 
 
@@ -29,15 +31,19 @@ typedef struct
     t_buffer* buffer;
 } t_paquete;
 
+void aviso_desconexion(char* , int);
 
 void* recibir_buffer(int*, int);
 t_list* recibir_paquete(int);
 void recibir_mensaje(int, t_log*);
 int recibir_operacion(int);
-void enviar_mensaje(char* mensaje, int socket_cliente);
+void enviar_mensaje(char* , int );
 t_paquete* crear_paquete(void);
 void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
 void enviar_paquete(t_paquete* paquete, int socket_cliente);
 void eliminar_paquete(t_paquete* paquete);
+void enviar_interfaz(char* mensaje, int socket_cliente);
+char* recibir_interfaz(int socket_cliente, t_log* logger);
+char* recibir_desconexion(int socket_cliente, t_log* logger);
 
 #endif
