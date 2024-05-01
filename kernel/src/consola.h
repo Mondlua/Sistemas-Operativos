@@ -10,6 +10,8 @@
 #include<commons/log.h>
 #include<readline/readline.h>
 #include<pthread.h>
+#include "utils_consola.h"
+#include "main.h"
 
 void consola_interactiva(t_log* logger);
 void* leer_consola(void *arg);
@@ -19,7 +21,7 @@ void iniciar_proceso(char* path, t_log* logger);
 void finalizar_proceso(uint32_t pid, t_log* logger);
 void iniciar_planificacion(t_log* logger);
 void detener_planificacion(t_log* logger);
-void multiprogramacion(int valor, t_log* logger);
+void multiprogramacion(char* valor, t_log* logger);
 void proceso_estado(t_log* logger);
 
 

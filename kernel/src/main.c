@@ -17,7 +17,7 @@ t_queue* colaExec;
 t_queue* colaBlocked;
 t_queue* colaExit;
 
-int nivel_multiprog=queue_size(colaReady)+queue_size(colaBlocked)+queue_size(colaExec);
+int nivel_multiprog;//=queue_size(colaReady)+queue_size(colaBlocked)+queue_size(colaExec);
 
 int main(void)
 {
@@ -90,9 +90,6 @@ int main(void)
     /* KERNEL - Servidor */
 
 
-
- 	/* KERNEL - Servidor */
-
     // Extraer configs
     
    puerto_escucha = config_get_string_value(kernel_config, "PUERTO_ESCUCHA");
@@ -101,22 +98,20 @@ int main(void)
     
     kernel_server = iniciar_servidor(puerto_escucha, kernel_log);
     log_info(kernel_log, "KERNEL listo para recibir clientes");
-    server_escuchar(kernel_log, "kernel", kernel_server);
-    char *algoritmo=config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
-    fifo();
 
     t_atender_cliente_args args;
     args.log = kernel_log;
     args.c_socket = kernel_server;
-    args.server_name = "Kernel"; // Ejemplo de nombre de servidor
+    args.server_name = "Kernel"; 
     pthread_t hilo;
     pthread_create(&hilo, NULL, (void *)server_escuchar, (void *)&args);
+
+    char *algoritmo=config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
+   // fifo();
    
     consola_interactiva(kernel_log);
-    //server_escuchar(kernel_log, "kernel", kernel_server);
-    //pthread_t io = atender_peticion_IO("pepe", "34", kernel_server);
     sleep(10);
-   // validar_peticion("pepe","33");
+    validar_peticion("pepe","33");
     pthread_join(hilo, NULL);
 
     return 0;
