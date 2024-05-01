@@ -13,16 +13,16 @@
 #include "utils_consola.h"
 #include "main.h"
 
-void consola_interactiva(t_log* logger);
-void* leer_consola(void *arg);
-void funciones(char* leido, t_log* logger);
-void ejecutar_script(char* path, t_log* logger);
-void iniciar_proceso(char* path, t_log* logger);
-void finalizar_proceso(uint32_t pid, t_log* logger);
-void iniciar_planificacion(t_log* logger);
-void detener_planificacion(t_log* logger);
-void multiprogramacion(char* valor, t_log* logger);
-void proceso_estado(t_log* logger);
+void consola_interactiva();
+void* leer_consola();
+void funciones(char* leido);
+void ejecutar_script(char* path);
+void iniciar_proceso(char* path);
+void finalizar_proceso(uint32_t pid);
+void iniciar_planificacion();
+void detener_planificacion();
+void multiprogramacion(char* valor);
+void proceso_estado();
 
 
 

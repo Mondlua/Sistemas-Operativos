@@ -117,7 +117,6 @@ bool rcv_handshake(int fd_conexion){
         bytes = send(fd_conexion, &resultError, sizeof(int32_t), 0);
         }
     }
-
     return true;
 }
 
