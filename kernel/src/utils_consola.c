@@ -21,8 +21,9 @@ t_pcb *crear_nuevo_pcb(uint32_t *pid_contador)
     log_info(kernel_log, "Se crea el proceso con PID = %u en NEW", nuevo_pcb->pid);
 
     (*pid_contador)++;
-
+    
     return nuevo_pcb;
+   // free(nuevo_pcb);
 }
 void inicializar_colas_estados()
 {

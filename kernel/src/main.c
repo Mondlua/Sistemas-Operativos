@@ -1,11 +1,4 @@
 #include "main.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <utils/client.h>
-#include <utils/inicio.h>
-#include <utils/comunicacion.h>
-#include <consola.h>
-#include<io.h>
 
 
 t_log* kernel_log;
@@ -17,7 +10,7 @@ t_queue* colaExec;
 t_queue* colaBlocked;
 t_queue* colaExit;
 
-int nivel_multiprog;//=queue_size(colaReady)+queue_size(colaBlocked)+queue_size(colaExec);
+int nivel_multiprog;
 
 int main(void)
 {
@@ -67,7 +60,7 @@ int main(void)
     
     // Establecer conexiones
 
-	/*conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+	/* conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
 
     log_info(kernel_log, "KERNEL se conectó a MEMORIA");
     send_handshake(conexion_memoria, kernel_log, "KERNEL / MEMORIA");
@@ -86,33 +79,48 @@ int main(void)
     log_info(kernel_log, "KERNEL se conectó a CPU INTERRUPT");
     send_handshake(conexion_cpu_interrupt, kernel_log, "KERNEL / CPU INTERRUPT");
 
-
+ */
     /* KERNEL - Servidor */
 
 
     // Extraer configs
     
-   puerto_escucha = config_get_string_value(kernel_config, "PUERTO_ESCUCHA");
+    puerto_escucha = config_get_string_value(kernel_config, "PUERTO_ESCUCHA");
 
     // Inicio server
     
     kernel_server = iniciar_servidor(puerto_escucha, kernel_log);
     log_info(kernel_log, "KERNEL listo para recibir clientes");
 
-    t_atender_cliente_args args;
-    args.log = kernel_log;
-    args.c_socket = kernel_server;
-    args.server_name = "Kernel"; 
+    t_atender_cliente_args* args = malloc(sizeof(t_atender_cliente_args));
+    args->log = kernel_log;
+    args->c_socket = kernel_server;
+    args->server_name = "Kernel"; 
+    
     pthread_t hilo;
-    pthread_create(&hilo, NULL, (void *)server_escuchar, (void *)&args);
+    pthread_create(&hilo, NULL, (void *)server_escuchar, args);//hilo para que no se estanque en el while 1 y siga con la ejecucion del kernel
+    
 
+    // Ver Algortimos
     char *algoritmo=config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
-   // fifo();
+   //fifo();
    
-    consola_interactiva(kernel_log);
-    sleep(10);
-    validar_peticion("pepe","33");
+   //Ver Consola
+    inicializar_colas_estados();
+    consola_interactiva();
+    nivel_multiprog = queue_size(colaReady)+queue_size(colaBlocked)+queue_size(colaExec); 
+    sleep(10);//tiempo para escribir en la consola de entrada salida
+    validar_peticion("pepe","33");// nombre de la interfaz que se quiere conectar, 33 cant de tiempo
     pthread_join(hilo, NULL);
 
+    free(args);
+    free(kernel_log);
+    free(kernel_config);
+    free(colaNew);
+    free(colaExit);
+    free(colaReady);
+    free(colaBlocked);
+    free(colaExec);
+    
     return 0;
 }

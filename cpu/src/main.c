@@ -53,8 +53,13 @@ int main(void){
 
     cpu_dispatch_server = iniciar_servidor(puerto_cpu_dispatch, cpu_log);
     log_info(cpu_log, "CPU DISPATCH listo para recibir a KERNEL");
-   server_escuchar(cpu_log,"CPU",cpu_dispatch_server);
-
+    
+    t_atender_cliente_args* args = malloc(sizeof(t_atender_cliente_args));
+    args->log = cpu_log;
+    args->c_socket =cpu_dispatch_server;
+    args->server_name = "CPU";
+    server_escuchar(args);
+    free(args);
     // Inicio CPU INTERRUPT server
 
     cpu_interrupt_server = iniciar_servidor(puerto_cpu_interrupt, cpu_log);
