@@ -39,7 +39,7 @@ void funciones(char* leido, t_log* logger) {
     } else if (string_equals_ignore_case(funcion[0], "DETENER_PLANIFICACION")) {
         detener_planificacion(logger);
     } else if (string_equals_ignore_case(funcion[0], "MULTIPROGRAMACION") && string_array_size(funcion) == 2) {
-        multiprogramacion(atoi(funcion[1]), logger);
+        multiprogramacion(funcion[1], logger);
     } else if (string_equals_ignore_case(funcion[0], "PROCESO_ESTADO")) {
         proceso_estado(logger);
     } else if (!string_is_empty(leido)){
@@ -52,9 +52,36 @@ void ejecutar_script(char* path, t_log* logger){
     log_info(logger, ">> Se ejecuta el script %s", path);
 }
 void iniciar_proceso(char* path, t_log* logger){
+
+    // FILE* archivo;
+    t_pcb *pcb;
+
+    // archivo = fopen(nombre_archivo, "r");
+
+    /*if (archivo == NULL) {
+        log_error(kernel_log, "No se pudo abrir el archivo.\n");
+        return;
+    }
+*/
+    static uint32_t pid_contador = 0;
+
+    pcb = crear_nuevo_pcb(&pid_contador);
+    queue_push(colaNew, pcb);
+    int grado_actual = config_get_int_value(kernel_config, "GRADO_MULTIPROGRAMACION");
+
+    if(nivel_multiprog<grado_actual){
+        queue_pop(colaNew,pcb);
+        queue_push(colaReady,pcb);
+        log_info(kernel_log,"Proceso con pid %u pasado a la cola de Ready",pcb->pid)
+    }
+    // avisar a memoria
+
+    // fclose(archivo);
+    return pcb;
     log_info(logger, ">> Se crea el proceso %s en NEW", path);
 }
 void finalizar_proceso(uint32_t pid, t_log* logger){
+    borrar_pcb(pid);
     log_info(logger, ">> Se finaliza proceso %i", pid);
 }
 void iniciar_planificacion(t_log* logger){
@@ -63,9 +90,32 @@ void iniciar_planificacion(t_log* logger){
 void detener_planificacion(t_log* logger){
     log_info(logger, ">> Se detiene la planificacion");
 }
-void multiprogramacion(int valor, t_log* logger){
-    log_info(logger, ">> Se cambio el grado de multiprogamacion a %i", valor);
+
+void multiprogramacion(char* valor, t_log* logger){
+    
+
+    config_set_value(kernel_config, "GRADO_MULTIPROGRAMACION", valor);
+
+    int cambio_ok = config_get_int_value(kernel_config, "GRADO_MULTIPROGRAMACION");
+
+    if (cambio_ok == valor)
+    {
+        log_info(kernel_log, "Se cambio el grado de multiprogramacion a %d", valor);
+        nivel_multiprog = cambio_ok;
+    }
+    else
+    {
+        log_warning(kernel_log, "No se pudo cambiar el grado de multiprogramacion");
+    }
+
+    log_info(kernel_log, ">> Se cambio el grado de multiprogamacion a %d", valor);
 }
+
 void proceso_estado(t_log* logger){
+
     log_info(logger, ">> Listado de procesos por estado ...");
+    for (t_proceso_estado estado = NEW; estado <= EXIT; estado++)
+    {
+        mostrar_pids_en_estado(estado);
+    }
 }

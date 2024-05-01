@@ -1,7 +1,6 @@
 #include <utils/comunicacion.h>
 
 t_list* interfaces;
-//int fd_interfaz;
 
 void atender_cliente(void *void_args)
 {
@@ -11,12 +10,12 @@ void atender_cliente(void *void_args)
     int client_socket = args->c_socket;
     char *server_name = args->server_name;
 
-
+    
     free(args);
 
     op_code cop = recibir_operacion(client_socket);
     t_pcb* pcb;
-
+    cliente new_client;
     while (client_socket != -1)
     {   
         op_code cop = recibir_operacion(client_socket);
@@ -43,18 +42,19 @@ void atender_cliente(void *void_args)
         }
 
         case INTERFAZ:
-        {
-           // int fd_interfaz = client_socket;
-            printf("int %i  ", fd_interfaz);
-            char* interfaz = recibir_interfaz(client_socket, logger);
-            list_add(interfaces, interfaz);
-            
+        {   
+            new_client.nombre_cliente = strdup(recibir_interfaz(client_socket, logger));
+            new_client.socket_cliente = client_socket;
+            list_add(interfaces, &new_client);
+            free(new_client.nombre_cliente);
+
             break;
         }
         case AVISO_DESCONEXION:
         {
             char* interfaz = recibir_desconexion(client_socket, logger);
             list_remove_element(interfaces, interfaz);
+            free(interfaz);
         }
 
 

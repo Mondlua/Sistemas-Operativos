@@ -18,8 +18,13 @@ typedef struct
 
 } t_atender_cliente_args;
 
+typedef struct {
+    char* nombre_cliente;
+    int socket_cliente;  
+} cliente;
+
+
 extern t_list* interfaces;
-//extern int fd_interfaz;
 
 int server_escuchar(void *arg);
 bool rcv_handshake(int fd_conexion);
