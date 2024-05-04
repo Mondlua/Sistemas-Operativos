@@ -15,11 +15,9 @@ int recibir_operacion(int socket_cliente)
 void* recibir_buffer(int* size, int socket_cliente)
 {
     void * buffer;
-
     recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
     buffer = malloc(*size);
     recv(socket_cliente, buffer, *size, MSG_WAITALL);
-
     return buffer;
 }
 
@@ -36,7 +34,6 @@ char* recibir_interfaz(int socket_cliente, t_log* logger)
     int size;
     char* buffer = recibir_buffer(&size, socket_cliente);
     log_info(logger, "Interfaz conectada: %s", buffer);
-   // free(buffer);
    return buffer;
 }
 
@@ -145,9 +142,7 @@ char* recibir_desconexion(int socket_cliente, t_log* logger)
     int size;
     char* buffer = recibir_buffer(&size, socket_cliente);
     log_info(logger, "Interfaz desconectada: %s", buffer);
-   // free(buffer);
    return buffer;
-   free(buffer);
 }
 
 void crear_buffer(t_paquete* paquete)
@@ -184,6 +179,46 @@ void enviar_paquete(t_paquete* paquete, int socket_cliente)
 
 	free(a_enviar);
 }
+
+bool rcv_handshake(int fd_conexion){
+    size_t bytes;
+
+    int32_t handshake;
+    int32_t resultOk = 0;
+    int32_t resultError = -1;
+
+    if(fd_conexion != -1){
+
+        bytes = recv(fd_conexion, &handshake, sizeof(int32_t), MSG_WAITALL);
+        if (handshake == 1) {
+        bytes = send(fd_conexion, &resultOk, sizeof(int32_t), 0);
+        } else {
+        bytes = send(fd_conexion, &resultError, sizeof(int32_t), 0);
+        }
+    }
+    return true;
+}
+
+bool send_handshake(int conexion, t_log* logger, const char* conexion_name){
+    size_t bytes;
+
+    int32_t handshake = 1;
+    int32_t result;
+
+    bytes = send(conexion, &handshake, sizeof(int32_t), 0);
+    bytes = recv(conexion, &result, sizeof(int32_t), MSG_WAITALL);
+
+    if (result == 0) {
+    log_info(logger, "Handshake OK de %s", conexion_name);
+    // Handshake OK
+    } 
+    else {
+    // Handshake ERROR
+    log_info(logger,"Error handshake de %s", conexion_name); 
+    }   
+    return true;
+}
+
 
 void eliminar_paquete(t_paquete* paquete)
 {

@@ -9,6 +9,7 @@
 #include <commons/log.h>
 #include <pthread.h>
 #include <utils/mensajes.h>
+#include<utils/Globals.h>
 
 typedef struct
 {
@@ -19,16 +20,12 @@ typedef struct
 } t_atender_cliente_args;
 
 typedef struct {
-    char* nombre_cliente;
-    int socket_cliente;  
-} cliente;
-
-
-extern t_list* interfaces;
+    char* nombre_interfaz;
+    int socket_interfaz;  
+} interfaz;
 
 int server_escuchar(void *arg);
-bool rcv_handshake(int fd_conexion);
-bool send_handshake(int conexion, t_log* logger, const char* conexion_name);
+int buscar_interfaz_por_nombre(char* nombre_interfaz);
 //t_pcb* recibir_pcb(int socket_cliente);
 
 

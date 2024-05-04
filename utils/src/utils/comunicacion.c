@@ -1,6 +1,5 @@
 #include <utils/comunicacion.h>
 
-t_list* interfaces;
 
 void atender_cliente(void *void_args)
 {
@@ -13,9 +12,8 @@ void atender_cliente(void *void_args)
     
     free(args);
 
-    op_code cop = recibir_operacion(client_socket);
     t_pcb* pcb;
-    cliente new_client;
+    
     while (client_socket != -1)
     {   
         op_code cop = recibir_operacion(client_socket);
@@ -43,21 +41,33 @@ void atender_cliente(void *void_args)
 
         case INTERFAZ:
         {   
-            new_client.nombre_cliente = strdup(recibir_interfaz(client_socket, logger));
-            new_client.socket_cliente = client_socket;
-            list_add(interfaces, &new_client);
-            free(new_client.nombre_cliente);
-
+            interfaz* new_client = malloc(sizeof(interfaz));
+            new_client->nombre_interfaz = recibir_interfaz(client_socket, logger);
+            new_client->socket_interfaz = client_socket;
+            list_add(interfaces, new_client);
+            int tamanio_lista = list_size(interfaces);
+            printf("tam %i",tamanio_lista);
+            interfaz* posible_interfaz = (interfaz*)list_get(interfaces, 0);
+            printf("lista EN COMUNICACION: %s ", posible_interfaz->nombre_interfaz);
+            printf("lista socker COMUNICACION: %i", posible_interfaz->socket_interfaz);
             break;
         }
         case AVISO_DESCONEXION:
         {
-            char* interfaz = recibir_desconexion(client_socket, logger);
-            list_remove_element(interfaces, interfaz);
-            free(interfaz);
+            char* interfaz_recibida = recibir_desconexion(client_socket, logger);
+            int posicion_interfaz = buscar_interfaz_por_nombre(interfaz_recibida);
+            if (posicion_interfaz != -1) {
+                interfaz* interfaz_desconectada = (interfaz*)list_remove(interfaces, posicion_interfaz);
+                free(interfaz_recibida); 
+                if (interfaz_desconectada != NULL) {
+                    free(interfaz_desconectada);
+                }
+            } else {
+                log_error(logger, "No se encontró la interfaz %s en la lista", interfaz_recibida);
+                free(interfaz_recibida); 
+            }
+            break;
         }
-
-
         default:
             log_error(logger, "Algo anduvo mal en el server de %s", server_name);
             log_info(logger, "Cop: %d", cop);
@@ -100,45 +110,17 @@ int server_escuchar(void* arg)
 /* PROTOCOLO */
 
 
-
-bool rcv_handshake(int fd_conexion){
-    size_t bytes;
-
-    int32_t handshake;
-    int32_t resultOk = 0;
-    int32_t resultError = -1;
-
-    if(fd_conexion != -1){
-
-        bytes = recv(fd_conexion, &handshake, sizeof(int32_t), MSG_WAITALL);
-        if (handshake == 1) {
-        bytes = send(fd_conexion, &resultOk, sizeof(int32_t), 0);
-        } else {
-        bytes = send(fd_conexion, &resultError, sizeof(int32_t), 0);
+int buscar_interfaz_por_nombre(char* nombre_interfaz) {
+    int tamanio_lista = list_size(interfaces);
+    for (int i = 0; i < tamanio_lista; i++) {
+        interfaz* posible_interfaz = list_get(interfaces, i);
+        if (string_equals_ignore_case(posible_interfaz->nombre_interfaz, nombre_interfaz)) {
+            return i;
         }
     }
-    return true;
+    return -1;
 }
 
-bool send_handshake(int conexion, t_log* logger, const char* conexion_name){
-    size_t bytes;
-
-    int32_t handshake = 1;
-    int32_t result;
-
-    bytes = send(conexion, &handshake, sizeof(int32_t), 0);
-    bytes = recv(conexion, &result, sizeof(int32_t), MSG_WAITALL);
-
-    if (result == 0) {
-    log_info(logger, "Handshake OK de %s", conexion_name);
-    // Handshake OK
-    } 
-    else {
-    // Handshake ERROR
-    log_info(logger,"Error handshake de %s", conexion_name); 
-    }   
-    return true;
-}
 
 /*t_pcb* recibir_pcb(int socket_cliente) {
     t_list* valores_paquete = recibir_paquete(socket_cliente);

@@ -44,6 +44,8 @@ void enviar_paquete(t_paquete* paquete, int socket_cliente);
 void eliminar_paquete(t_paquete* paquete);
 void enviar_interfaz(char* mensaje, int socket_cliente);
 char* recibir_interfaz(int socket_cliente, t_log* logger);
+bool rcv_handshake(int fd_conexion);
+bool send_handshake(int conexion, t_log* logger, const char* conexion_name);
 char* recibir_desconexion(int socket_cliente, t_log* logger);
 
 #endif
