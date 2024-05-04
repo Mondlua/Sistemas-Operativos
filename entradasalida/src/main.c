@@ -18,8 +18,8 @@ int main(void) {
     char* interfaz;
     int tiempo;
 
-    char* ruta[100];
-    char* nombre_interfaz[100];
+    char ruta[100];
+    char nombre_interfaz[100];
 
     entradasalida_log = iniciar_logger("entradasalida.log","entradasalida");
     printf("Ingrese el nombre de la interfaz: ");
@@ -38,7 +38,6 @@ int main(void) {
 
     ip_kernel= config_get_string_value(entradasalida_config,"IP_KERNEL");
     puerto_kernel = config_get_string_value(entradasalida_config, "PUERTO_KERNEL");
-    log_info(entradasalida_log, ip_memoria);
     // Establecer conexiones
 
    /* conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
@@ -48,6 +47,7 @@ int main(void) {
     conexion_kernel = crear_conexion(ip_kernel, puerto_kernel);
     log_info(entradasalida_log, "I/O conectado a KERNEL");
     send_handshake(conexion_kernel, entradasalida_log, "I/O / KERNEL");
+    log_info(entradasalida_log, "conection %i", conexion_kernel);
 
     // Interfaces
     interfaz = config_get_string_value(entradasalida_config, "TIPO_INTERFAZ");
