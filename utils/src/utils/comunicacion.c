@@ -45,11 +45,7 @@ void atender_cliente(void *void_args)
             new_client->nombre_interfaz = recibir_interfaz(client_socket, logger);
             new_client->socket_interfaz = client_socket;
             list_add(interfaces, new_client);
-            int tamanio_lista = list_size(interfaces);
-            printf("tam %i",tamanio_lista);
-            interfaz* posible_interfaz = (interfaz*)list_get(interfaces, 0);
-            printf("lista EN COMUNICACION: %s ", posible_interfaz->nombre_interfaz);
-            printf("lista socker COMUNICACION: %i", posible_interfaz->socket_interfaz);
+            sem_post(&sem_contador);
             break;
         }
         case AVISO_DESCONEXION:

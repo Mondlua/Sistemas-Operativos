@@ -54,7 +54,18 @@ int main(void) {
     tiempo = config_get_int_value(entradasalida_config, "TIEMPO_UNIDAD_TRABAJO");
     log_info(entradasalida_log, "el tiempo es %i" ,tiempo);
     enviar_interfaz(nombre_interfaz, conexion_kernel);
-    recibir_mensaje(conexion_kernel, entradasalida_log);
+
+    instruccion_params* instruccion_recibir = recibir_instruccion(conexion_kernel);
+    if (instruccion_recibir != NULL)
+    {
+        char* unidades_trabajo_recibidas = instruccion_recibir->params.io_gen_sleep_params.unidades_trabajo;
+        printf("Instrucción recibida: IO_GEN_SLEEP a la interfaz 'pepe' de %s unidades de trabajo.\n", unidades_trabajo_recibidas);
+    }
+    else
+    {
+        fprintf(stderr, "Error al recibir la instrucción IO_GEN_SLEEP.\n");
+    }
+    free(instruccion_recibir);
 
     terminar_io();
 
