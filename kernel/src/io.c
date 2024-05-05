@@ -2,26 +2,30 @@
 
 
 void validar_peticion(char* interfaz_a_validar, char* tiempo) {
+    sem_wait(&sem_contador);
     int tamanio_lista = list_size(interfaces);
-    printf("tam %i",tamanio_lista);
-    interfaz* posible_interfaz = (interfaz*)list_get(interfaces, 0);
-    printf("lista en IO: %s ", posible_interfaz->nombre_interfaz);
     if (tamanio_lista > 0) {
+        int encontrado=0;
         int cont = 0;
-        interfaz* posible_interfaz = NULL;
-
         while (cont < tamanio_lista) {
-            posible_interfaz = (interfaz*)list_get(interfaces, cont);
-
+            interfaz* posible_interfaz = (interfaz*)list_get(interfaces, cont);
             if (string_equals_ignore_case(posible_interfaz->nombre_interfaz, interfaz_a_validar)) {
-                enviar_mensaje(tiempo, posible_interfaz->socket_interfaz);
-                printf("MENSAJE ENVIADO %s", tiempo);
-                return; 
+                t_paquete_instruccion* instruccion_enviar = malloc(sizeof(t_paquete_instruccion));
+                instruccion_params* parametros = malloc(sizeof(instruccion_params));
+                instruccion_enviar->codigo_operacion = IO_GEN_SLEEP;
+                parametros->params.io_gen_sleep_params.unidades_trabajo = strdup(tiempo);
+                enviar_instruccion(instruccion_enviar, parametros, posible_interfaz->socket_interfaz);
+                free(parametros);
+                free(instruccion_enviar);
+                encontrado++;
+                break;
             } else {
                 cont++;
             }
         }
-        printf("La interfaz '%s' no existe en la lista.\n", interfaz_a_validar);
+        if(!encontrado){
+            printf("La interfaz '%s' no existe en la lista.\n", interfaz_a_validar);
+        }
     } else {
         printf("La lista de interfaces está vacía.\n");
     }
