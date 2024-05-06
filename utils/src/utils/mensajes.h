@@ -10,13 +10,16 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdint.h>
+#include "/home/utnso/Desktop/tp-2024-1c-Operati2/memoria/src/instrucciones_memoria.h"
 
 typedef enum
 {
     MENSAJE,
     PAQUETE,
     INTERFAZ,
-    AVISO_DESCONEXION
+    AVISO_DESCONEXION,
+    PC,
+    INSTRUCCION
 }op_code;
 
 
@@ -47,7 +50,7 @@ typedef enum
     IO_FS_DELETE,
     IO_FS_TRUNCATE,
     IO_FS_WRITE,
-    IO_FS_READ
+    IO_FS_READ,
 } IO_OPERATION;
 
 typedef struct
@@ -68,6 +71,11 @@ typedef struct
      }params;
 }instruccion_params;
 
+typedef struct t_instruccion{
+
+    op_code codigo_operacion;
+    t_buffer_ins* buffer;
+}t_instruccion;
 
 void aviso_desconexion(char* , int);
 void* recibir_buffer(int*, int);
@@ -89,5 +97,13 @@ t_buffer_ins* serializar_io_gen_sleep(instruccion_params* param);
 instruccion_params* deserializar_io_gen_sleep(t_buffer_ins* buffer);
 void enviar_instruccion(t_paquete_instruccion* , instruccion_params* , int );
 instruccion_params* recibir_instruccion(int socket_servidor);
+void enviar_pc(char* pc, int socket_cliente);
+char* recibir_pc(int socket_cliente);
+char* recibo_pc(int socket_servidor);
+//t_instruccion* deserializar_ins(t_buffer_ins* buffer);
+t_instruccion* recibo_instruccion(int socket_servidor);
+t_buffer_ins* serializar_instruccion(t_instruccion* ins);
+void enviar_instruccionSola(int socket_cliente, t_instruccion* instruccion);
+
 
 #endif

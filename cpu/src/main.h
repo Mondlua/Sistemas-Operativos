@@ -12,7 +12,7 @@
 #include <pthread.h>
 
 #include <commons/collections/queue.h>
-
+char* int_to_char(int num);
 
 
 //t_pcb* recibir_pcb(int socket_cliente); 

@@ -1,6 +1,5 @@
 #include <utils/comunicacion.h>
 
-
 void atender_cliente(void *void_args)
 {
     t_atender_cliente_args *args = (t_atender_cliente_args *)void_args;
@@ -13,6 +12,7 @@ void atender_cliente(void *void_args)
     free(args);
 
     t_pcb* pcb;
+    
     
     while (client_socket != -1)
     {   
@@ -38,7 +38,28 @@ void atender_cliente(void *void_args)
 			log_info(logger, "Me llego el pcb cuyo pid es %u", pcb->pid);
 			break;*/
         }
+        case PC:
+        {
+            int pc = atoi(recibir_pc(client_socket));
 
+            t_instruccion* ins = malloc(sizeof(t_instruccion));
+            ins->codigo_operacion= INSTRUCCION;
+            log_info(logger, "codigo %d", ins->codigo_operacion);
+            
+            ins->buffer=malloc(sizeof(t_buffer_ins));
+            uint32_t num = sizeof("SET AX 3");
+            ins->buffer->size=num;
+
+            ins->buffer->stream= malloc(sizeof(ins->buffer->size));
+            ins->buffer->stream="SET AX 3";
+            
+            log_info(logger,"mando %s", ins->buffer->stream);
+            enviar_instruccionSola(client_socket,ins);
+            //enviar_pc("1", client_socket);
+           
+            break;
+        }
+        /*
         case INTERFAZ:
         {   
             interfaz* new_client = malloc(sizeof(interfaz));
@@ -47,8 +68,8 @@ void atender_cliente(void *void_args)
             list_add(interfaces, new_client);
             sem_post(&sem_contador);
             break;
-        }
-        case AVISO_DESCONEXION:
+        }*/
+        /*case AVISO_DESCONEXION:
         {
             char* interfaz_recibida = recibir_desconexion(client_socket, logger);
             int posicion_interfaz = buscar_interfaz_por_nombre(interfaz_recibida);
@@ -63,7 +84,7 @@ void atender_cliente(void *void_args)
                 free(interfaz_recibida); 
             }
             break;
-        }
+        }*/
         default:
             log_error(logger, "Algo anduvo mal en el server de %s", server_name);
             log_info(logger, "Cop: %d", cop);
@@ -90,8 +111,6 @@ int server_escuchar(void* arg)
 
         if (client_socket != -1) // != error
         {
-            log_info(logger, "cree hilo");
-
             pthread_t hilo;
             args->log = logger;
             args->c_socket = client_socket;
@@ -105,7 +124,7 @@ int server_escuchar(void* arg)
 }
 /* PROTOCOLO */
 
-
+/*
 int buscar_interfaz_por_nombre(char* nombre_interfaz) {
     int tamanio_lista = list_size(interfaces);
     for (int i = 0; i < tamanio_lista; i++) {
@@ -115,7 +134,7 @@ int buscar_interfaz_por_nombre(char* nombre_interfaz) {
         }
     }
     return -1;
-}
+}*/
 
 
 /*t_pcb* recibir_pcb(int socket_cliente) {
