@@ -230,32 +230,33 @@ void eliminar_paquete(t_paquete* paquete)
 
 void enviar_instruccion(t_paquete_instruccion* instruccion, instruccion_params* parametros ,int socket_cliente)
 {
+    t_buffer_ins* buffer = NULL;
     // Llama a la función de serialización correspondiente según el tipo de operación
     switch (instruccion->codigo_operacion)
     {
         case IO_GEN_SLEEP:
-            t_buffer_ins* buffer = serializar_io_gen_sleep(parametros);
-            instruccion->buffer = buffer;
-            int offset = 0;
-            void* a_enviar = malloc(buffer->size + sizeof(IO_OPERATION) + sizeof(uint32_t));
-            memcpy(a_enviar + offset, &(instruccion->codigo_operacion), sizeof(IO_OPERATION));
-            offset += sizeof(IO_OPERATION);
-            memcpy(a_enviar + offset, &(instruccion->buffer->size), sizeof(uint32_t));
-            offset += sizeof(uint32_t);
-            memcpy(a_enviar + offset, instruccion->buffer->stream, instruccion->buffer->size);
-            int resultado_send = send(socket_cliente, a_enviar, buffer->size + sizeof(IO_OPERATION) + sizeof(uint32_t), MSG_NOSIGNAL);
-            if (resultado_send == -1)
-            {
-                printf("Error al enviar la instrucción: socket cerrado.\n");
-            }
-            free(buffer);
-            free(a_enviar);
+            buffer = serializar_io_gen_sleep(parametros);
             break;
         // OTRAS INSTRUCCIONES
         default:
             printf("Tipo de operación no válido.\n");
             return;
     }
+    instruccion->buffer = buffer;
+    int offset = 0;
+    void* a_enviar = malloc(buffer->size + sizeof(IO_OPERATION) + sizeof(uint32_t));
+    memcpy(a_enviar + offset, &(instruccion->codigo_operacion), sizeof(IO_OPERATION));
+    offset += sizeof(IO_OPERATION);
+    memcpy(a_enviar + offset, &(instruccion->buffer->size), sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, instruccion->buffer->stream, instruccion->buffer->size);
+    int resultado_send = send(socket_cliente, a_enviar, buffer->size + sizeof(IO_OPERATION) + sizeof(uint32_t), MSG_NOSIGNAL);
+    if (resultado_send == -1)
+        {
+            printf("Error al enviar la instrucción: socket cerrado.\n");
+        }
+    free(buffer);
+    free(a_enviar);
     
 }
 
@@ -293,9 +294,11 @@ instruccion_params* recibir_instruccion(int socket_servidor)
         // OTRAS FUNCIONES
         default:
             printf("Tipo de operación no válido.\n");
+            free(instruccion->buffer);
             free(instruccion);
             return NULL;
     }
+    free(instruccion->buffer);
     free(instruccion);
     return param;
 }
