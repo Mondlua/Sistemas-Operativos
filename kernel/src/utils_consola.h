@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <utils/client.h>
 #include <utils/inicio.h>
-#include <utils/comunicacion.h>
+#include "server_kernel.h"
 
 #include <inttypes.h>
 #include <pthread.h>
