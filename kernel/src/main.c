@@ -11,6 +11,7 @@ t_queue* colaBlocked;
 t_queue* colaExit;
 
 t_list* interfaces;
+sem_t sem_contador;
 
 int nivel_multiprog;
 
@@ -101,7 +102,7 @@ int main(void)
     
     pthread_t hilo;
     pthread_create(&hilo, NULL, (void *)server_escuchar, args);//hilo para que no se estanque en el while 1 y siga con la ejecucion del kernel
-
+    sem_init(&sem_contador, 0, 0); //semaforo
     // Ver Algortimos
     char *algoritmo=config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
    //fifo();
@@ -110,15 +111,7 @@ int main(void)
     inicializar_colas_estados();
     consola_interactiva();
     nivel_multiprog = queue_size(colaReady)+queue_size(colaBlocked)+queue_size(colaExec); 
-    sleep(20);//tiempo para escribir en la consola de entrada salida
-
-
  
-    int tamanio_lista = list_size(interfaces);
-    printf("tam %i",tamanio_lista);
-    interfaz* posible_interfaz = (interfaz*)list_get(interfaces, 0);
-    printf("lista en kernel: %s", posible_interfaz->nombre_interfaz);
-    printf("lista socker KERNEL: %i", posible_interfaz->socket_interfaz);
     validar_peticion("pepe","33");// nombre de la interfaz que se quiere conectar, 33 cant de tiempo
     pthread_join(hilo,NULL);
     list_destroy(interfaces);
@@ -130,6 +123,7 @@ int main(void)
     free(colaReady);
     free(colaBlocked);
     free(colaExec);
+    sem_destroy(&sem_contador);
     
     return 0;
 }
