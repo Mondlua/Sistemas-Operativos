@@ -9,7 +9,7 @@
 #include <commons/log.h>
 #include <pthread.h>
 #include <utils/mensajes.h>
-#include<utils/Globals.h>
+#include <utils/Globals.h>
 
 typedef struct
 {

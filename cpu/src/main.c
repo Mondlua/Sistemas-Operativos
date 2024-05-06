@@ -41,9 +41,14 @@ int main(void){
     log_info(cpu_log, "CPU conectado a MEMORIA");
     send_handshake(conexion_memoria, cpu_log, "CPU / MEMORIA");
     
+    
+    enviar_pc(int_to_char(1),conexion_memoria);
+
+    t_instruccion* x= recibo_instruccion(conexion_memoria);
+    printf("recibi la instruccion %s", x->buffer->stream);
 
     /* CPU - Server */
-
+    /*
     //Extraer configs
 
     puerto_cpu_dispatch = config_get_string_value(cpu_config, "PUERTO_ESCUCHA_DISPATCH");
@@ -66,9 +71,15 @@ int main(void){
     log_info(cpu_log, "CPU INTERRUPT listo para recibir a KERNEL");
     esperar_cliente(cpu_interrupt_server, cpu_log);
 
-    
+    */
     return 0;
 
 }
 
-
+char* int_to_char(int num) {
+    char *str;
+    int len = snprintf(NULL, 0, "%d", num); // Obtener la longitud de la cadena necesaria
+    str = (char *)malloc(len + 1); // Asignar memoria para la cadena de caracteres
+    snprintf(str, len + 1, "%d", num); // Convertir el entero a una cadena de caracteres
+    return str;
+}

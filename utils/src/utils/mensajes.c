@@ -237,7 +237,6 @@ void enviar_instruccion(t_paquete_instruccion* instruccion, instruccion_params* 
         case IO_GEN_SLEEP:
             buffer = serializar_io_gen_sleep(parametros);
             break;
-        // OTRAS INSTRUCCIONES
         default:
             printf("Tipo de operación no válido.\n");
             return;
@@ -291,7 +290,6 @@ instruccion_params* recibir_instruccion(int socket_servidor)
         case IO_GEN_SLEEP:
             param = deserializar_io_gen_sleep(instruccion->buffer);
             break;
-        // OTRAS FUNCIONES
         default:
             printf("Tipo de operación no válido.\n");
             free(instruccion->buffer);
@@ -302,3 +300,101 @@ instruccion_params* recibir_instruccion(int socket_servidor)
     free(instruccion);
     return param;
 }
+
+void enviar_pc(char* pc, int socket_cliente){
+
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+
+    paquete->codigo_operacion = PC;
+    paquete->buffer = malloc(sizeof(t_buffer));
+    paquete->buffer->size = strlen(pc)+1;
+    paquete->buffer->stream = malloc(paquete->buffer->size);
+    memcpy(paquete->buffer->stream, pc, paquete->buffer->size);
+
+    int bytes = paquete->buffer->size + 2*sizeof(int);
+
+    void* a_enviar = serializar_paquete(paquete, bytes);
+
+    int resultado_send = send(socket_cliente, a_enviar, bytes, MSG_NOSIGNAL);  // Evita la generación de SIGPIPE
+
+    if (resultado_send == -1) {
+        fprintf(stderr, "Error al enviar el program counter: socket cerrado.\n");
+    }
+
+    free(a_enviar);
+    eliminar_paquete(paquete);
+}
+
+char* recibir_pc(int socket_cliente){
+
+    int size;
+    char* buffer = recibir_buffer(&size, socket_cliente);
+
+    if(buffer==NULL){
+        printf("No se recibio nada\n");
+    }
+    else{
+        printf("Me llego el mensaje %s\n", buffer);
+    }
+    return buffer;
+    free(buffer);
+}
+
+void enviar_instruccionSola(int socket_cliente, t_instruccion* instruccion){
+    
+    t_buffer_ins* buffer=malloc(sizeof(t_buffer_ins)) ;
+    buffer = serializar_instruccion(instruccion);
+     
+    instruccion->buffer=buffer;
+    int offset = 0;
+    void* a_enviar = malloc(buffer->size + sizeof(op_code) + sizeof(uint32_t));
+    memcpy(a_enviar + offset, &(instruccion->codigo_operacion), sizeof(op_code));
+    offset += sizeof(op_code);
+    memcpy(a_enviar + offset, &(instruccion->buffer->size), sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, instruccion->buffer->stream, instruccion->buffer->size);
+    int resultado_send = send(socket_cliente, a_enviar, buffer->size + sizeof(op_code) + sizeof(uint32_t), MSG_NOSIGNAL);
+    if (resultado_send == -1)
+        {
+            printf("Error al enviar la instrucción: socket cerrado.\n");
+        }
+    free(buffer);
+    free(a_enviar);
+    }
+
+t_buffer_ins* serializar_instruccion(t_instruccion* ins){
+    
+    t_buffer_ins* buffer = malloc(sizeof(t_buffer_ins));
+    buffer->size = ins->buffer->size ;//strlen(ins->buffer->stream) + 1; // Longitud de la cadena + 1 para el carácter nulo
+    buffer->offset = 0;
+    buffer->stream = malloc(buffer->size);
+    memcpy(buffer->stream, ins->buffer->stream, buffer->size); // Copiar la cadena directamente
+
+    return buffer;
+}
+
+t_instruccion* recibo_instruccion(int socket_servidor){
+
+    t_instruccion* instruccion = malloc(sizeof(t_instruccion));
+
+    instruccion->buffer = malloc(sizeof(t_buffer_ins));
+
+    recv(socket_servidor, &(instruccion->codigo_operacion), sizeof(op_code), MSG_WAITALL);
+
+    recv(socket_servidor, &(instruccion->buffer->size), sizeof(uint32_t), MSG_WAITALL);
+
+    instruccion->buffer->stream = malloc(sizeof(instruccion->buffer->size));
+    recv(socket_servidor, instruccion->buffer->stream, instruccion->buffer->size, MSG_WAITALL);
+ 
+    return instruccion;  
+    free(instruccion->buffer);
+    free(instruccion);
+}
+    
+/*t_instruccion* deserializar_ins(t_buffer_ins* buffer){
+    t_instruccion* ins = malloc(sizeof(t_instruccion));
+    ins->buffer=malloc(sizeof(t_buffer_ins));
+    ins->buffer->size = buffer->size;
+    ins->buffer->stream = strdup(buffer->stream); // Asignar la cadena desde el stream
+    return ins;
+}*/
