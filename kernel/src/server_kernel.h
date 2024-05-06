@@ -9,8 +9,12 @@
 #include <commons/log.h>
 #include <pthread.h>
 #include <utils/mensajes.h>
-#include<commons/collections/list.h>
-#include <utils/Globals.h>
+#include <commons/collections/list.h>
+#include <semaphore.h>
+
+// Declaración externa de la variable global interfaces
+extern t_list* interfaces;
+extern sem_t sem_contador;
 
 typedef struct
 {
