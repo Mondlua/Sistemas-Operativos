@@ -3,8 +3,7 @@
 t_list* abrir_pseudocodigo(char* path){
 
     char* path_instrucciones = config_get_string_value(memoria_config ,"PATH_INSTRUCCIONES");
-    //strcat(strcat(path_instrucciones,"/"),"prueba_instrucciones.txt")
-    FILE* arch_pseudocodigo = fopen("/home/utnso/scripts-pruebas/prueba_instrucciones.txt", "r");
+    FILE* arch_pseudocodigo = fopen(strcat(strcat(path_instrucciones,"/"),"prueba_instrucciones.txt"), "r");
         if(arch_pseudocodigo == NULL){
          log_error(memoria_log, "No se pudo abrir el archivo.\n");
          EXIT_FAILURE;

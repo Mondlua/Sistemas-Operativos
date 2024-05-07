@@ -40,12 +40,13 @@ int main(void){
 	conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
     log_info(cpu_log, "CPU conectado a MEMORIA");
     send_handshake(conexion_memoria, cpu_log, "CPU / MEMORIA");
-    
-    
-    enviar_pc(int_to_char(0),conexion_memoria);
-    t_instruccion* x = recibo_instruccion(conexion_memoria);
-    printf("recibi la instruccion %s", x->buffer->stream);
 
+    t_pcb* pcb = malloc(sizeof(t_pcb));
+    pcb->pid = 0;
+    pcb->p_counter=2;
+
+    t_instruccion* ins = fetch(pcb, conexion_memoria);
+    
     /* CPU - Server */
     /*
     //Extraer configs
