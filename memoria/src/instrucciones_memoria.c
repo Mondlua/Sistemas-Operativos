@@ -10,7 +10,7 @@ t_list* abrir_pseudocodigo(char* path){
          }
 
     t_list* lista_inst= list_create();
-    char instruccionlinea[50];
+    char instruccionlinea[50]; //Ver 
 
     int cont = 0;
         while (fgets(instruccionlinea, sizeof(instruccionlinea), arch_pseudocodigo) != NULL) {
@@ -35,7 +35,6 @@ t_list* abrir_pseudocodigo(char* path){
     log_info(memoria_log,"Cerrando archivo pseudocodigo...");
     fclose(arch_pseudocodigo);
     return lista_inst;
-    //Liberamos?
 }
 
 

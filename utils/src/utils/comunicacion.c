@@ -7,11 +7,13 @@ void atender_cliente(void *void_args)
     t_log *logger = args->log;
     int client_socket = args->c_socket;
     char *server_name = args->server_name;
-
     
     free(args);
 
+    //KERNEL A CPU
     t_pcb* pcb;
+
+    //MEMORIA a CPU
     t_list* listaInstrucciones= abrir_pseudocodigo("prueba_intrucciones.txt");
     
     while (client_socket != -1)
@@ -32,11 +34,13 @@ void atender_cliente(void *void_args)
 
             break;
         }
-        case PAQUETE:
-        {/*
+        case PAQUETE:{}
+        case PCB:
+        {
             pcb = recibir_pcb(client_socket);
-			log_info(logger, "Me llego el pcb cuyo pid es %u", pcb->pid);
-			break;*/
+			log_info(logger, "Me llego el PCB cuyo pid es %u", pcb->pid);
+
+			break;
         }
         case PC:
         {
@@ -44,11 +48,11 @@ void atender_cliente(void *void_args)
 
             t_instruccion* instruccion = list_get(listaInstrucciones,pc);
             
-            enviar_instruccionSola(client_socket,instruccion);
+            enviar_instruccion_mem(client_socket,instruccion);
            
             break;
         }
-        /*
+        
         case INTERFAZ:
         {   
             interfaz* new_client = malloc(sizeof(interfaz));
@@ -57,8 +61,8 @@ void atender_cliente(void *void_args)
             list_add(interfaces, new_client);
             sem_post(&sem_contador);
             break;
-        }*/
-        /*case AVISO_DESCONEXION:
+        }
+        case AVISO_DESCONEXION:
         {
             char* interfaz_recibida = recibir_desconexion(client_socket, logger);
             int posicion_interfaz = buscar_interfaz_por_nombre(interfaz_recibida);
@@ -73,7 +77,7 @@ void atender_cliente(void *void_args)
                 free(interfaz_recibida); 
             }
             break;
-        }*/
+        }
         default:
             log_error(logger, "Algo anduvo mal en el server de %s", server_name);
             log_info(logger, "Cop: %d", cop);
@@ -113,7 +117,7 @@ int server_escuchar(void* arg)
 }
 /* PROTOCOLO */
 
-/*
+
 int buscar_interfaz_por_nombre(char* nombre_interfaz) {
     int tamanio_lista = list_size(interfaces);
     for (int i = 0; i < tamanio_lista; i++) {
@@ -123,24 +127,7 @@ int buscar_interfaz_por_nombre(char* nombre_interfaz) {
         }
     }
     return -1;
-}*/
-
-
-/*t_pcb* recibir_pcb(int socket_cliente) {
-    t_list* valores_paquete = recibir_paquete(socket_cliente);
-    if (valores_paquete == NULL) {
-        return NULL;
-    }
-
-    t_pcb* pcb = malloc(sizeof(t_pcb));
-    
-
-    pcb->pid = *((uint32_t *) list_get(valores_paquete, 0)) ;
-    pcb->p_counter = *((int*) list_get(valores_paquete, 1));
-    pcb -> quantum = *((int*) list_get(valores_paquete, 2));
-    pcb -> estado = *((t_proceso_estado*) list_get(valores_paquete, 3));
-
-    list_destroy(valores_paquete);
-    return pcb;
 }
-*/
+
+
+

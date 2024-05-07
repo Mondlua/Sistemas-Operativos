@@ -3,14 +3,14 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <utils/server.h>
-#include <utils/inicio.h>
+#include <utils/catedra/server.h>
+#include <utils/catedra/client.h>
 #include <inttypes.h>
 #include <commons/log.h>
 #include <pthread.h>
-#include <utils/mensajes.h>
 #include <utils/Globals.h>
-#include "/home/utnso/Desktop/tp-2024-1c-Operati2/memoria/src/instrucciones_memoria.h"
+#include <utils/mensajesPropios.h>
+#include </home/utnso/tp-2024-1c-Operati2/memoria/src/instrucciones_memoria.h>
 
 typedef struct
 {

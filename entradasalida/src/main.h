@@ -4,8 +4,8 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <utils/client.h>
-#include <utils/inicio.h>
+#include <utils/catedra/client.h>
+#include <utils/catedra/inicio.h>
 #include <utils/comunicacion.h>
 
 
