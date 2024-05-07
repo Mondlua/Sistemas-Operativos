@@ -17,14 +17,15 @@ void inicializar_registro(t_pcb* pcb)
     registros->DI = malloc(sizeof(4));
 }
 
-/*char* fetch(t_pcb* pcb, int conexion_memoria){
+/*t_instruccion* fetch(t_pcb* pcb, int conexion_memoria){
     
     t_instruccion* instruccion;
 
-    enviar_pc(int_to_char(pcb->pc),conexion_memoria); //pedirle a mem instruccion y mandarle el pcounter
+    enviar_pc(int_to_char(pcb->pc),conexion_memoria); //Mando PC
+    instruccion = recibo_instruccion(conexion_memoria);//Recibo INSTRUCCION
 
+    printf("Recibi la INSTRUCCION %s", instruccion->buffer->stream);
     
-    //intruccion=recibir    //nos llega instruccion de memoria
     pcb->p_counter++;
     return instruccion;
 }*/

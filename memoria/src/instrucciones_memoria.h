@@ -10,6 +10,6 @@
 #include </home/utnso/Desktop/tp-2024-1c-Operati2/utils/src/utils/mensajes.h>
 //#include "tabla_paginas.h"
 
-//void abrir_arch_pseudo(){}
+t_list* abrir_pseudocodigo(char* path);
 
 #endif
