@@ -10,6 +10,7 @@
 #include <pthread.h>
 #include <utils/mensajes.h>
 #include <utils/Globals.h>
+#include "/home/utnso/Desktop/tp-2024-1c-Operati2/memoria/src/instrucciones_memoria.h"
 
 typedef struct
 {

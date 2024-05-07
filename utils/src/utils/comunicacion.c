@@ -12,7 +12,7 @@ void atender_cliente(void *void_args)
     free(args);
 
     t_pcb* pcb;
-    
+    t_list* listaInstrucciones= abrir_pseudocodigo("prueba_intrucciones.txt");
     
     while (client_socket != -1)
     {   
@@ -42,20 +42,9 @@ void atender_cliente(void *void_args)
         {
             int pc = atoi(recibir_pc(client_socket));
 
-            t_instruccion* ins = malloc(sizeof(t_instruccion));
-            ins->codigo_operacion= INSTRUCCION;
-            log_info(logger, "codigo %d", ins->codigo_operacion);
+            t_instruccion* instruccion = list_get(listaInstrucciones,pc);
             
-            ins->buffer=malloc(sizeof(t_buffer_ins));
-            uint32_t num = sizeof("SET AX 3");
-            ins->buffer->size=num;
-
-            ins->buffer->stream= malloc(sizeof(ins->buffer->size));
-            ins->buffer->stream="SET AX 3";
-            
-            log_info(logger,"mando %s", ins->buffer->stream);
-            enviar_instruccionSola(client_socket,ins);
-            //enviar_pc("1", client_socket);
+            enviar_instruccionSola(client_socket,instruccion);
            
             break;
         }

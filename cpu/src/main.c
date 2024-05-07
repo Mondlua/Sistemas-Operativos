@@ -42,9 +42,8 @@ int main(void){
     send_handshake(conexion_memoria, cpu_log, "CPU / MEMORIA");
     
     
-    enviar_pc(int_to_char(1),conexion_memoria);
-
-    t_instruccion* x= recibo_instruccion(conexion_memoria);
+    enviar_pc(int_to_char(0),conexion_memoria);
+    t_instruccion* x = recibo_instruccion(conexion_memoria);
     printf("recibi la instruccion %s", x->buffer->stream);
 
     /* CPU - Server */

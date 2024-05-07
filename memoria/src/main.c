@@ -31,8 +31,7 @@ int main(void) {
     
     pthread_t hilo;
     pthread_create(&hilo, NULL, (void *)server_escuchar, args);//hilo para que no se estanque en el while 1 y siga con la ejecucion del kernel
-
-
+    
     /*int tam_memoria=config_get_int_value(memoria_config, "TAM_MEMORIA");
     int tam_pagina=config_get_int_value(memoria_config, "TAM_PAGINA");
     tabla_paginas* tabla=inicializar_tabla(tam_pagina,tam_memoria);

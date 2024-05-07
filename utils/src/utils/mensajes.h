@@ -22,7 +22,6 @@ typedef enum
     INSTRUCCION
 }op_code;
 
-
 typedef struct
 {
     int size;
@@ -34,7 +33,6 @@ typedef struct
     op_code codigo_operacion;
     t_buffer* buffer;
 } t_paquete;
-
 
 typedef struct {
     uint32_t size; // Tamaño del payload
@@ -104,6 +102,5 @@ char* recibo_pc(int socket_servidor);
 t_instruccion* recibo_instruccion(int socket_servidor);
 t_buffer_ins* serializar_instruccion(t_instruccion* ins);
 void enviar_instruccionSola(int socket_cliente, t_instruccion* instruccion);
-
 
 #endif
