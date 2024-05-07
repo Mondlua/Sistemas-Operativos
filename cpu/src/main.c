@@ -1,11 +1,3 @@
-/*#include<stdlib.h>
-#include<stdio.h>
-#include<utils/client.h>
-#include<utils/inicio.h>
-#include<utils/server.h> 
-#include <utils/comunicacion.h>
-*/
-
 #include "main.h"
 
 int main(void){
@@ -41,14 +33,12 @@ int main(void){
     log_info(cpu_log, "CPU conectado a MEMORIA");
     send_handshake(conexion_memoria, cpu_log, "CPU / MEMORIA");
 
-    t_pcb* pcb = malloc(sizeof(t_pcb));
-    pcb->pid = 0;
-    pcb->p_counter=2;
+    // Recibir PCB
 
-    t_instruccion* ins = fetch(pcb, conexion_memoria);
-    
+    //Ejecutar Ciclo de Instruccion
+
     /* CPU - Server */
-    /*
+    
     //Extraer configs
 
     puerto_cpu_dispatch = config_get_string_value(cpu_config, "PUERTO_ESCUCHA_DISPATCH");
@@ -62,24 +52,22 @@ int main(void){
     t_atender_cliente_args* args = malloc(sizeof(t_atender_cliente_args));
     args->log = cpu_log;
     args->c_socket =cpu_dispatch_server;
-    args->server_name = "CPU";
+    args->server_name = "CPU DISPATCH";
     server_escuchar(args);
     free(args);
+    //preguntar a zoe si esto le ponemos el hilo extra como en memoria
     // Inicio CPU INTERRUPT server
 
     cpu_interrupt_server = iniciar_servidor(puerto_cpu_interrupt, cpu_log);
     log_info(cpu_log, "CPU INTERRUPT listo para recibir a KERNEL");
-    esperar_cliente(cpu_interrupt_server, cpu_log);
-
-    */
+       
+    t_atender_cliente_args* arg = malloc(sizeof(t_atender_cliente_args));
+    arg->log = cpu_log;
+    arg->c_socket =cpu_interrupt_server;
+    arg->server_name = "CPU INTERRUPT";
+    server_escuchar(arg);
+    free(arg);
+//idem
     return 0;
-
 }
 
-char* int_to_char(int num) {
-    char *str;
-    int len = snprintf(NULL, 0, "%d", num); // Obtener la longitud de la cadena necesaria
-    str = (char *)malloc(len + 1); // Asignar memoria para la cadena de caracteres
-    snprintf(str, len + 1, "%d", num); // Convertir el entero a una cadena de caracteres
-    return str;
-}

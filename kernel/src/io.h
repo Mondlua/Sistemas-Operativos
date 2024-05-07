@@ -12,6 +12,7 @@
 #include<utils/mensajes.h>
 #include<utils/comunicacion.h>
 #include<utils/Globals.h>
+
 typedef struct
 {
     char* interfaz_solicitada;

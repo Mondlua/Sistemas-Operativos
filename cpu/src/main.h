@@ -1,21 +1,16 @@
-
 #ifndef MAINCPU_H_
 #define MAINCPU_H_
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <utils/client.h>
-#include <utils/inicio.h>
+#include <utils/catedra/client.h>
+#include <utils/catedra/inicio.h>
 #include <utils/comunicacion.h>
 
 #include <inttypes.h>
 #include <pthread.h>
 
 #include <commons/collections/queue.h>
-
-char* int_to_char(int num);
-
-
-//t_pcb* recibir_pcb(int socket_cliente); 
+#include <utils/funcionesUtiles.h>
 
 #endif

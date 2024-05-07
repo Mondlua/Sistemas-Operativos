@@ -12,7 +12,7 @@ t_pcb *crear_nuevo_pcb(uint32_t *pid_contador)
     }
 
     nuevo_pcb->pid = *pid_contador;
-    nuevo_pcb->p_counter = 0; // ver de donde salen todas las instrucciones
+    nuevo_pcb->p_counter = 0; 
     nuevo_pcb->quantum = config_get_int_value(kernel_config, "QUANTUM");
     nuevo_pcb->tabla_paginas = NULL;
     nuevo_pcb->algoritmo_planif = config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
@@ -23,8 +23,8 @@ t_pcb *crear_nuevo_pcb(uint32_t *pid_contador)
     (*pid_contador)++;
     
     return nuevo_pcb;
-   // free(nuevo_pcb);
 }
+
 void inicializar_colas_estados()
 {
     colaNew = queue_create();
@@ -89,49 +89,6 @@ void mostrar_pids_en_estado(t_proceso_estado estado)
     {
         log_warning(kernel_log, "La COLA %s esta VACIA", estado_a_string(estado));
     }
-}
-
-/// funcion para especificar en LOG cual elemento del enum es (estado)
-char *estado_a_string(t_proceso_estado estado)
-{
-    switch (estado)
-    {
-    case 0:
-        return "NEW";
-    case 1:
-        return "READY";
-    case 2:
-        return "EXEC";
-    case 3:
-        return "BLOCKED";
-    case 4:
-        return "EXIT";
-    default:
-        return 0;
-    }
-}
-
-
-// Devuelve 1. TRUE o 0. FALSE si encuentra el elemento en la cola COMMONS QUEUE //Ver
-int find_queue(uint32_t elem, t_queue *cola)
-{
-    if (queue_is_empty(cola))
-    {
-        return 0;
-    }
-
-    t_link_element *actual = cola->elements->head;
-
-    while (actual != NULL)
-    {
-        uint32_t *dato = (uint32_t*)actual->data;
-        if (*dato == elem)
-        {
-            return 1;
-        }
-        actual = actual->next;
-    }
-    return 0;
 }
 
 t_queue* cola_pcb(uint32_t num_pid){ //buscar cola en cada estado
@@ -200,15 +157,15 @@ t_pcb* buscar_pcb(uint32_t num_pid){
 void enviar_pcb_cpu(t_pcb* pcb, int socket_cliente){
 
     t_paquete* paquete = crear_paquete();
+    paquete->codigo_operacion= PCB;
     agregar_a_paquete(paquete, &(pcb->pid), sizeof(uint32_t));
     agregar_a_paquete(paquete, &(pcb->p_counter), sizeof(int));
     agregar_a_paquete(paquete, &(pcb->quantum), sizeof(int));
     agregar_a_paquete(paquete, &(pcb->estado), sizeof(t_proceso_estado));
-    //agregar_a_paquete(paquete, pcb->algoritmo_planif, sizeof(pcb->algoritmo_planif));
+    agregar_a_paquete(paquete, pcb->algoritmo_planif, sizeof(pcb->algoritmo_planif));
 
     enviar_paquete(paquete, socket_cliente);
     eliminar_paquete(paquete);
-
 }
 
 /*void cambiar_cola(t_pcb* pcb,t_proceso_estado nuevo_estado){
