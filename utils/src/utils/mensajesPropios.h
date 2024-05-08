@@ -14,7 +14,6 @@ typedef struct {
 
 
 typedef struct t_instruccion{
-
     op_code codigo_operacion;
     t_buffer_ins* buffer;
 }t_instruccion;

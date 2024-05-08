@@ -2,6 +2,7 @@
 
 void consola_interactiva(){
    pthread_t consola;
+   
     int resultado_creacion = pthread_create(&consola, NULL, leer_consola, NULL);
     if (resultado_creacion != 0) {
         fprintf(stderr, "Error: No se pudo crear el hilo. Código de error: %d\n", resultado_creacion);
@@ -51,16 +52,8 @@ void ejecutar_script(char* path){
 }
 void iniciar_proceso(char* path){
 
-    // FILE* archivo;
     t_pcb *pcb;
 
-    // archivo = fopen(nombre_archivo, "r");
-
-    /*if (archivo == NULL) {
-        log_error(kernel_log, "No se pudo abrir el archivo.\n");
-        return;
-    }
-*/
     static uint32_t pid_contador = 0;
 
     pcb = crear_nuevo_pcb(&pid_contador);
@@ -70,13 +63,17 @@ void iniciar_proceso(char* path){
     if(nivel_multiprog<grado_actual){
         queue_pop(colaNew);
         queue_push(colaReady, pcb);
+        pcb->estado=READY;
         log_info(kernel_log,"Proceso con pid %u pasado a la cola de Ready",pcb->pid);
     }
-    // avisar a memoria
-
-    // fclose(archivo);
+    
     log_info(kernel_log, ">> Se crea el proceso %s en NEW", path);
+
+    enviar_mensaje(path,conexion_memoria);
+
+    enviar_pcb_cpu(pcb,conexion_cpu_dispatch);
 }
+
 void finalizar_proceso(uint32_t pid){
     borrar_pcb(pid);
     log_info(kernel_log, ">> Se finaliza proceso %i", pid);
