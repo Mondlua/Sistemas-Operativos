@@ -80,7 +80,8 @@ int main(void)
     nuevo_pcb->p_counter = 0; 
     nuevo_pcb->quantum = config_get_int_value(kernel_config, "QUANTUM");
     nuevo_pcb->tabla_paginas = NULL;
-    nuevo_pcb->algoritmo_planif = config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
+    nuevo_pcb->algoritmo_planif = "Fifo";
+    //config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
     nuevo_pcb->estado = NEW;
      //= iniciar_proceso("gg");
     enviar_pcb_cpu(nuevo_pcb,conexion_cpu_dispatch);

@@ -162,7 +162,7 @@ void enviar_pcb_cpu(t_pcb* pcb, int socket_cliente){
     agregar_a_paquete(paquete, &(pcb->p_counter), sizeof(int));
     agregar_a_paquete(paquete, &(pcb->quantum), sizeof(int));
     agregar_a_paquete(paquete, &(pcb->estado), sizeof(t_proceso_estado));
-    agregar_a_paquete(paquete, pcb->algoritmo_planif, sizeof(pcb->algoritmo_planif));
+    agregar_a_paquete(paquete, (pcb->algoritmo_planif), sizeof(pcb->algoritmo_planif));
 
     enviar_paquete(paquete, socket_cliente);
     eliminar_paquete(paquete);
