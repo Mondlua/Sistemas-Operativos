@@ -1,6 +1,7 @@
 #ifndef TABLA_H
 #define TABLA_H
 #include "main.h"
+
 typedef struct pagina{
     int nro_pagina;
     void* data;

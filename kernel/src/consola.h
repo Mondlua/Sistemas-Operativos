@@ -1,17 +1,13 @@
 #ifndef CONSOLA_H
 #define CONSOLA_H
 
-#include<stdio.h>
-#include<stdlib.h>
 #include<signal.h>
 #include<unistd.h>
 #include<netdb.h>
 #include<commons/string.h>
 #include<commons/log.h>
 #include<readline/readline.h>
-#include<pthread.h>
 #include "utils_consola.h"
-#include "main.h"
 
 void consola_interactiva();
 void* leer_consola();

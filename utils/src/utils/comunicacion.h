@@ -3,12 +3,12 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <utils/server.h>
-#include <utils/inicio.h>
+#include <utils/catedra/server.h>
+#include <utils/catedra/client.h>
 #include <inttypes.h>
 #include <commons/log.h>
 #include <pthread.h>
-#include <utils/mensajes.h>
+#include <utils/mensajesPropios.h>
 
 typedef struct
 {
@@ -19,7 +19,6 @@ typedef struct
 } t_atender_cliente_args;
 
 int server_escuchar(void *arg);
-//t_pcb* recibir_pcb(int socket_cliente);
 
 
 #endif
