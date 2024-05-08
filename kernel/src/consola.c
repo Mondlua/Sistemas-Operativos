@@ -64,11 +64,11 @@ void iniciar_proceso(char* path){
         queue_pop(colaNew);
         queue_push(colaReady, pcb);
         pcb->estado=READY;
-        log_info(kernel_log,"Proceso con pid %u pasado a la cola de Ready",pcb->pid);
+        log_info(kernel_log,"Proceso con PID %u pasado a la cola READY",pcb->pid);
     }
     
     log_info(kernel_log, ">> Se crea el proceso %s en NEW", path);
-    log_info(kernel_log, "conexion memoria %i", conexion_memoria);
+
     enviar_mensaje(path,conexion_memoria);
 
     enviar_pcb_cpu(pcb,conexion_cpu_dispatch);

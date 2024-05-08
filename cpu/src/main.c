@@ -16,7 +16,6 @@ int main(void){
     char* ip_memoria;       
     char* puerto_memoria; 
 
-    int conexion_memoria_cpu;
     
     cpu_log = iniciar_logger("cpu.log","cpu");
     cpu_config = iniciar_config("cpu.config");

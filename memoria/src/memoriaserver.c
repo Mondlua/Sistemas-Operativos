@@ -1,5 +1,7 @@
 #include "memoriaserver.h"
 
+t_list* lista_arch;
+
 void atender_cliente(void *void_args)
 {
     t_atender_cliente_args *args = (t_atender_cliente_args *)void_args;
@@ -11,7 +13,7 @@ void atender_cliente(void *void_args)
     free(args);
 
     t_pcb* pcb;
-    t_list* lista_arch;
+    
 
     //MEMORIA a CPU
     
@@ -31,6 +33,7 @@ void atender_cliente(void *void_args)
         {
             char* path = recibir_mensaje(client_socket, logger);
             lista_arch = abrir_pseudocodigo(path);
+            sleep(10);
             free(path);
             
             break;
@@ -38,11 +41,12 @@ void atender_cliente(void *void_args)
         case PAQUETE:{}
         case PC:
         {
-            int pc = atoi(recibir_pc(client_socket));
+            char * pc_recibido = recibir_mensaje(client_socket,logger);
+            int pc = atoi(pc_recibido);
 
-            t_instruccion* instruccion = list_get(lista_arch,pc);
+            /*t_instruccion* instruccion = list_get(lista_arch,pc);
             
-            enviar_instruccion_mem(client_socket,instruccion);
+            enviar_instruccion_mem(client_socket,instruccion);*/
            
             break;
         }
