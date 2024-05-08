@@ -14,7 +14,6 @@ void atender_cliente(void *void_args)
     t_pcb* pcb;
 
     //MEMORIA a CPU
-    //t_list* listaInstrucciones= abrir_pseudocodigo("prueba_intrucciones.txt");
     
     while (client_socket != -1)
     {   
@@ -39,7 +38,9 @@ void atender_cliente(void *void_args)
         {
             pcb = recibir_pcb(client_socket);
 			log_info(logger, "Me llego el PCB cuyo pid es %u", pcb->pid);
-
+            log_info(logger, "Me llego el quantum cuyo pid es %d", pcb->quantum);
+            log_info(logger, "Me llego el alg cuyo pid es %s", pcb->algoritmo_planif);
+        log_info(logger, "Me llego el alg cuyo pid es %d", pcb->estado);
 			break;
         }
         /*case PC:
@@ -53,32 +54,6 @@ void atender_cliente(void *void_args)
             break;
         }*/
         
-        /*case INTERFAZ:
-        {   
-            interfaz* new_client = malloc(sizeof(interfaz));
-            new_client->nombre_interfaz = recibir_interfaz(client_socket, logger);
-            new_client->socket_interfaz = client_socket;
-            list_add(interfaces, new_client);
-            sem_post(&sem_contador);
-            break;
-        }*/
-        /*
-        case AVISO_DESCONEXION:
-        {
-            char* interfaz_recibida = recibir_desconexion(client_socket, logger);
-            int posicion_interfaz = buscar_interfaz_por_nombre(interfaz_recibida);
-            if (posicion_interfaz != -1) {
-                interfaz* interfaz_desconectada = (interfaz*)list_remove(interfaces, posicion_interfaz);
-                free(interfaz_recibida); 
-                if (interfaz_desconectada != NULL) {
-                    free(interfaz_desconectada);
-                }
-            } else {
-                log_error(logger, "No se encontró la interfaz %s en la lista", interfaz_recibida);
-                free(interfaz_recibida); 
-            }
-            break;
-        }*/
         default:
             log_error(logger, "Algo anduvo mal en el server de %s", server_name);
             log_info(logger, "Cop: %d", cop);
@@ -116,18 +91,3 @@ int server_escuchar(void* arg)
     }
     return 0;
 }
-
-/*
-int buscar_interfaz_por_nombre(char* nombre_interfaz) {
-    int tamanio_lista = list_size(interfaces);
-    for (int i = 0; i < tamanio_lista; i++) {
-        interfaz* posible_interfaz = list_get(interfaces, i);
-        if (string_equals_ignore_case(posible_interfaz->nombre_interfaz, nombre_interfaz)) {
-            return i;
-        }
-    }
-    return -1;
-}*/
-
-
-

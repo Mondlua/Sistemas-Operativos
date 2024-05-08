@@ -1,5 +1,5 @@
 #include "ciclo_inst.h"
-
+/*
 void inicializar_registro(t_pcb* pcb)
 {
     cpu_registros *registros = pcb->registros;
@@ -15,7 +15,7 @@ void inicializar_registro(t_pcb* pcb)
     registros->EDX = malloc(sizeof(4));
     registros->SI = malloc(sizeof(4));
     registros->DI = malloc(sizeof(4));
-}
+}*/
 
 t_instruccion* fetch(t_pcb* pcb, int conexion_memoria){
     
