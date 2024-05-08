@@ -227,6 +227,24 @@ char* recibir_pc(int socket_cliente){
     free(buffer);
 }
 
+t_pcb* recibir_pcb(int socket_cliente) {
+    t_list* valores_paquete = recibir_paquete(socket_cliente);
+    if (valores_paquete == NULL) {
+        return NULL;
+    }
+
+    t_pcb* pcb = malloc(sizeof(t_pcb));
+    
+
+    pcb->pid = *((uint32_t *) list_get(valores_paquete, 0)) ;
+    pcb->p_counter = *((int*) list_get(valores_paquete, 1));
+    pcb -> quantum = *((int*) list_get(valores_paquete, 2));
+    pcb -> estado = *((t_proceso_estado*) list_get(valores_paquete, 3));
+
+    list_destroy(valores_paquete);
+    return pcb;
+}
+
 char *estado_a_string(t_proceso_estado estado)
 {
     switch (estado)

@@ -10,8 +10,7 @@
 #include <pthread.h>
 #include <utils/Globals.h>
 #include <utils/mensajesPropios.h>
-#include </home/utnso/tp-2024-1c-Operati2/memoria/src/instrucciones_memoria.h>
-
+//#include </home/utnso/tp-2024-1c-Operati2/memoria/src/instrucciones_memoria.h>
 typedef struct
 {
     t_log *log;

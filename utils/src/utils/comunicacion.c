@@ -14,7 +14,7 @@ void atender_cliente(void *void_args)
     t_pcb* pcb;
 
     //MEMORIA a CPU
-    t_list* listaInstrucciones= abrir_pseudocodigo("prueba_intrucciones.txt");
+    //t_list* listaInstrucciones= abrir_pseudocodigo("prueba_intrucciones.txt");
     
     while (client_socket != -1)
     {   
@@ -42,7 +42,7 @@ void atender_cliente(void *void_args)
 
 			break;
         }
-        case PC:
+        /*case PC:
         {
             int pc = atoi(recibir_pc(client_socket));
 
@@ -51,9 +51,9 @@ void atender_cliente(void *void_args)
             enviar_instruccion_mem(client_socket,instruccion);
            
             break;
-        }
+        }*/
         
-        case INTERFAZ:
+        /*case INTERFAZ:
         {   
             interfaz* new_client = malloc(sizeof(interfaz));
             new_client->nombre_interfaz = recibir_interfaz(client_socket, logger);
@@ -61,7 +61,8 @@ void atender_cliente(void *void_args)
             list_add(interfaces, new_client);
             sem_post(&sem_contador);
             break;
-        }
+        }*/
+        /*
         case AVISO_DESCONEXION:
         {
             char* interfaz_recibida = recibir_desconexion(client_socket, logger);
@@ -77,7 +78,7 @@ void atender_cliente(void *void_args)
                 free(interfaz_recibida); 
             }
             break;
-        }
+        }*/
         default:
             log_error(logger, "Algo anduvo mal en el server de %s", server_name);
             log_info(logger, "Cop: %d", cop);
@@ -115,9 +116,8 @@ int server_escuchar(void* arg)
     }
     return 0;
 }
-/* PROTOCOLO */
 
-
+/*
 int buscar_interfaz_por_nombre(char* nombre_interfaz) {
     int tamanio_lista = list_size(interfaces);
     for (int i = 0; i < tamanio_lista; i++) {
@@ -127,7 +127,7 @@ int buscar_interfaz_por_nombre(char* nombre_interfaz) {
         }
     }
     return -1;
-}
+}*/
 
 
 

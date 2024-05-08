@@ -4,6 +4,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include <utils/catedra/mensajes.h>
+#include <utils/catedra/inicio.h>
 
 typedef enum
 {

@@ -9,7 +9,7 @@
 #include<commons/string.h>
 #include<commons/log.h>
 #include<commons/collections/list.h>
-#include<utils/mensajes.h>
+#include<utils/catedra/mensajes.h>
 #include<utils/comunicacion.h>
 #include<utils/Globals.h>
 
