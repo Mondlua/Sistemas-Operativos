@@ -1,4 +1,4 @@
-#include <utils/inicio.h>
+#include "inicio.h"
 
 t_log* iniciar_logger(char* ruta, char* emisor)
 {

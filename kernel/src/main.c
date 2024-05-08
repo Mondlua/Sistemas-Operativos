@@ -42,30 +42,31 @@ int main(void)
     /* KERNEL - Cliente */
 
     // Extraer configs
-    
+    /*
     ip_memoria = config_get_string_value(kernel_config,"IP_MEMORIA");
-    puerto_memoria = config_get_string_value(kernel_config, "PUERTO_MEMORIA");
+    puerto_memoria = config_get_string_value(kernel_config, "PUERTO_MEMORIA");*/
 
     ip_cpu = config_get_string_value(kernel_config, "IP_CPU");
     puerto_cpu_dispatch = config_get_string_value(kernel_config, "PUERTO_CPU_DISPATCH");
     puerto_cpu_interrupt = config_get_string_value(kernel_config, "PUERTO_CPU_INTERRUPT");
     
     // Establecer conexiones
-    
+    /*
     conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
     
     log_info(kernel_log, "KERNEL se conectó a MEMORIA");
-    send_handshake(conexion_memoria, kernel_log, "KERNEL / MEMORIA");
+    send_handshake(conexion_memoria, kernel_log, "KERNEL / MEMORIA");*/
 
     conexion_cpu_dispatch = crear_conexion(ip_cpu, puerto_cpu_dispatch);
 
     log_info(kernel_log, "KERNEL se conectó a CPU DISPATCH");
     send_handshake(conexion_cpu_dispatch, kernel_log, "KERNEL / CPU DISPATCH");
-  
+    
+    /*
     conexion_cpu_interrupt = crear_conexion(ip_cpu, puerto_cpu_interrupt);
     log_info(kernel_log, "KERNEL se conectó a CPU INTERRUPT");
     send_handshake(conexion_cpu_interrupt, kernel_log, "KERNEL / CPU INTERRUPT");
-
+|*/
 
     // Planificacion
 
@@ -74,14 +75,21 @@ int main(void)
     // Enviar PCB a CPU
 
     inicializar_colas_estados();
-    t_pcb* nuevo_pcb = iniciar_proceso();
+    t_pcb* nuevo_pcb=malloc(sizeof(t_pcb));
+    nuevo_pcb->pid = 0;
+    nuevo_pcb->p_counter = 0; 
+    nuevo_pcb->quantum = config_get_int_value(kernel_config, "QUANTUM");
+    nuevo_pcb->tabla_paginas = NULL;
+    nuevo_pcb->algoritmo_planif = config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
+    nuevo_pcb->estado = NEW;
+     //= iniciar_proceso("gg");
     enviar_pcb_cpu(nuevo_pcb,conexion_cpu_dispatch);
 
  
     /* KERNEL - Servidor */
 
     // Extraer configs
-    
+    /*
     puerto_escucha = config_get_string_value(kernel_config, "PUERTO_ESCUCHA");
 
     // Inicio server
@@ -118,6 +126,6 @@ int main(void)
     free(colaBlocked);
     free(colaExec);
     sem_destroy(&sem_contador);
-
+    */
     return 0;
 }

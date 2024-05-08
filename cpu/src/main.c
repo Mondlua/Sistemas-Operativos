@@ -28,11 +28,11 @@ int main(void){
 	puerto_memoria = config_get_string_value(cpu_config, "PUERTO_MEMORIA");
 	
     // Establecer conexiones
-
+    /*
 	conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
     log_info(cpu_log, "CPU conectado a MEMORIA");
     send_handshake(conexion_memoria, cpu_log, "CPU / MEMORIA");
-
+    */
     // Recibir PCB
 
     //Ejecutar Ciclo de Instruccion
@@ -55,6 +55,7 @@ int main(void){
     args->server_name = "CPU DISPATCH";
     server_escuchar(args);
     free(args);
+
     //preguntar a zoe si esto le ponemos el hilo extra como en memoria
     // Inicio CPU INTERRUPT server
 
@@ -67,6 +68,7 @@ int main(void){
     arg->server_name = "CPU INTERRUPT";
     server_escuchar(arg);
     free(arg);
+    
 //idem
     return 0;
 }

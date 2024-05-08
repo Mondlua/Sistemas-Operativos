@@ -1,5 +1,5 @@
-#include <utils/mensajes.h>
-
+#include <utils/catedra/client.h>
+#include <utils/catedra/mensajes.h>
 int recibir_operacion(int socket_cliente)
 {
     int cod_op;
