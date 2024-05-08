@@ -115,24 +115,26 @@ t_instruccion* recibir_instruccion_cpu(int socket_servidor){
 void enviar_pc(char* pc, int socket_cliente){
 
     t_paquete* paquete = malloc(sizeof(t_paquete));
-
+    printf("tengo dentro el pc %s", pc); //NO SE VEN
     paquete->codigo_operacion = PC;
     paquete->buffer = malloc(sizeof(t_buffer));
     paquete->buffer->size = strlen(pc)+1;
     paquete->buffer->stream = malloc(paquete->buffer->size);
     memcpy(paquete->buffer->stream, pc, paquete->buffer->size);
 
+    printf("tengo dentro de buf %s", paquete->buffer->stream);
+
     int bytes = paquete->buffer->size + 2*sizeof(int);
 
     void* a_enviar = serializar_paquete(paquete, bytes);
-
+    
     int resultado_send = send(socket_cliente, a_enviar, bytes, MSG_NOSIGNAL);  // Evita la generación de SIGPIPE
 
     if (resultado_send == -1) {
         fprintf(stderr, "Error al enviar el program counter: socket cerrado.\n");
     }
 
-    free(a_enviar);
+    //free(a_enviar);
     eliminar_paquete(paquete);
 }
 
@@ -148,7 +150,6 @@ char* recibir_pc(int socket_cliente){
         printf("Me llego el mensaje %s\n", buffer);
     }
     return buffer;
-    free(buffer);
 }
 
 t_pcb* recibir_pcb(int socket_cliente) {

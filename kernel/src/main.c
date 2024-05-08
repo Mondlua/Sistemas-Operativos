@@ -92,7 +92,7 @@ int main(void)
     sem_init(&sem_contador, 0, 0); //semaforo
     
     //Ver Consola
-    log_info(kernel_log, "conexion memoria %i", conexion_memoria);
+    
     inicializar_colas_estados();
     consola_interactiva();
     nivel_multiprog = queue_size(colaReady)+queue_size(colaBlocked)+queue_size(colaExec); 

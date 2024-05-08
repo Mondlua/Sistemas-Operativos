@@ -12,4 +12,5 @@
 #include <utils/funcionesUtiles.h>
 
 extern int conexion_memoria_cpu;
+
 #endif

@@ -20,6 +20,8 @@ typedef struct
 
 } t_atender_cliente_args;
 
+extern t_list* lista_arch;
+
 int server_escuchar(void *arg);
 
 #endif
