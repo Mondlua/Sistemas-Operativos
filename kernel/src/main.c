@@ -25,13 +25,10 @@ int main(void)
 
     char *ip_memoria;
     char *puerto_memoria;
-    int conexion_memoria;
 
     char *ip_cpu;
     char *puerto_cpu_dispatch;
     char *puerto_cpu_interrupt;
-
-    int conexion_cpu_dispatch;
     int conexion_cpu_interrupt;
 
     char *algoritmo;  
@@ -95,9 +92,9 @@ int main(void)
     sem_init(&sem_contador, 0, 0); //semaforo
     
     //Ver Consola
-
+    log_info(kernel_log, "conexion memoria %i", conexion_memoria);
     inicializar_colas_estados();
-    consola_interactiva(conexion_memoria, conexion_cpu_dispatch);
+    consola_interactiva();
     nivel_multiprog = queue_size(colaReady)+queue_size(colaBlocked)+queue_size(colaExec); 
     validar_peticion("pepe","33");// nombre de la interfaz que se quiere conectar, 33 cant de tiempo
 
