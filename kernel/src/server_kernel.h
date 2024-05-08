@@ -11,6 +11,7 @@
 #include <utils/mensajes.h>
 #include <commons/collections/list.h>
 #include <semaphore.h>
+#include <utils/instrucciones.h>
 
 // Declaración externa de la variable global interfaces
 extern t_list* interfaces;
