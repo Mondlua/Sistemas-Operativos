@@ -33,6 +33,5 @@ void enviar_instruccion_mem(int socket_cliente, t_instruccion* instruccion);
 t_pcb* recibir_pcb(int socket_cliente);
 void enviar_pc(char* pc, int socket_cliente);
 char* recibir_pc(int socket_cliente);
-char* recibo_pc(int socket_servidor);
 
 #endif
