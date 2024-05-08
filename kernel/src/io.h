@@ -8,9 +8,6 @@
 #include<commons/log.h>
 #include "server_kernel.h"
 
-
-/*pthread_t atender_peticion_IO(char* interfaz, char* tiempo, int server);
-void* validar_peticion(void*);*/
 void validar_peticion(char* interfaz_a_validar, char* tiempo);
 
 #endif

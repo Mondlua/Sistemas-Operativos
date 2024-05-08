@@ -3,12 +3,12 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <utils/server.h>
-#include <utils/inicio.h>
+#include <utils/catedra/server.h>
+#include <utils/catedra/inicio.h>
 #include <inttypes.h>
 #include <commons/log.h>
 #include <pthread.h>
-#include <utils/mensajes.h>
+#include <utils/catedra/mensajes.h>
 #include <commons/collections/list.h>
 #include <semaphore.h>
 #include <utils/instrucciones.h>

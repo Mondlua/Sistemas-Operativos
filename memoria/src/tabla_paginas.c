@@ -1,6 +1,7 @@
 #include "tabla_paginas.h"
 
 tabla_paginas *inicializar_tabla(int tam_pagina, int tam_memoria) {
+
     tabla_paginas* tabla=malloc(sizeof(tabla_paginas));
     tabla->cant_paginas = tam_memoria / tam_pagina;
     tabla->paginas = malloc(tabla->cant_paginas * sizeof(pagina));

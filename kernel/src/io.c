@@ -1,6 +1,5 @@
 #include "io.h"
 
-
 void validar_peticion(char* interfaz_a_validar, char* tiempo) {
     sem_wait(&sem_contador);
     int tamanio_lista = list_size(interfaces);

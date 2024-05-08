@@ -1,5 +1,5 @@
 #include "ciclo_inst.h"
-
+/*
 void inicializar_registro(t_pcb* pcb)
 {
     cpu_registros *registros = pcb->registros;
@@ -15,12 +15,17 @@ void inicializar_registro(t_pcb* pcb)
     registros->EDX = malloc(sizeof(4));
     registros->SI = malloc(sizeof(4));
     registros->DI = malloc(sizeof(4));
-}
+}*/
 
-char* fetch(t_pcb* pcb){
-    //pedirle a mem instruccion y mandarle el pcounter
-    //nos llega instruccion de memoria
-    char* instruccion;
+t_instruccion* fetch(t_pcb* pcb, int conexion_memoria){
+    
+    t_instruccion* instruccion;
+
+    enviar_pc(int_to_char(pcb->p_counter),conexion_memoria);
+    instruccion = recibir_instruccion_cpu(conexion_memoria);
+
+    printf("Recibi la INSTRUCCION %s", instruccion->buffer->stream);
+    
     pcb->p_counter++;
     return instruccion;
 }

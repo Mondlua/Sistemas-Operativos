@@ -4,10 +4,10 @@
 #include "consola.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include <utils/client.h>
-#include <utils/inicio.h>
 #include "server_kernel.h"
-#include <io.h>
+#include <utils/catedra/client.h>
+#include <utils/catedra/inicio.h>
+#include "io.h"
 
 extern t_log* kernel_log;
 extern t_config* kernel_config;
