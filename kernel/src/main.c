@@ -14,6 +14,9 @@ sem_t sem_contador;
 
 int nivel_multiprog;
 
+int conexion_memoria;
+int conexion_cpu_dispatch;
+
 int main(void)
 {
 
@@ -42,20 +45,20 @@ int main(void)
     /* KERNEL - Cliente */
 
     // Extraer configs
-    /*
+    
     ip_memoria = config_get_string_value(kernel_config,"IP_MEMORIA");
-    puerto_memoria = config_get_string_value(kernel_config, "PUERTO_MEMORIA");*/
+    puerto_memoria = config_get_string_value(kernel_config, "PUERTO_MEMORIA");
 
     ip_cpu = config_get_string_value(kernel_config, "IP_CPU");
     puerto_cpu_dispatch = config_get_string_value(kernel_config, "PUERTO_CPU_DISPATCH");
     puerto_cpu_interrupt = config_get_string_value(kernel_config, "PUERTO_CPU_INTERRUPT");
     
     // Establecer conexiones
-    /*
+    
     conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
     
     log_info(kernel_log, "KERNEL se conectó a MEMORIA");
-    send_handshake(conexion_memoria, kernel_log, "KERNEL / MEMORIA");*/
+    send_handshake(conexion_memoria, kernel_log, "KERNEL / MEMORIA");
 
     conexion_cpu_dispatch = crear_conexion(ip_cpu, puerto_cpu_dispatch);
 
@@ -65,32 +68,16 @@ int main(void)
     /*
     conexion_cpu_interrupt = crear_conexion(ip_cpu, puerto_cpu_interrupt);
     log_info(kernel_log, "KERNEL se conectó a CPU INTERRUPT");
-    send_handshake(conexion_cpu_interrupt, kernel_log, "KERNEL / CPU INTERRUPT");
-|*/
+    send_handshake(conexion_cpu_interrupt, kernel_log, "KERNEL / CPU INTERRUPT");*/
 
     // Planificacion
 
     algoritmo=config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
-    
-    // Enviar PCB a CPU
-
-    inicializar_colas_estados();
-    t_pcb* nuevo_pcb=malloc(sizeof(t_pcb));
-    nuevo_pcb->pid = 0;
-    nuevo_pcb->p_counter = 0; 
-    nuevo_pcb->quantum = config_get_int_value(kernel_config, "QUANTUM");
-    nuevo_pcb->tabla_paginas = NULL;
-    nuevo_pcb->algoritmo_planif = "Fifo";
-    //config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
-    nuevo_pcb->estado = NEW;
-     //= iniciar_proceso("gg");
-    enviar_pcb_cpu(nuevo_pcb,conexion_cpu_dispatch);
-
- 
+   
     /* KERNEL - Servidor */
 
     // Extraer configs
-    /*
+    
     puerto_escucha = config_get_string_value(kernel_config, "PUERTO_ESCUCHA");
 
     // Inicio server
@@ -107,10 +94,10 @@ int main(void)
     pthread_create(&hilo, NULL, (void *)server_escuchar, args);
     sem_init(&sem_contador, 0, 0); //semaforo
     
-
     //Ver Consola
 
-    consola_interactiva();
+    inicializar_colas_estados();
+    consola_interactiva(conexion_memoria, conexion_cpu_dispatch);
     nivel_multiprog = queue_size(colaReady)+queue_size(colaBlocked)+queue_size(colaExec); 
     validar_peticion("pepe","33");// nombre de la interfaz que se quiere conectar, 33 cant de tiempo
 
@@ -127,6 +114,6 @@ int main(void)
     free(colaBlocked);
     free(colaExec);
     sem_destroy(&sem_contador);
-    */
+    
     return 0;
 }

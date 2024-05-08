@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <utils/catedra/inicio.h>
-#include <utils/comunicacion.h>
+#include "memoriaserver.h"
 #include <commons/config.h>
 #include "main.h"
 #include <utils/mensajesPropios.h>

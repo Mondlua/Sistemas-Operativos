@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <utils/catedra/client.h>
 #include <utils/catedra/inicio.h>
-#include <utils/comunicacion.h>
 #include <utils/instrucciones.h>
 
 

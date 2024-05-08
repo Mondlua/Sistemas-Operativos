@@ -8,9 +8,10 @@
 #include<commons/log.h>
 #include<readline/readline.h>
 #include "utils_consola.h"
+#include "main.h"
 
 void consola_interactiva();
-void* leer_consola();
+void*leer_consola();
 void funciones(char* leido);
 void ejecutar_script(char* path);
 void iniciar_proceso(char* path);

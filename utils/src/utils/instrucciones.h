@@ -11,10 +11,11 @@
 
 
 typedef struct {
-    uint32_t size; // Tamaño del payload
-    uint32_t offset; // Desplazamiento dentro del payload
-    void* stream; // Payload
+    uint32_t size; //tamaño
+    uint32_t offset; //desplazamiento
+    void* stream; //lo que se guarda (cod)
 } t_buffer_ins;
+
 typedef enum
 {
     IO_GEN_SLEEP,

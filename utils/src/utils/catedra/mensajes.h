@@ -38,7 +38,7 @@ typedef struct
 
 void enviar_mensaje(char* , int );
 void* recibir_buffer(int*, int);
-void recibir_mensaje(int, t_log*);
+char* recibir_mensaje(int, t_log*);
 int recibir_operacion(int);
 
 t_paquete* crear_paquete(void);
