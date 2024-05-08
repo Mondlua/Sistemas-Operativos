@@ -7,7 +7,7 @@
 #include <utils/client.h>
 #include <utils/inicio.h>
 #include <utils/comunicacion.h>
-
+#include <utils/instrucciones.h>
 
 
 #endif
