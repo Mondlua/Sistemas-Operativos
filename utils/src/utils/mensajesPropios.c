@@ -59,32 +59,6 @@ char* recibir_desconexion(int socket_cliente, t_log* logger)
 
 //////////////////////////////* INSTRUCCIONES MEMORIA *//////////////////////////////////////
 
-instruccion_params* recibir_instruccion(int socket_servidor)
-{
-    t_paquete_instruccion* instruccion = malloc(sizeof(t_paquete_instruccion));
-    instruccion->buffer = malloc(sizeof(t_buffer_ins));
-    recv(socket_servidor, &(instruccion->codigo_operacion), sizeof(IO_OPERATION), MSG_WAITALL);
-    recv(socket_servidor, &(instruccion->buffer->size), sizeof(uint32_t), MSG_WAITALL);
-    instruccion->buffer->stream = malloc(instruccion->buffer->size);
-    recv(socket_servidor, instruccion->buffer->stream, instruccion->buffer->size, MSG_WAITALL);
-    instruccion_params* param;
-    switch (instruccion->codigo_operacion)
-    {
-        case IO_GEN_SLEEP:
-            param = deserializar_io_gen_sleep(instruccion->buffer);
-            break;
-        default:
-            printf("Tipo de operación no válido.\n");
-            free(instruccion->buffer);
-            free(instruccion);
-            return NULL;
-    }
-    free(instruccion->buffer);
-    free(instruccion);
-    return param;
-}
-
-
 void enviar_instruccion_mem(int socket_cliente, t_instruccion* instruccion){
     
     t_buffer_ins* buffer=malloc(sizeof(t_buffer_ins)) ;
