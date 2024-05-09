@@ -41,7 +41,7 @@ void atender_cliente(void *void_args)
         case PAQUETE:{}
         case PC:
         {
-            char * pc_recibido = recibir_mensaje(client_socket,logger);
+            char * pc_recibido = recibir_pc(client_socket);
             int pc = atoi(pc_recibido);
 
             /*t_instruccion* instruccion = list_get(lista_arch,pc);

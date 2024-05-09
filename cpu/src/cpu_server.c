@@ -41,6 +41,7 @@ void atender_cliente(void *void_args)
         case INSTRUCCION:{
             t_instruccion* ins = recibir_instruccion_cpu(client_socket);
             log_info(logger, "Me llego la INSTRUCCION %s", ins->buffer->stream);
+            break;
         }
         case PC:{}
         default:
