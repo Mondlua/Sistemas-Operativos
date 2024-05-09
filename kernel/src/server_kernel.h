@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <utils/catedra/server.h>
 #include <utils/catedra/inicio.h>
 #include <inttypes.h>
