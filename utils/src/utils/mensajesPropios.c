@@ -152,12 +152,15 @@ void enviar_pc(char* pc, int socket_cliente){
     void* a_enviar = serializar_paquete(paquete, bytes);
     
     int resultado_send = send(socket_cliente, a_enviar, bytes, MSG_NOSIGNAL);  
+
+    if (resultado_send == -1)
+        {
+            printf("Error al enviar la instrucción: socket cerrado.\n");
+        }
     
-    if (resultado_send == -1) {
-        fprintf(stderr, "Error al enviar el program counter: socket cerrado.\n");
-    }
     eliminar_paquete(paquete);
 }
+
 
 char* recibir_pc(int socket_cliente){
 

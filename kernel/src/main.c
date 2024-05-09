@@ -52,12 +52,12 @@ int main(void)
     
     // Establecer conexiones
     
-   // conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+    conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
     
     log_info(kernel_log, "KERNEL se conectó a MEMORIA");
     send_handshake(conexion_memoria, kernel_log, "KERNEL / MEMORIA");
 
-    //conexion_cpu_dispatch = crear_conexion(ip_cpu, puerto_cpu_dispatch);
+    conexion_cpu_dispatch = crear_conexion(ip_cpu, puerto_cpu_dispatch);
 
     log_info(kernel_log, "KERNEL se conectó a CPU DISPATCH");
     send_handshake(conexion_cpu_dispatch, kernel_log, "KERNEL / CPU DISPATCH");

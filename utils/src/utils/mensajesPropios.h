@@ -26,7 +26,7 @@ char* recibir_desconexion(int socket_cliente, t_log* logger);
 void aviso_operacion_invalida(char* mensaje, int socket);
 void recibir_error_oi(int socket, t_log* logger);
 
-
+void* serializar_paquete(t_paquete* paquete, int bytes);
 t_instruccion* recibir_instruccion_cpu(int socket_servidor);
 t_buffer_ins* serializar_instruccion(t_instruccion* ins);
 void enviar_instruccion_mem(int socket_cliente, t_instruccion* instruccion);
