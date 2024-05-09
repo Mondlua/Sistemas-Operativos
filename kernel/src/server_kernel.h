@@ -3,17 +3,17 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <utils/catedra/server.h>
 #include <utils/catedra/inicio.h>
 #include <inttypes.h>
 #include <commons/log.h>
 #include <pthread.h>
-#include <utils/catedra/mensajes.h>
+#include <utils/mensajesPropios.h>
 #include <commons/collections/list.h>
 #include <semaphore.h>
-#include <utils/instrucciones.h>
+#include <utils/io_operation.h>
 
-// Declaración externa de la variable global interfaces
 extern t_list* interfaces;
 extern sem_t sem_contador;
 
