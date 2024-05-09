@@ -34,8 +34,7 @@ void atender_cliente(void *void_args)
 			log_info(logger, "Me llego el PCB cuyo PID es %u", pcb->pid);
             char* pc = int_to_char(pcb->p_counter);
             sleep(10);
-            log_info(logger, "Mconexion %d", conexion_memoria_cpu);
-            enviar_mensaje_pc(pc,conexion_memoria_cpu);
+            enviar_pc(pc,conexion_memoria_cpu);
             
 			break;
         }
@@ -79,28 +78,3 @@ int server_escuchar(void* arg)
     }
     return 0;
 }
-
-void enviar_mensaje_pc(char* mensaje, int socket_cliente)
-{
-	t_paquete* paquete = malloc(sizeof(t_paquete));
-
-	paquete->codigo_operacion = PC;
-	paquete->buffer = malloc(sizeof(t_buffer));
-	paquete->buffer->size = strlen(mensaje) + 1;
-	paquete->buffer->stream = malloc(paquete->buffer->size);
-	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
-
-	int bytes = paquete->buffer->size + 2*sizeof(int);
-
-	void* a_enviar = serializar_paquete(paquete, bytes);
-
-    int resultado_send = send(socket_cliente, a_enviar, bytes, MSG_NOSIGNAL);  // Evita la generación de SIGPIPE
-
-    if (resultado_send == -1) {
-        fprintf(stderr, "Error al enviar el mensaje: socket cerrado.\n");
-    }
-
-    //free(a_enviar);
-    eliminar_paquete(paquete);
-}
-
