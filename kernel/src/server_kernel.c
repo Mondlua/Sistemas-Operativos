@@ -64,6 +64,12 @@ void atender_cliente(void *void_args)
             }
             break;
         }
+        case AVISO_OPERACION_INVALIDA:
+        {
+            recibir_error_oi(client_socket, logger);
+            // CAMBIAR ESTADO A EXIT
+            break;
+        }
         default:
             log_error(logger, "Algo anduvo mal en el server de %s", server_name);
             log_info(logger, "Cop: %d", cop);

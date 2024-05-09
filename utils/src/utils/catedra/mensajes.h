@@ -18,6 +18,7 @@ typedef enum
     PAQUETE,
     INTERFAZ,
     AVISO_DESCONEXION,
+    AVISO_OPERACION_INVALIDA,
     PC,
     INSTRUCCION,
     PCB

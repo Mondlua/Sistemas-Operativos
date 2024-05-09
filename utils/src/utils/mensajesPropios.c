@@ -49,6 +49,32 @@ void aviso_desconexion(char* mensaje, int socket_cliente){
 	eliminar_paquete(paquete);
 }
 
+void aviso_operacion_invalida(char* mensaje, int socket){
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+
+	paquete->codigo_operacion = AVISO_OPERACION_INVALIDA;
+	paquete->buffer = malloc(sizeof(t_buffer));
+	paquete->buffer->size = strlen(mensaje) + 1;
+	paquete->buffer->stream = malloc(paquete->buffer->size);
+	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
+
+	int bytes = paquete->buffer->size + 2*sizeof(int);
+
+	void* a_enviar = serializar_paquete(paquete, bytes);
+
+	send(socket, a_enviar, bytes, 0);
+
+	free(a_enviar);
+	eliminar_paquete(paquete);
+}
+
+void recibir_error_oi(int socket, t_log* logger){
+    int size;
+    char* buffer = recibir_buffer(&size, socket);
+    log_info(logger, ">> %s", buffer);
+    free(buffer);
+}
+
 char* recibir_desconexion(int socket_cliente, t_log* logger)
 {
     int size;
