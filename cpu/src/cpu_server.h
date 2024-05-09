@@ -21,6 +21,5 @@ typedef struct
 } t_atender_cliente_args;
 
 int server_escuchar(void *arg);
-void enviar_mensaje_pc(char* mensaje, int socket_cliente);
 
 #endif
