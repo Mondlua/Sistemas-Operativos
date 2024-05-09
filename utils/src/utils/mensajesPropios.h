@@ -23,6 +23,8 @@ void aviso_desconexion(char* , int);
 void enviar_interfaz(char* mensaje, int socket_cliente);
 char* recibir_interfaz(int socket_cliente, t_log* logger);
 char* recibir_desconexion(int socket_cliente, t_log* logger);
+void aviso_operacion_invalida(char* mensaje, int socket);
+void recibir_error_oi(int socket, t_log* logger);
 
 
 t_instruccion* recibir_instruccion_cpu(int socket_servidor);
