@@ -22,6 +22,8 @@ instruccion_params* recibir_instruccion(char* tipo_interfaz, int socket_servidor
     {
         case IO_GEN_SLEEP:
             param = deserializar_io_gen_sleep(instruccion->buffer);
+            char* aviso = "ENVIAR PROCESO A BLOCK!!";
+            aviso_segun_cod_op(aviso, socket_servidor, AVISO_OPERACION_VALIDADA);
             break;
         // OTRAS FUNCIONES
         default:
@@ -33,7 +35,7 @@ instruccion_params* recibir_instruccion(char* tipo_interfaz, int socket_servidor
     }
     else{
         char* error = "ERROR DE OPERACION!!";
-        aviso_operacion_invalida(error, socket_servidor);
+        aviso_segun_cod_op(error, socket_servidor, AVISO_DESCONEXION);
         param = NULL;
     }
     free(instruccion->buffer);

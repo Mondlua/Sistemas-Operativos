@@ -19,11 +19,10 @@ typedef struct t_instruccion{
 }t_instruccion;
 
 
-void aviso_desconexion(char* , int);
+void aviso_segun_cod_op(char* , int, int);
 void enviar_interfaz(char* mensaje, int socket_cliente);
 char* recibir_interfaz(int socket_cliente, t_log* logger);
 char* recibir_desconexion(int socket_cliente, t_log* logger);
-void aviso_operacion_invalida(char* mensaje, int socket);
 void recibir_error_oi(int socket, t_log* logger);
 
 void* serializar_paquete(t_paquete* paquete, int bytes);
