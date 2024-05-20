@@ -35,12 +35,14 @@ void atender_cliente(void *void_args)
             char* pc = int_to_char(pcb->p_counter);
             sleep(10);
             enviar_pc(pc,conexion_memoria_cpu);
-            
 			break;
         }
         case INSTRUCCION:{
             t_instruccion* ins = recibir_instruccion_cpu(client_socket);
             log_info(logger, "Me llego la INSTRUCCION %s", ins->buffer->stream);
+            t_decode* decodeado= decode(ins);
+            log_info(logger, "Me llego el decode %d", decodeado->op_code);
+
             break;
         }
         case PC:{}

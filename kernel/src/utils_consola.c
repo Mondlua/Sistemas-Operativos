@@ -14,6 +14,7 @@ t_pcb *crear_nuevo_pcb(uint32_t *pid_contador)
     nuevo_pcb->pid = *pid_contador;
     nuevo_pcb->p_counter = 0; 
     nuevo_pcb->quantum = config_get_int_value(kernel_config, "QUANTUM");
+    inicializar_registro(nuevo_pcb);
     nuevo_pcb->tabla_paginas = NULL;
     nuevo_pcb->algoritmo_planif = config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
     nuevo_pcb->estado = NEW;
@@ -166,6 +167,23 @@ void enviar_pcb_cpu(t_pcb* pcb, int socket_cliente){
 
     enviar_paquete(paquete, socket_cliente);
     eliminar_paquete(paquete);
+}
+
+void inicializar_registro(t_pcb* pcb)
+{
+    cpu_registros *registros = pcb->registros;
+    registros= malloc(sizeof(cpu_registros));
+    registros->PC = malloc(sizeof(4));
+    registros->AX = malloc(sizeof(1));
+    registros->BX = malloc(sizeof(1));
+    registros->CX = malloc(sizeof(1));
+    registros->DX = malloc(sizeof(1));
+    registros->EAX = malloc(sizeof(4));
+    registros->EBX = malloc(sizeof(4));
+    registros->ECX = malloc(sizeof(4));
+    registros->EDX = malloc(sizeof(4));
+    registros->SI = malloc(sizeof(4));
+    registros->DI = malloc(sizeof(4));
 }
 
 /*void cambiar_cola(t_pcb* pcb,t_proceso_estado nuevo_estado){

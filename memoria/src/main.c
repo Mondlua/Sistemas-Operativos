@@ -31,7 +31,7 @@ int main(void) {
     args->log = memoria_log;
     args->c_socket = memoria_server;
     args->server_name = "memoria"; 
-    
+
     pthread_t hilo;
     pthread_create(&hilo, NULL, (void *)server_escuchar, args);
     
