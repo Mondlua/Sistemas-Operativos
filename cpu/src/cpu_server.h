@@ -11,7 +11,7 @@
 #include <utils/mensajesPropios.h>
 #include <utils/funcionesUtiles.h>
 #include "main.h"
-
+#include "ciclo_inst.h"
 typedef struct
 {
     t_log *log;

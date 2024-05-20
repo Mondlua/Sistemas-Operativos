@@ -9,6 +9,7 @@
 #include <inttypes.h>
 #include <pthread.h>
 #include <commons/collections/queue.h>
+#include <commons/collections/list.h>
 #include <utils/funcionesUtiles.h>
 
 extern int conexion_memoria_cpu;
