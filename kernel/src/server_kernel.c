@@ -44,6 +44,7 @@ void atender_cliente(void *void_args)
             interfaz* new_client = malloc(sizeof(interfaz));
             new_client->nombre_interfaz = recibir_interfaz(client_socket, logger);
             new_client->socket_interfaz = client_socket;
+            new_client->cola_block = queue_create();
             list_add(interfaces, new_client);
             sem_post(&sem_contador);
             break;
@@ -51,11 +52,12 @@ void atender_cliente(void *void_args)
         case AVISO_DESCONEXION:
         {
             char* interfaz_recibida = recibir_desconexion(client_socket, logger);
-            int posicion_interfaz = buscar_interfaz_por_nombre(interfaz_recibida);
+            int posicion_interfaz = buscar_posicion_interfaz_por_nombre(interfaz_recibida);
             if (posicion_interfaz != -1) {
                 interfaz* interfaz_desconectada = (interfaz*)list_remove(interfaces, posicion_interfaz);
                 free(interfaz_recibida); 
                 if (interfaz_desconectada != NULL) {
+                    queue_destroy(interfaz_desconectada->cola_block);
                     free(interfaz_desconectada);
                 }
             } else {
@@ -67,8 +69,19 @@ void atender_cliente(void *void_args)
         case AVISO_OPERACION_INVALIDA:
         {
             recibir_error_oi(client_socket, logger);
-            // CAMBIAR ESTADO A EXIT
+            // CAMBIAR PCB ESTADO A EXIT
             break;
+        }
+        case AVISO_OPERACION_VALIDADA:
+        {
+            // CAMBIAR PCB A ESTADO BLOCK
+            // SUMAR PROCESO A COLA BLOCK DE INTERFAZ
+            break;
+        }
+        case AVISO_OPERACION_FINALIZADA:
+        {
+            //CAMBIAR PCB A ESTADO READY O EXIT
+            // SACAR PROCESO DE COLA BLOCK DE INTERFAZ
         }
         default:
             log_error(logger, "Algo anduvo mal en el server de %s", server_name);
@@ -112,7 +125,7 @@ int server_escuchar(void* arg)
 /* PROTOCOLO */
 
 
-int buscar_interfaz_por_nombre(char* nombre_interfaz) {
+int buscar_posicion_interfaz_por_nombre(char* nombre_interfaz) {
     int tamanio_lista = list_size(interfaces);
     for (int i = 0; i < tamanio_lista; i++) {
         interfaz* posible_interfaz = list_get(interfaces, i);
