@@ -28,24 +28,27 @@ void fifo(int conexion_cpu_dispatch){
             switch (motivo_desalojo) {
                 case INS_EXIT:
                     pcb_actualizado->estado=EXIT;
-                    queue_push(colaExit, pcb_a_planificar);
+                    queue_push(colaExit, pcb_actualizado);
                     break;
                 case BLOCK_IO:
-                pcb_actualizado->estado=BLOCKED;
-                queue_push(colaBlocked, pcb_actualizado); // colaBlockedIO (*)
-                
+                    t_instruccion* instruccion = recibir_instruccion_io(conexion_memoria);
+                    char* instruccion_string = instruccion->buffer->stream;
+                    char** array_palabras = string_split(instruccion_string, " ");
+
+                    char* instruccionIO = array_palabras[0];
+                    char* interfazIO = array_palabras[1];
+
                 if(!validar_conexion_IO(interfazIO)){ // Si no existe la interfaz o no esta conectada , el proceso pasa a EXIT
                     pcb_actualizado->estado=EXIT;
-                    queue_push(colaExit, pcb_a_planificar);
+                    queue_push(colaExit, pcb_actualizado);
                     break;
-                } else if(validar_operacion()){ // Si no puede realizar la operacion solicitada, el proceso pasa a EXIT
+                } else if(!validar_operacion(tipoInterfaz,instruccion)){ // Si no puede realizar la operacion solicitada, el proceso pasa a EXIT
                     pcb_actualizado->estado=EXIT;
-                    queue_push(colaExit, pcb_a_planificar);
+                    queue_push(colaExit, pcb_actualizado);
                     break;
                 } else if(interfaz_esta_libre()){ // Creo que aca se podria usar "validar_peticion(interfaz, tiempo)" pero es void
-
-                    //enviar instruccion a la IO correspondiente
-                    //recibir notificacion de la IO
+                    pcb_actualizado->estado=BLOCKED;
+                    manejar_operacion_io(instruccion);
                     pcb_actualizado->estado=READY;
                     queue_push(colaReady, pcb_actualizado);
                     break;
@@ -57,5 +60,28 @@ void fifo(int conexion_cpu_dispatch){
                 
                 default:*/ // (*) Ver enunciado, ¿el estado BLOCKED tiene "multiples colas" una por cada IO y una por cada recurso?
             }
+
+            tamanioExec = queue_size(colaExec);
+            tamanioReady = queue_size(colaReady);
         }
    }
+
+
+   //---------------------------------
+  t_instruccion* recibir_instruccion_io(int socket_conexion){
+
+    enviar_pc(int_to_char(pcb_a_planificar->p_counter),conexion_memoria);
+    t_instruccion* instruccion = recibir_instruccion_de_memoria(conexion_memoria); // esta funcion tiene el nombre de recibir_instruccion_cpu
+   }
+
+   void manejar_operacion_io(t_instruccion* instruccion, char* interfazIO){
+    enviar_instruccion();
+    //enviar instruccion a la IO correspondiente
+    //recibir notificacion de la IO
+   }
+
+validar_conexion_IO(char* interfazIO){
+    //asumo que vamos a hacer una lista de las interfaces que se van conectando al kernel
+    
+
+}
