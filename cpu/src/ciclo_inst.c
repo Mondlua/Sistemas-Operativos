@@ -176,6 +176,22 @@ void asignar_registro(cpu_registros* regs, const char* nombre_registro, uint8_t 
     else if (strcmp(nombre_registro, "SI") == 0)  {regs->SI=valor;}
     else if (strcmp(nombre_registro, "DI") == 0)  {regs->DI=valor;}
 }
+
+void* obtener_valor_registro(cpu_registros* regs, const char* nombre_registro) {
+    if (strcmp(nombre_registro, "PC") == 0) return &(regs->PC);
+    else if (strcmp(nombre_registro, "AX") == 0) return &(regs->AX);
+    else if (strcmp(nombre_registro, "BX") == 0) return &(regs->BX);
+    else if (strcmp(nombre_registro, "CX") == 0) return &(regs->CX);
+    else if (strcmp(nombre_registro, "DX") == 0) return &(regs->DX);
+    else if (strcmp(nombre_registro, "EAX") == 0) return &(regs->EAX);
+    else if (strcmp(nombre_registro, "EBX") == 0) return &(regs->EBX);
+    else if (strcmp(nombre_registro, "ECX") == 0) return &(regs->ECX);
+    else if (strcmp(nombre_registro, "EDX") == 0) return &(regs->EDX);
+    else if (strcmp(nombre_registro, "SI") == 0) return &(regs->SI);
+    else if (strcmp(nombre_registro, "DI") == 0) return &(regs->DI);
+    else return NULL;
+}
+
 void execute(t_decode* decode, t_pcb* pcb){
     
     instrucciones ins = decode->op_code;
@@ -190,7 +206,17 @@ void execute(t_decode* decode, t_pcb* pcb){
          }
         case 1:{}
         case 2:{}
-        case 3:{}
+        case 3:{
+            char* registroOrigen = (char*)list_get(decode->registroCpu,1);
+            char* registroDestino = (char*)list_get(decode->registroCpu,0);
+            int valor1 = obtener_valor_registro(pcb->registros, registroOrigen);
+            printf("%d",valor1);
+            int valor2 = obtener_valor_registro(pcb->registros, registroDestino);
+            printf("%d",valor2);
+            int suma = valor1 +valor2;
+            asignar_registro(pcb->registros, registroDestino, suma);
+            
+        }
         case 4:{}
         case 5:{}
         case 6:{}

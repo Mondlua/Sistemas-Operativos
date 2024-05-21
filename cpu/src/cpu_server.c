@@ -43,7 +43,8 @@ void atender_cliente(void *void_args)
             log_info(logger, "Me llego el decode %d", decodeado->op_code);
             log_info(logger, "Registro es %s", list_get(decodeado->registroCpu, 0));
             execute(decodeado,pcb);
-            log_info(logger, "Me llego el registro con %u", pcb->registros->AX);
+            log_info(logger, "Me llego el registro con %d",(uint8_t)pcb->registros->AX);
+            log_info(logger, "Me llego el registro con %d", (uint8_t)pcb->registros->BX);
 			break;
         }
             /*  case INSTRUCCION:{
