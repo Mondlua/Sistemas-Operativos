@@ -33,10 +33,16 @@ typedef struct t_decode {
 instrucciones op_code;
 t_list* registroCpu;
 int valor;
-instrucciones ins;
 char* recurso;
 bool logicaAFisica;
 }t_decode;
+
+typedef struct {
+    const char* nombre;
+    void* puntero;
+    size_t tamano; 
+} registro_mapa;
+
 
 t_instruccion* fetch(t_pcb* pcb, int conexion_memoria);
 t_decode* decode(t_instruccion* ins);

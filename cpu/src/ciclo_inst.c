@@ -63,7 +63,7 @@ t_decode* decode(t_instruccion* instruccion){
         }
         case 5:{
         instrucciones ins = obtener_instruccion(arrayIns[1]);
-        decode->ins= ins;
+        decode->op_code= ins;
         break;
         }
         case 6:{
@@ -162,3 +162,53 @@ instrucciones obtener_instruccion(char *nombre) {
         return -1;
     }
 }
+
+void asignar_registro(cpu_registros* regs, const char* nombre_registro, uint8_t valor) {
+    if (strcmp(nombre_registro, "PC") == 0)  {regs->PC=valor;}
+    else if (strcmp(nombre_registro, "AX") == 0)  {regs->AX=valor;}
+    else if (strcmp(nombre_registro, "BX") == 0)  {regs->BX=valor;}
+    else if (strcmp(nombre_registro, "CX") == 0)  {regs->CX=valor;}
+    else if (strcmp(nombre_registro, "DX") == 0)  {regs->DX=valor;}
+    else if (strcmp(nombre_registro, "EAX") == 0)  {regs->EAX=valor;}
+    else if (strcmp(nombre_registro, "EBX") == 0)  {regs->EBX=valor;}
+    else if (strcmp(nombre_registro, "ECX") == 0) {regs->ECX=valor;}
+    else if (strcmp(nombre_registro, "EDX") == 0)  {regs->EDX=valor;}
+    else if (strcmp(nombre_registro, "SI") == 0)  {regs->SI=valor;}
+    else if (strcmp(nombre_registro, "DI") == 0)  {regs->DI=valor;}
+}
+void execute(t_decode* decode, t_pcb* pcb){
+    
+    instrucciones ins = decode->op_code;
+
+    switch(ins){
+    
+        case 0:{
+            int valor = decode->valor;
+            char* registro_adepositar=(char*)list_get(decode->registroCpu,0);
+            asignar_registro(pcb->registros, registro_adepositar, valor);
+            break;
+         }
+        case 1:{}
+        case 2:{}
+        case 3:{}
+        case 4:{}
+        case 5:{}
+        case 6:{}
+        case 7:{}
+        case 8:{}
+        case 9:{}
+        case 10:{}
+        case 11:{}
+        case 12:{}
+        case 13:{}
+        case 14:{}
+        case 15:{}
+        case 16:{}
+        case 17:{}
+        case 18:{}
+    }
+
+
+}
+
+

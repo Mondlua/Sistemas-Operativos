@@ -64,8 +64,7 @@ char* recibir_desconexion(int socket_cliente, t_log* logger)
 
 void enviar_instruccion_mem(int socket_cliente, t_instruccion* instruccion){
     
-    t_buffer_ins* buffer=malloc(sizeof(t_buffer_ins)) ;
-    buffer = serializar_instruccion(instruccion);
+    t_buffer_ins* buffer = serializar_instruccion(instruccion);
     instruccion->codigo_operacion = INSTRUCCION;
     instruccion->buffer=buffer;
     int offset = 0;
@@ -75,6 +74,7 @@ void enviar_instruccion_mem(int socket_cliente, t_instruccion* instruccion){
     memcpy(a_enviar + offset, &(instruccion->buffer->size), sizeof(uint32_t));
     offset += sizeof(uint32_t);
     memcpy(a_enviar + offset, instruccion->buffer->stream, instruccion->buffer->size);
+    offset += sizeof(buffer->size);
     int resultado_send = send(socket_cliente, a_enviar, buffer->size + sizeof(op_code) + sizeof(uint32_t), MSG_NOSIGNAL);
     if (resultado_send == -1)
         {
@@ -109,8 +109,6 @@ t_instruccion* recibir_instruccion_cpu(int socket_servidor){
     recv(socket_servidor, instruccion->buffer->stream, instruccion->buffer->size, MSG_WAITALL);
  
     return instruccion;  
-    free(instruccion->buffer);
-    free(instruccion);
 }
 
 //////////////////////////////* PCB *//////////////////////////////////////
@@ -163,9 +161,10 @@ t_pcb* recibir_pcb(int socket_cliente) {
     pcb->pid = *((uint32_t *) list_get(valores_paquete, 0)) ;
     pcb->p_counter = *((int*) list_get(valores_paquete, 1));
     pcb -> quantum = *((int*) list_get(valores_paquete, 2));
+    pcb->registros= ((cpu_registros*) list_get(valores_paquete, 3));
     pcb->tabla_paginas = NULL;
-    pcb->estado=*((t_proceso_estado*)list_get(valores_paquete, 3));
-    pcb->algoritmo_planif= ((char*)list_get(valores_paquete, 4));
+    pcb->estado=*((t_proceso_estado*)list_get(valores_paquete, 4));
+    pcb->algoritmo_planif= ((char*)list_get(valores_paquete, 5));
 
     printf("%s algortimo", pcb->algoritmo_planif);
     return pcb;

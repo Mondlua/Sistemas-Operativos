@@ -36,21 +36,25 @@ void atender_cliente(void *void_args)
             sleep(10);
             enviar_pc(pc,conexion_memoria_cpu);
             sleep(5);
+            // VER
             t_instruccion* ins = recibir_instruccion_cpu(conexion_memoria_cpu);
             log_info(logger, "Me llego la INSTRUCCION %s", ins->buffer->stream);
             t_decode* decodeado= decode(ins);
             log_info(logger, "Me llego el decode %d", decodeado->op_code);
-
+            log_info(logger, "Registro es %s", list_get(decodeado->registroCpu, 0));
+            execute(decodeado,pcb);
+            log_info(logger, "Me llego el registro con %u", pcb->registros->AX);
 			break;
         }
-       /* case INSTRUCCION:{
-            t_instruccion* ins = recibir_instruccion_cpu(conexion_memoria_cpu);
+            /*  case INSTRUCCION:{
+          t_instruccion* ins = recibir_instruccion_cpu(conexion_memoria_cpu);
             log_info(logger, "Me llego la INSTRUCCION %s", ins->buffer->stream);
             t_decode* decodeado= decode(ins);
             log_info(logger, "Me llego el decode %d", decodeado->op_code);
-
+            log_info(logger, "Registro es %s", list_get(decodeado->registroCpu, 0));
+           
             break;
-        }*/
+        } */
         case PC:{}
         default:
             log_error(logger, "Algo anduvo mal en el server de %s", server_name);
