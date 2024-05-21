@@ -2,6 +2,7 @@
 
 t_log* memoria_log;
 t_config* memoria_config;
+sem_t semaforo_mem;
 
 int main(void) {
     
@@ -26,6 +27,7 @@ int main(void) {
 
     memoria_server = iniciar_servidor(puerto, memoria_log);
     log_info(memoria_log, "MEMORIA lista para recibir clientes");
+    sem_init(&semaforo_mem, 0, 0);
 
     t_atender_cliente_args* args = malloc(sizeof(t_atender_cliente_args));
     args->log = memoria_log;

@@ -3,6 +3,7 @@
 #include "main.h"
 #include <utils/mensajesPropios.h>
 #include <commons/collections/list.h>
+#include <commons/string.h>
 
 
 typedef enum instrucciones{

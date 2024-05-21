@@ -11,8 +11,10 @@
 #include <commons/log.h>
 #include <pthread.h>
 #include <utils/mensajesPropios.h>
+#include <semaphore.h>
 
 extern t_list* lista_arch;
+extern sem_t semaforo_mem;
 
 typedef struct
 {
