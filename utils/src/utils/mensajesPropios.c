@@ -66,7 +66,7 @@ void enviar_instruccion_mem(int socket_cliente, t_instruccion* instruccion){
     
     t_buffer_ins* buffer=malloc(sizeof(t_buffer_ins)) ;
     buffer = serializar_instruccion(instruccion);
-     
+    instruccion->codigo_operacion = INSTRUCCION;
     instruccion->buffer=buffer;
     int offset = 0;
     void* a_enviar = malloc(buffer->size + sizeof(op_code) + sizeof(uint32_t));

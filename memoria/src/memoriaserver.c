@@ -32,8 +32,8 @@ void atender_cliente(void *void_args)
         case MENSAJE:
         {
             char* path = recibir_mensaje(client_socket, logger);
+            lista_arch = list_create();
             lista_arch = abrir_pseudocodigo(path);
-            sleep(10);
             free(path);
             
             break;
@@ -44,7 +44,8 @@ void atender_cliente(void *void_args)
             char * pc_recibido = recibir_pc(client_socket);
             int pc = atoi(pc_recibido);
             log_info(logger, "Mando la pc %d", pc);
-            t_instruccion* instruccion = list_get(lista_arch,pc);
+            sem_wait(&semaforo_mem);
+            t_instruccion* instruccion = (t_instruccion*)list_get(lista_arch,pc);
             log_info(logger, "Mando la INSTRUCCION %s", instruccion->buffer->stream);
             enviar_instruccion_mem(client_socket,instruccion);
            
