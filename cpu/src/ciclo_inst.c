@@ -19,9 +19,8 @@ t_decode* decode(t_instruccion* instruccion){
     char* buffer = (char*) instruccion->buffer->stream;
     char** arrayIns = malloc(sizeof(char*)*4);
     arrayIns = string_split(buffer," ");
-
     ins = obtener_instruccion(arrayIns[0]);
-    t_decode* decode;
+    t_decode* decode = malloc(sizeof(t_decode));
     decode->op_code = ins;
     decode->registroCpu = list_create();
     
@@ -30,13 +29,15 @@ t_decode* decode(t_instruccion* instruccion){
         cpu_registros* registro = arrayIns[1];
         list_add(decode->registroCpu, registro);
         int valor =atoi(arrayIns[2]);
-        decode->valor = valor;          
+        decode->valor = valor;     
+        break;     
         }
         case 1:{
         cpu_registros* registroDatos = arrayIns[1];
         list_add(decode->registroCpu,registroDatos);
         cpu_registros* registroDireccion = arrayIns[2];
         list_add(decode->registroCpu,registroDireccion);     
+        break;
         }
         case 2:{
         cpu_registros* registroDireccion = arrayIns[1];
@@ -44,66 +45,74 @@ t_decode* decode(t_instruccion* instruccion){
         cpu_registros* registroDatos = arrayIns[2];
         list_add(decode->registroCpu,registroDatos);   
         decode->logicaAFisica= true;  
+        break;
         }
         case 3:{
         cpu_registros* registroDestino = arrayIns[1];
         list_add(decode->registroCpu,registroDestino);
         cpu_registros* registroOrigen= arrayIns[2];
         list_add(decode->registroCpu,registroOrigen);     
+        break;
         }
         case 4:{
         cpu_registros* registroDestino = arrayIns[1];
         list_add(decode->registroCpu,registroDestino);
         cpu_registros* registroOrigen= arrayIns[2];
         list_add(decode->registroCpu,registroOrigen);
+        break;
         }
         case 5:{
         instrucciones ins = obtener_instruccion(arrayIns[1]);
         decode->ins= ins;
+        break;
         }
         case 6:{
         int tamanio = atoi(arrayIns[1]);
         decode->valor= tamanio;
+        break;
         }   
         case 7:{
         int tamanio = atoi(arrayIns[1]);
         decode->valor= tamanio;
+        break;
         }
         case 8:{
         char *rec;
         rec= arrayIns[1];
         decode->recurso = rec;
+        break;
         }
         case 9:{
         char* recu = arrayIns[1];
         decode->recurso=recu;
+        break;
         }
         case 10:{
-
+            break;
         }
         case 11:{
-            
+            break;
         }
         case 12:{
-            
+            break;
         }
         case 13:{
-            
+            break;
         }
         case 14:{
-            
+            break;
         }
         case 15:{
-            
+            break;
         }
         case 16:{
-            
+            break;
         }
         case 17:{
-            
+            break;
         }
         case 18:{
-            
+            break;
         }
     }
    

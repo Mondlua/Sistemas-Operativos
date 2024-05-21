@@ -35,16 +35,22 @@ void atender_cliente(void *void_args)
             char* pc = int_to_char(pcb->p_counter);
             sleep(10);
             enviar_pc(pc,conexion_memoria_cpu);
+            sleep(5);
+            t_instruccion* ins = recibir_instruccion_cpu(conexion_memoria_cpu);
+            log_info(logger, "Me llego la INSTRUCCION %s", ins->buffer->stream);
+            t_decode* decodeado= decode(ins);
+            log_info(logger, "Me llego el decode %d", decodeado->op_code);
+
 			break;
         }
-        case INSTRUCCION:{
-            t_instruccion* ins = recibir_instruccion_cpu(client_socket);
+       /* case INSTRUCCION:{
+            t_instruccion* ins = recibir_instruccion_cpu(conexion_memoria_cpu);
             log_info(logger, "Me llego la INSTRUCCION %s", ins->buffer->stream);
             t_decode* decodeado= decode(ins);
             log_info(logger, "Me llego el decode %d", decodeado->op_code);
 
             break;
-        }
+        }*/
         case PC:{}
         default:
             log_error(logger, "Algo anduvo mal en el server de %s", server_name);
