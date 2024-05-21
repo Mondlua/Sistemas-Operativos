@@ -162,6 +162,7 @@ void enviar_pcb_cpu(t_pcb* pcb, int socket_cliente){
     agregar_a_paquete(paquete, &(pcb->pid), sizeof(uint32_t));
     agregar_a_paquete(paquete, &(pcb->p_counter), sizeof(int));
     agregar_a_paquete(paquete, &(pcb->quantum), sizeof(int));
+    agregar_a_paquete(paquete, &(pcb->registros), sizeof(cpu_registros));
     agregar_a_paquete(paquete, &(pcb->estado), sizeof(t_proceso_estado));
     agregar_a_paquete(paquete, (pcb->algoritmo_planif), sizeof(pcb->algoritmo_planif));
 
@@ -173,17 +174,17 @@ void inicializar_registro(t_pcb* pcb)
 {
     cpu_registros *registros = pcb->registros;
     registros= malloc(sizeof(cpu_registros));
-    registros->PC = malloc(sizeof(4));
-    registros->AX = malloc(sizeof(1));
-    registros->BX = malloc(sizeof(1));
-    registros->CX = malloc(sizeof(1));
-    registros->DX = malloc(sizeof(1));
-    registros->EAX = malloc(sizeof(4));
-    registros->EBX = malloc(sizeof(4));
-    registros->ECX = malloc(sizeof(4));
-    registros->EDX = malloc(sizeof(4));
-    registros->SI = malloc(sizeof(4));
-    registros->DI = malloc(sizeof(4));
+    registros->PC = malloc(sizeof(uint32_t));
+    registros->AX = malloc(sizeof(uint8_t));
+    registros->BX = malloc(sizeof(uint8_t));
+    registros->CX = malloc(sizeof(uint8_t));
+    registros->DX = malloc(sizeof(uint8_t));
+    registros->EAX = malloc(sizeof(uint32_t));
+    registros->EBX = malloc(sizeof(uint32_t));
+    registros->ECX = malloc(sizeof(uint32_t));
+    registros->EDX = malloc(sizeof(uint32_t));
+    registros->SI = malloc(sizeof(uint32_t));
+    registros->DI = malloc(sizeof(uint32_t));
 }
 
 /*void cambiar_cola(t_pcb* pcb,t_proceso_estado nuevo_estado){

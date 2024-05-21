@@ -18,12 +18,12 @@ typedef enum t_proceso_estado
 } t_proceso_estado;
 
 typedef struct 
-{
+{    
     uint32_t PC; 
     uint8_t AX;   
     uint8_t BX;   
     uint8_t CX;   
-    uint8_t DX;  
+    uint8_t DX;   
     uint32_t EAX; 
     uint32_t EBX; 
     uint32_t ECX; 
