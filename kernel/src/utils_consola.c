@@ -14,12 +14,15 @@ t_pcb *crear_nuevo_pcb(uint32_t *pid_contador)
     nuevo_pcb->pid = *pid_contador;
     nuevo_pcb->p_counter = 0; 
     nuevo_pcb->quantum = config_get_int_value(kernel_config, "QUANTUM");
+    inicializar_registro(nuevo_pcb);
+    nuevo_pcb->registros->AX = 5;
+    nuevo_pcb->registros->BX = 2;
     nuevo_pcb->tabla_paginas = NULL;
     nuevo_pcb->algoritmo_planif = config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
     nuevo_pcb->estado = NEW;
 
     log_info(kernel_log, "Se crea el proceso con PID = %u en NEW", nuevo_pcb->pid);
-
+    log_info(kernel_log, "Se crea el proceso con ax = %u en NEW", nuevo_pcb->registros->AX);
     (*pid_contador)++;
     
     return nuevo_pcb;
@@ -161,11 +164,30 @@ void enviar_pcb_cpu(t_pcb* pcb, int socket_cliente){
     agregar_a_paquete(paquete, &(pcb->pid), sizeof(uint32_t));
     agregar_a_paquete(paquete, &(pcb->p_counter), sizeof(int));
     agregar_a_paquete(paquete, &(pcb->quantum), sizeof(int));
+
+    agregar_a_paquete(paquete, (pcb->registros), sizeof(cpu_registros));
     agregar_a_paquete(paquete, &(pcb->estado), sizeof(t_proceso_estado));
     agregar_a_paquete(paquete, (pcb->algoritmo_planif), sizeof(pcb->algoritmo_planif));
 
     enviar_paquete(paquete, socket_cliente);
     eliminar_paquete(paquete);
+}
+
+void inicializar_registro(t_pcb* pcb)
+{
+
+    pcb->registros= malloc(sizeof(cpu_registros));
+    pcb->registros->PC = malloc(sizeof(uint32_t));
+    pcb->registros->AX = malloc(sizeof(uint8_t));
+    pcb->registros->BX = malloc(sizeof(uint8_t));
+    pcb->registros->CX = malloc(sizeof(uint8_t));
+    pcb->registros->DX = malloc(sizeof(uint8_t));
+    pcb->registros->EAX = malloc(sizeof(uint32_t));
+    pcb->registros->EBX = malloc(sizeof(uint32_t));
+    pcb->registros->ECX = malloc(sizeof(uint32_t));
+    pcb->registros->EDX = malloc(sizeof(uint32_t));
+    pcb->registros->SI = malloc(sizeof(uint32_t));
+    pcb->registros->DI = malloc(sizeof(uint32_t));
 }
 
 /*void cambiar_cola(t_pcb* pcb,t_proceso_estado nuevo_estado){

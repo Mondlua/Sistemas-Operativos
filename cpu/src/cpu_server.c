@@ -1,4 +1,4 @@
-#include <utils/comunicacion.h>
+#include "cpu_server.h"
 
 void atender_cliente(void *void_args)
 {
@@ -10,7 +10,6 @@ void atender_cliente(void *void_args)
     
     free(args);
 
-    //KERNEL A CPU
     t_pcb* pcb;
 
     //MEMORIA a CPU
@@ -27,41 +26,39 @@ void atender_cliente(void *void_args)
 
         switch (cop) 
         {
-        case MENSAJE:
-        {
-            recibir_mensaje(client_socket, logger);
-
-            break;
-        }
+        case MENSAJE:{}
         case PAQUETE:{}
         case PCB:
         {
             pcb = recibir_pcb(client_socket);
-			log_info(logger, "Me llego el PCB cuyo pid es %u", pcb->pid);
-            log_info(logger, "Me llego el quantum cuyo pid es %d", pcb->quantum);
-            log_info(logger, "Me llego el alg cuyo pid es %s", pcb->algoritmo_planif);
-        log_info(logger, "Me llego el alg cuyo pid es %d", pcb->estado);
+			log_info(logger, "Me llego el PCB cuyo PID es %u", pcb->pid);
+            char* pc = int_to_char(pcb->p_counter);
+            enviar_pc(pc,conexion_memoria_cpu);
+            // VER
+            t_instruccion* ins = recibir_instruccion_cpu(conexion_memoria_cpu);
+            log_info(logger, "Me llego la INSTRUCCION %s", ins->buffer->stream);
+            t_decode* decodeado= decode(ins);
+            execute(decodeado,pcb);
+            log_info(logger, "Me llego el registroAX on %u",(uint8_t)pcb->registros->AX);
+            log_info(logger, "Me llego el registroBX con %u", (uint8_t)pcb->registros->BX);
 			break;
         }
-        /*case PC:
-        {
-            int pc = atoi(recibir_pc(client_socket));
-
-            t_instruccion* instruccion = list_get(listaInstrucciones,pc);
-            
-            enviar_instruccion_mem(client_socket,instruccion);
+            /*  case INSTRUCCION:{
+          t_instruccion* ins = recibir_instruccion_cpu(conexion_memoria_cpu);
+            log_info(logger, "Me llego la INSTRUCCION %s", ins->buffer->stream);
+            t_decode* decodeado= decode(ins);
+            log_info(logger, "Me llego el decode %d", decodeado->op_code);
+            log_info(logger, "Registro es %s", list_get(decodeado->registroCpu, 0));
            
             break;
-        }*/
-        
+        } */
+        case PC:{}
         default:
             log_error(logger, "Algo anduvo mal en el server de %s", server_name);
             log_info(logger, "Cop: %d", cop);
             
             break;
-            
         }
-        
     }
 
     log_warning(logger, "El cliente se desconecto de %s server", server_name);

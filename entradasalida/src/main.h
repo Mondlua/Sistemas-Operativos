@@ -6,8 +6,8 @@
 #include <stdio.h>
 #include <utils/catedra/client.h>
 #include <utils/catedra/inicio.h>
-#include <utils/comunicacion.h>
-#include <utils/instrucciones.h>
+#include <instrucciones.h>
 
+void terminar_io();
 
 #endif

@@ -18,6 +18,9 @@ typedef enum
     PAQUETE,
     INTERFAZ,
     AVISO_DESCONEXION,
+    AVISO_OPERACION_INVALIDA,
+    AVISO_OPERACION_VALIDADA,
+    AVISO_OPERACION_FINALIZADA,
     PC,
     INSTRUCCION,
     PCB
@@ -38,7 +41,7 @@ typedef struct
 
 void enviar_mensaje(char* , int );
 void* recibir_buffer(int*, int);
-void recibir_mensaje(int, t_log*);
+char* recibir_mensaje(int, t_log*);
 int recibir_operacion(int);
 
 t_paquete* crear_paquete(void);

@@ -3,17 +3,18 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <commons/string.h>
 #include <utils/catedra/server.h>
 #include <utils/catedra/inicio.h>
 #include <inttypes.h>
 #include <commons/log.h>
 #include <pthread.h>
-#include <utils/catedra/mensajes.h>
+#include <utils/mensajesPropios.h>
 #include <commons/collections/list.h>
 #include <semaphore.h>
-#include <utils/instrucciones.h>
+#include <utils/io_operation.h>
+#include <commons/collections/queue.h>
 
-// Declaración externa de la variable global interfaces
 extern t_list* interfaces;
 extern sem_t sem_contador;
 
@@ -28,10 +29,11 @@ typedef struct
 typedef struct {
     char* nombre_interfaz;
     int socket_interfaz;  
+    t_queue* cola_block;
 } interfaz;
 
 int server_escuchar(void *arg);
-int buscar_interfaz_por_nombre(char* nombre_interfaz);
+int buscar_posicion_interfaz_por_nombre(char* nombre_interfaz);
 //t_pcb* recibir_pcb(int socket_cliente);
 
 
