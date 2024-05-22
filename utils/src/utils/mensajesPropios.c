@@ -165,8 +165,6 @@ t_pcb* recibir_pcb(int socket_cliente) {
     pcb->tabla_paginas = NULL;
     pcb->estado=*((t_proceso_estado*)list_get(valores_paquete, 4));
     pcb->algoritmo_planif= ((char*)list_get(valores_paquete, 5));
-
-    printf("%s algortimo", pcb->algoritmo_planif);
     return pcb;
     list_destroy(valores_paquete);
 

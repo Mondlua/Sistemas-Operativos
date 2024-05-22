@@ -33,18 +33,14 @@ void atender_cliente(void *void_args)
             pcb = recibir_pcb(client_socket);
 			log_info(logger, "Me llego el PCB cuyo PID es %u", pcb->pid);
             char* pc = int_to_char(pcb->p_counter);
-            sleep(10);
             enviar_pc(pc,conexion_memoria_cpu);
-            sleep(5);
             // VER
             t_instruccion* ins = recibir_instruccion_cpu(conexion_memoria_cpu);
             log_info(logger, "Me llego la INSTRUCCION %s", ins->buffer->stream);
             t_decode* decodeado= decode(ins);
-            log_info(logger, "Me llego el decode %d", decodeado->op_code);
-            log_info(logger, "Registro es %s", list_get(decodeado->registroCpu, 0));
             execute(decodeado,pcb);
-            log_info(logger, "Me llego el registro con %d",(uint8_t)pcb->registros->AX);
-            log_info(logger, "Me llego el registro con %d", (uint8_t)pcb->registros->BX);
+            log_info(logger, "Me llego el registroAX on %u",(uint8_t)pcb->registros->AX);
+            log_info(logger, "Me llego el registroBX con %u", (uint8_t)pcb->registros->BX);
 			break;
         }
             /*  case INSTRUCCION:{
