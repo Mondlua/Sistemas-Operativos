@@ -1,9 +1,10 @@
 #include "instrucciones_memoria.h"
 
+
 t_list* abrir_pseudocodigo(char* path){
 
     char* path_instrucciones = config_get_string_value(memoria_config ,"PATH_INSTRUCCIONES");
-    FILE* arch_pseudocodigo = fopen(strcat(strcat(path_instrucciones,"/"),"prueba_instrucciones.txt"), "r");
+    FILE* arch_pseudocodigo = fopen(strcat(strcat(path_instrucciones,"/"),path), "r");
         if(arch_pseudocodigo == NULL){
          log_error(memoria_log, "No se pudo abrir el archivo.\n");
          EXIT_FAILURE;
@@ -24,8 +25,8 @@ t_list* abrir_pseudocodigo(char* path){
             instruccion->buffer->stream = strdup(instruccionlinea);
             list_add_in_index(lista_inst,cont,instruccion);
             cont++;
-            printf("Longitud: %zu, Contenido: %s", instruccion->buffer->size, instruccion->buffer->stream);
-
+            //printf("Longitud: %zu, Contenido: %s", instruccion->buffer->size, instruccion->buffer->stream);
+            sem_post(&semaforo_mem); //Contador de intrucciones
             if(strcmp(instruccion->buffer->stream,"EXIT") == 0){
                  break;  
             }

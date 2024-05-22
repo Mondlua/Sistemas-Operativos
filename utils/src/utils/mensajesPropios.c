@@ -26,27 +26,30 @@ void enviar_interfaz(char* mensaje, int socket_cliente)
 
 	send(socket_cliente, a_enviar, bytes, 0);
 
-	free(a_enviar);
+	//free(a_enviar);
 	eliminar_paquete(paquete);
 }
 
-void aviso_desconexion(char* mensaje, int socket_cliente){
-	t_paquete* paquete = malloc(sizeof(t_paquete));
+void aviso_segun_cod_op(char* mensaje, int socket_cliente, int codigo_operacion){
+     t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = codigo_operacion;
+    paquete->buffer = malloc(sizeof(t_buffer));
+    paquete->buffer->size = strlen(mensaje) + 1;
+    paquete->buffer->stream = malloc(paquete->buffer->size);
+    memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
+    int bytes = paquete->buffer->size + 2*sizeof(int);
+    void* a_enviar = serializar_paquete(paquete, bytes);
+    send(socket_cliente, a_enviar, bytes, 0);
+    free(a_enviar);
+    eliminar_paquete(paquete);
+}
 
-	paquete->codigo_operacion = AVISO_DESCONEXION;
-	paquete->buffer = malloc(sizeof(t_buffer));
-	paquete->buffer->size = strlen(mensaje) + 1;
-	paquete->buffer->stream = malloc(paquete->buffer->size);
-	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
 
-	int bytes = paquete->buffer->size + 2*sizeof(int);
-
-	void* a_enviar = serializar_paquete(paquete, bytes);
-
-	send(socket_cliente, a_enviar, bytes, 0);
-
-	free(a_enviar);
-	eliminar_paquete(paquete);
+void recibir_error_oi(int socket, t_log* logger){
+    int size;
+    char* buffer = recibir_buffer(&size, socket);
+    log_info(logger, ">> %s", buffer);
+    free(buffer);
 }
 
 char* recibir_desconexion(int socket_cliente, t_log* logger)
@@ -61,9 +64,8 @@ char* recibir_desconexion(int socket_cliente, t_log* logger)
 
 void enviar_instruccion_mem(int socket_cliente, t_instruccion* instruccion){
     
-    t_buffer_ins* buffer=malloc(sizeof(t_buffer_ins)) ;
-    buffer = serializar_instruccion(instruccion);
-     
+    t_buffer_ins* buffer = serializar_instruccion(instruccion);
+    instruccion->codigo_operacion = INSTRUCCION;
     instruccion->buffer=buffer;
     int offset = 0;
     void* a_enviar = malloc(buffer->size + sizeof(op_code) + sizeof(uint32_t));
@@ -72,6 +74,7 @@ void enviar_instruccion_mem(int socket_cliente, t_instruccion* instruccion){
     memcpy(a_enviar + offset, &(instruccion->buffer->size), sizeof(uint32_t));
     offset += sizeof(uint32_t);
     memcpy(a_enviar + offset, instruccion->buffer->stream, instruccion->buffer->size);
+    offset += sizeof(buffer->size);
     int resultado_send = send(socket_cliente, a_enviar, buffer->size + sizeof(op_code) + sizeof(uint32_t), MSG_NOSIGNAL);
     if (resultado_send == -1)
         {
@@ -106,8 +109,6 @@ t_instruccion* recibir_instruccion_cpu(int socket_servidor){
     recv(socket_servidor, instruccion->buffer->stream, instruccion->buffer->size, MSG_WAITALL);
  
     return instruccion;  
-    free(instruccion->buffer);
-    free(instruccion);
 }
 
 //////////////////////////////* PCB *//////////////////////////////////////
@@ -115,7 +116,6 @@ t_instruccion* recibir_instruccion_cpu(int socket_servidor){
 void enviar_pc(char* pc, int socket_cliente){
 
     t_paquete* paquete = malloc(sizeof(t_paquete));
-
     paquete->codigo_operacion = PC;
     paquete->buffer = malloc(sizeof(t_buffer));
     paquete->buffer->size = strlen(pc)+1;
@@ -125,16 +125,17 @@ void enviar_pc(char* pc, int socket_cliente){
     int bytes = paquete->buffer->size + 2*sizeof(int);
 
     void* a_enviar = serializar_paquete(paquete, bytes);
+    
+    int resultado_send = send(socket_cliente, a_enviar, bytes, MSG_NOSIGNAL);  
 
-    int resultado_send = send(socket_cliente, a_enviar, bytes, MSG_NOSIGNAL);  // Evita la generación de SIGPIPE
-
-    if (resultado_send == -1) {
-        fprintf(stderr, "Error al enviar el program counter: socket cerrado.\n");
-    }
-
-    free(a_enviar);
+    if (resultado_send == -1)
+        {
+            printf("Error al enviar la instrucción: socket cerrado.\n");
+        }
+    
     eliminar_paquete(paquete);
 }
+
 
 char* recibir_pc(int socket_cliente){
 
@@ -148,7 +149,6 @@ char* recibir_pc(int socket_cliente){
         printf("Me llego el mensaje %s\n", buffer);
     }
     return buffer;
-    free(buffer);
 }
 
 t_pcb* recibir_pcb(int socket_cliente) {
@@ -161,11 +161,10 @@ t_pcb* recibir_pcb(int socket_cliente) {
     pcb->pid = *((uint32_t *) list_get(valores_paquete, 0)) ;
     pcb->p_counter = *((int*) list_get(valores_paquete, 1));
     pcb -> quantum = *((int*) list_get(valores_paquete, 2));
+    pcb->registros= ((cpu_registros*) list_get(valores_paquete, 3));
     pcb->tabla_paginas = NULL;
-    pcb->estado=*((t_proceso_estado*)list_get(valores_paquete, 3));
-    pcb->algoritmo_planif= ((char*)list_get(valores_paquete, 4));
-
-    printf("%s algortimo", pcb->algoritmo_planif);
+    pcb->estado=*((t_proceso_estado*)list_get(valores_paquete, 4));
+    pcb->algoritmo_planif= ((char*)list_get(valores_paquete, 5));
     return pcb;
     list_destroy(valores_paquete);
 

@@ -1,5 +1,5 @@
-#ifndef COMUNICACION_H_
-#define COMUNICACION_H_
+#ifndef CPUSERVER_H_
+#define CPUSERVER_H_
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -9,7 +9,9 @@
 #include <commons/log.h>
 #include <pthread.h>
 #include <utils/mensajesPropios.h>
-
+#include <utils/funcionesUtiles.h>
+#include "main.h"
+#include "ciclo_inst.h"
 typedef struct
 {
     t_log *log;
@@ -19,6 +21,5 @@ typedef struct
 } t_atender_cliente_args;
 
 int server_escuchar(void *arg);
-
 
 #endif

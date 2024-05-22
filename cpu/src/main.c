@@ -1,5 +1,7 @@
 #include "main.h"
 
+int conexion_memoria_cpu;
+
 int main(void){
 
     t_log* cpu_log;
@@ -13,9 +15,8 @@ int main(void){
 
     char* ip_memoria;       
     char* puerto_memoria; 
-    int conexion_memoria;
 
-
+    
     cpu_log = iniciar_logger("cpu.log","cpu");
     cpu_config = iniciar_config("cpu.config");
     
@@ -28,11 +29,11 @@ int main(void){
 	puerto_memoria = config_get_string_value(cpu_config, "PUERTO_MEMORIA");
 	
     // Establecer conexiones
-    /*
-	conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+    
+	conexion_memoria_cpu = crear_conexion(ip_memoria, puerto_memoria);
     log_info(cpu_log, "CPU conectado a MEMORIA");
-    send_handshake(conexion_memoria, cpu_log, "CPU / MEMORIA");
-    */
+    send_handshake(conexion_memoria_cpu, cpu_log, "CPU / MEMORIA");
+    
     // Recibir PCB
 
     //Ejecutar Ciclo de Instruccion
@@ -58,7 +59,7 @@ int main(void){
 
     //preguntar a zoe si esto le ponemos el hilo extra como en memoria
     // Inicio CPU INTERRUPT server
-
+    /*
     cpu_interrupt_server = iniciar_servidor(puerto_cpu_interrupt, cpu_log);
     log_info(cpu_log, "CPU INTERRUPT listo para recibir a KERNEL");
        
@@ -68,7 +69,7 @@ int main(void){
     arg->server_name = "CPU INTERRUPT";
     server_escuchar(arg);
     free(arg);
-    
+    */
 //idem
     return 0;
 }
