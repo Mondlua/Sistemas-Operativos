@@ -1,15 +1,8 @@
 #include "alg_planificacion.h"
 
-typedef enum t_motivos_desalojo // Los comparten el Kernel y el CPU
-{
-    INS_EXIT,
-    BLOCK_IO,
-    BLOCK_RECURSO
-
-} t_motivos_desalojo;
-
 void fifo(int conexion_cpu_dispatch){
    int tamanioReady = queue_size(colaReady);
+   int tamanioExec = queue_size(colaExec);
    int motivo_desalojo;
    t_pcb* pcb_actualizado;
    t_pcb* pcb_a_planificar;
@@ -18,15 +11,17 @@ void fifo(int conexion_cpu_dispatch){
    char** array_palabras;
 
     if(tamanioReady > 0){
-        while( tamanioReady>0 ){ //Cuando se implimente el comando "DETENER_PLANIFICACION", validar tambien que la planif no haya sido pausada
+       while( tamanioReady>0 && tamanioExec == 0 ){ //Cuando se implimente el comando "DETENER_PLANIFICACION", validar tambien que la planif no haya sido pausada
             pcb_a_planificar = queue_pop(colaReady);
             pcb_a_planificar->estado=EXEC;
             queue_push(colaExec,pcb_a_planificar);
             enviar_pcb_cpu(pcb_a_planificar,conexion_cpu_dispatch);
 
+            op_code motivo_desalojo = recibir_operacion(conexion_cpu_dispatch);
             pcb_actualizado = recibir_pcb(conexion_cpu_dispatch);
-            motivo_desalojo = recibir_motivo_desalojo(conexion_cpu_dispatch); // TO DO
-            queue_pop(colaExec);
+
+            pcb_a_planificar = queue_pop(colaExec);
+
             switch (motivo_desalojo) {
                 case INS_EXIT:
                     cambiar_a_exit(pcb_actualizado);
@@ -39,7 +34,7 @@ void fifo(int conexion_cpu_dispatch){
                     char* instruccionIO = array_palabras[0];
                     char* interfazIO = array_palabras[1];
 
-                if(!validar_conexion_IO(interfazIO)){ // Si no existe la interfaz o no esta conectada , el proceso pasa a EXIT
+                if(!validar_peticion(interfazIO)){ // Si no existe la interfaz o no esta conectada , el proceso pasa a EXIT
                     cambiar_a_exit(pcb_actualizado);
                     break;
                 } else if(!validar_operacion(tipoInterfaz,instruccion)){ // Si no puede realizar la operacion solicitada, el proceso pasa a EXIT
@@ -85,16 +80,17 @@ void fifo(int conexion_cpu_dispatch){
                 
                 default:
             }
-
-            tamanioReady = queue_size(colaReady);
+            free(pcb_a_planificar);
+            int tamanioReady = queue_size(colaReady);
+            int tamanioExec = queue_size(colaExec);
         }
    }
-
+//}
 
    //---------------------------------
   t_instruccion* recibir_instruccion_memoria(int socket_conexion){
     enviar_pc(int_to_char(pcb_a_planificar->p_counter),conexion_memoria);
-    t_instruccion* instruccion = recibir_instruccion_memoria(conexion_memoria); // esta funcion tiene el nombre de recibir_instruccion_cpu
+    t_instruccion* instruccion = recibir_instruccion_cpu(conexion_memoria); // esta funcion tednria que tener nombre de recibir_instruccion_memoria
    }
 
    void manejar_operacion_io(t_instruccion* instruccion, char* interfazIO){
@@ -102,12 +98,6 @@ void fifo(int conexion_cpu_dispatch){
     //enviar instruccion a la IO correspondiente
     //recibir notificacion de la IO
    }
-
-validar_conexion_IO(char* interfazIO){
-    //asumo que vamos a hacer una lista de las interfaces que se van conectando al kernel
-    
-
-}
 
 
 void cambiar_a_ready(t_pcb* pcb){

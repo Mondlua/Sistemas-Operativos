@@ -68,7 +68,7 @@ void iniciar_proceso(char* path){
     }*/
 
     sem_wait(&grado_actual);
-    pcb_plp = queue_pop(colaNew);
+    t_pcb* pcb_plp = queue_pop(colaNew);
     queue_push(colaReady, pcb_plp);
     pcb->estado=READY;
     log_info(kernel_log,"Proceso con PID %u pasado a la cola READY",pcb->pid);
