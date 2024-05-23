@@ -50,13 +50,13 @@ int main(void) {
     // Interfaces
     interfaz = config_get_string_value(entradasalida_config, "TIPO_INTERFAZ");
     tiempo = config_get_int_value(entradasalida_config, "TIEMPO_UNIDAD_TRABAJO");
-    enviar_interfaz(nombre_interfaz, conexion_kernel);
+    aviso_segun_cod_op(nombre_interfaz, conexion_kernel, INTERFAZ);
 
     instruccion_params* instruccion_recibir = recibir_instruccion(interfaz, conexion_kernel);
     if (instruccion_recibir != NULL)
     {
-        char* unidades_trabajo_recibidas = instruccion_recibir->params.io_gen_sleep_params.unidades_trabajo;
-        printf("Instrucción recibida: IO_GEN_SLEEP a la interfaz 'pepe' de %s unidades de trabajo.\n", unidades_trabajo_recibidas);
+        int unidades_trabajo_recibidas = instruccion_recibir->params.io_gen_sleep_params.unidades_trabajo;
+        printf("Instrucción recibida: IO_GEN_SLEEP a la interfaz 'pepe' de %i unidades de trabajo.\n", unidades_trabajo_recibidas);
     }
     else
     {
@@ -66,7 +66,7 @@ int main(void) {
 
     terminar_io();
 
-    aviso_desconexion(nombre_interfaz, conexion_kernel);
+    aviso_segun_cod_op(nombre_interfaz, conexion_kernel, AVISO_DESCONEXION);
     return 0;
 }
 

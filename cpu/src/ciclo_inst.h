@@ -4,29 +4,7 @@
 #include <utils/mensajesPropios.h>
 #include <commons/collections/list.h>
 #include <commons/string.h>
-
-
-typedef enum instrucciones{
-SET,
-MOV_IN,
-MOV_OUT, 
-SUM,
-SUB,
-JNZ,
-RESIZE,
-COPY_STRING,
-WAIT,
-SIGNAL,
-IO_GEN_SLEEP,
-IO_STDIN_READ,
-IO_STDOUT_WRITE,
-IO_FS_CREATE,
-IO_FS_DELETE,
-IO_FS_TRUNCATE,
-IO_FS_WRITE,
-IO_FS_READ,
-EXIIT
-}instrucciones;
+#include <utils/io_operation.h>
 
 
 typedef struct t_decode {
@@ -34,6 +12,7 @@ instrucciones op_code;
 t_list* registroCpu;
 int valor;
 char* recurso;
+char* interfaz;
 bool logicaAFisica;
 }t_decode;
 

@@ -20,7 +20,6 @@ typedef struct t_instruccion{
 
 
 void aviso_segun_cod_op(char* , int, int);
-void enviar_interfaz(char* mensaje, int socket_cliente);
 char* recibir_interfaz(int socket_cliente, t_log* logger);
 char* recibir_desconexion(int socket_cliente, t_log* logger);
 void recibir_error_oi(int socket, t_log* logger);
