@@ -33,7 +33,9 @@ void atender_cliente(void *void_args)
             pcb = recibir_pcb(client_socket);
 			log_info(logger, "Me llego el PCB cuyo PID es %u", pcb->pid);
             char* pc = int_to_char(pcb->p_counter);
+            sleep(5);
             enviar_pc(pc,conexion_memoria_cpu);
+            sleep(5);
             // VER
             t_instruccion* ins = recibir_instruccion_cpu(conexion_memoria_cpu);
             log_info(logger, "Me llego la INSTRUCCION %s", ins->buffer->stream);
