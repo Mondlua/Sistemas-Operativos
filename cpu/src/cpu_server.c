@@ -1,11 +1,13 @@
 #include "cpu_server.h"
 
+int kernel_socket;
+
 void atender_cliente(void *void_args)
 {
     t_atender_cliente_args *args = (t_atender_cliente_args *)void_args;
 
     t_log *logger = args->log;
-    int client_socket = args->c_socket;
+    kernel_socket = args->c_socket;
     char *server_name = args->server_name;
     
     free(args);
@@ -14,9 +16,9 @@ void atender_cliente(void *void_args)
 
     //MEMORIA a CPU
     
-    while (client_socket != -1)
+    while (kernel_socket != -1)
     {   
-        op_code cop = recibir_operacion(client_socket);
+        op_code cop = recibir_operacion(kernel_socket);
 
         if (cop == -1)
         {
@@ -30,7 +32,7 @@ void atender_cliente(void *void_args)
         case PAQUETE:{}
         case PCB:
         {
-            pcb = recibir_pcb(client_socket);
+            pcb = recibir_pcb(kernel_socket);
 			log_info(logger, "Me llego el PCB cuyo PID es %u", pcb->pid);
             char* pc = int_to_char(pcb->p_counter);
             sleep(10);
@@ -41,10 +43,7 @@ void atender_cliente(void *void_args)
             log_info(logger, "Me llego la INSTRUCCION %s", ins->buffer->stream);
             t_decode* decodeado= decode(ins);
             log_info(logger, "Me llego el decode %d", decodeado->op_code);
-            log_info(logger, "Registro es %s", list_get(decodeado->registroCpu, 0));
             execute(decodeado,pcb);
-            log_info(logger, "Me llego el registro con %d",(uint8_t)pcb->registros->AX);
-            log_info(logger, "Me llego el registro con %d", (uint8_t)pcb->registros->BX);
 			break;
         }
             /*  case INSTRUCCION:{
