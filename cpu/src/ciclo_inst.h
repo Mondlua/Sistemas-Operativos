@@ -35,6 +35,7 @@ t_list* registroCpu;
 int valor;
 char* recurso;
 bool logicaAFisica;
+instrucciones instrucciones;
 }t_decode;
 
 typedef struct {
@@ -44,9 +45,10 @@ typedef struct {
 } registro_mapa;
 
 
-t_instruccion* fetch(t_pcb* pcb, int conexion_memoria);
+t_instruccion* fetch(int conexion_memoria, t_pcb* pcb);
 t_decode* decode(t_instruccion* ins);
+void execute(t_decode* deacodeado, t_pcb* pcb);
 instrucciones obtener_instruccion(char *nombre);
-// Momentaneo
+void realizar_ciclo_inst(int conexion_memoria, t_pcb* pcb);
 
 #endif
