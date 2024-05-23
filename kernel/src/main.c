@@ -70,7 +70,7 @@ int main(void)
 
     // Planificacion
 
-    algoritmo=config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
+    //algoritmo=config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
     int grado_multiprog = config_get_int_value(kernel_config, "GRADO_MULTIPROGRAMACION");
     sem_init(&grado_actual, 0, grado_multiprog);
     /* KERNEL - Servidor */

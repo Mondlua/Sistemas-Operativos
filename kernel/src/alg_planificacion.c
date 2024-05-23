@@ -1,6 +1,7 @@
 #include "alg_planificacion.h"
 
 void fifo(int conexion_cpu_dispatch){
+
    int tamanioReady = queue_size(colaReady);
    int tamanioExec = queue_size(colaExec);
    int motivo_desalojo;
@@ -99,13 +100,16 @@ void fifo(int conexion_cpu_dispatch){
     //recibir notificacion de la IO
    }
 
-
 void cambiar_a_ready(t_pcb* pcb){
-    pcb_actualizado->estado=READY;
+    pcb->estado=READY;
     queue_push(colaReady, pcb);
 }
 
 void cambiar_a_exit(t_pcb* pcb){
-    pcb_actualizado->estado=EXIT;
+    pcb->estado=EXIT;
     queue_push(colaExit, pcb);
+}
+
+void rr(int conexion_cpu_dispatch){
+
 }

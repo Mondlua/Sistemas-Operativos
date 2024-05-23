@@ -67,7 +67,7 @@ void iniciar_proceso(char* path){
         log_info(kernel_log,"Proceso con PID %u pasado a la cola READY",pcb->pid);
     }*/
 
-    sem_wait(&grado_actual);
+    //sem_wait(&grado_actual);
     t_pcb* pcb_plp = queue_pop(colaNew);
     queue_push(colaReady, pcb_plp);
     pcb->estado=READY;
@@ -85,6 +85,16 @@ void finalizar_proceso(uint32_t pid){
     log_info(kernel_log, ">> Se finaliza proceso %i", pid);
 }
 void iniciar_planificacion(){
+    char* algoritmo=config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
+    if(strcmp(algoritmo, "FIFO")){
+        pthread_t alg_planificacion;
+        pthread_create(&alg_planificacion, NULL, (void*) fifo, (void*) conexion_cpu_dispatch);
+        pthread_detach(alg_planificacion);
+    } else if(strcmp(algoritmo, "RR")){
+        pthread_t alg_planificacion;
+        pthread_create(&alg_planificacion, NULL, (void*) rr, (void*) conexion_cpu_dispatch);
+        pthread_detach(alg_planificacion);
+    }
     log_info(kernel_log, ">> Se inicio la planificacion");
 }
 void detener_planificacion(){
