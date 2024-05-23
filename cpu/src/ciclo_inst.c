@@ -11,18 +11,62 @@ t_instruccion* fetch(t_pcb* pcb, int conexion_memoria){
     return instruccion;
 }
 
+void eliminar_linea_n(char* linea){
+    if(linea[strlen(linea)-1] == '\n'){
+        linea[strlen(linea)-1]='\0';
+    }
+}
+
+instrucciones obtener_instruccion(char *nombre) {
+    if (strcmp(nombre, "SET") == 0) {
+        return SET;
+    } else if (strcmp(nombre, "MOV_IN") == 0) {
+        return MOV_IN;
+    } else if (strcmp(nombre, "MOV_OUT") == 0) {
+        return MOV_OUT;
+    } else if (strcmp(nombre, "SUM") == 0) {
+        return SUM;
+    } else if (strcmp(nombre, "SUB") == 0) {
+        return SUB;
+    } else if (strcmp(nombre, "JNZ") == 0) {
+        return JNZ;
+    } else if (strcmp(nombre, "RESIZE") == 0) {
+        return RESIZE;
+    } else if (strcmp(nombre, "COPY_STRING") == 0) {
+        return COPY_STRING;
+    } else if (strcmp(nombre, "WAIT") == 0) {
+        return WAIT;
+    } else if (strcmp(nombre, "SIGNAL") == 0) {
+        return SIGNAL;
+    } else if (strcmp(nombre, "IO_GEN_SLEEP") == 0) {
+        return IO_GEN_SLEEP;
+    } else if (strcmp(nombre, "IO_STDIN_READ") == 0) {
+        return IO_STDIN_READ;
+    } else if (strcmp(nombre, "IO_STDOUT_WRITE") == 0) {
+        return IO_STDOUT_WRITE;
+    } else if (strcmp(nombre, "IO_FS_CREATE") == 0) {
+        return IO_FS_CREATE;
+    } else if (strcmp(nombre, "IO_FS_DELETE") == 0) {
+        return IO_FS_DELETE;
+    } else if (strcmp(nombre, "IO_FS_TRUNCATE") == 0) {
+        return IO_FS_TRUNCATE;
+    } else if (strcmp(nombre, "IO_FS_WRITE") == 0) {
+        return IO_FS_WRITE;
+    } else if (strcmp(nombre, "IO_FS_READ") == 0) {
+        return IO_FS_READ;
+    } else if (strcmp(nombre, "EXIIT") == 0) {
+        return EXIIT;
+    } else {
+        return -1;
+    }
+}
+
 t_decode* decode(t_instruccion* instruccion){
 
-    instrucciones ins;
-    char* buffer = (char*) instruccion->buffer->stream;
-    char** arrayIns = string_split(buffer," ");
-    string_trim(arrayIns);
-
-    for(int i=0; i<(sizeof(arrayIns)/sizeof(arrayIns[0])); i++){
-        printf("en el array hay %s", arrayIns[i]);
-        
-    }
-    ins = obtener_instruccion(arrayIns[0]);
+        char* buffer = (char*) instruccion->buffer->stream;
+    eliminar_linea_n(buffer);
+    char** arrayIns = string_split(buffer," ");    
+    instrucciones ins= obtener_instruccion(arrayIns[0]);
     t_decode* decode = malloc(sizeof(t_decode));
     decode->op_code = ins;
     decode->registroCpu = list_create();
@@ -51,11 +95,9 @@ t_decode* decode(t_instruccion* instruccion){
         break;
         }
         case 3:{
-        char* registroDestino = strdup(arrayIns[1]);
-        printf("decode registro AX = .%s.", registroDestino);
+        char* registroDestino = arrayIns[1];
         list_add(decode->registroCpu,registroDestino);
-        char* registroOrigen= strdup(arrayIns[2]);
-        printf("decode registro BX=.%s. y length %d",registroOrigen, string_length(registroOrigen));
+        char* registroOrigen= arrayIns[2];
         list_add(decode->registroCpu,registroOrigen);     
         break;
         }
@@ -124,49 +166,7 @@ t_decode* decode(t_instruccion* instruccion){
    return decode;
 }
 
-instrucciones obtener_instruccion(char *nombre) {
-    if (strcmp(nombre, "SET") == 0) {
-        return SET;
-    } else if (strcmp(nombre, "MOV_IN") == 0) {
-        return MOV_IN;
-    } else if (strcmp(nombre, "MOV_OUT") == 0) {
-        return MOV_OUT;
-    } else if (strcmp(nombre, "SUM") == 0) {
-        return SUM;
-    } else if (strcmp(nombre, "SUB") == 0) {
-        return SUB;
-    } else if (strcmp(nombre, "JNZ") == 0) {
-        return JNZ;
-    } else if (strcmp(nombre, "RESIZE") == 0) {
-        return RESIZE;
-    } else if (strcmp(nombre, "COPY_STRING") == 0) {
-        return COPY_STRING;
-    } else if (strcmp(nombre, "WAIT") == 0) {
-        return WAIT;
-    } else if (strcmp(nombre, "SIGNAL") == 0) {
-        return SIGNAL;
-    } else if (strcmp(nombre, "IO_GEN_SLEEP") == 0) {
-        return IO_GEN_SLEEP;
-    } else if (strcmp(nombre, "IO_STDIN_READ") == 0) {
-        return IO_STDIN_READ;
-    } else if (strcmp(nombre, "IO_STDOUT_WRITE") == 0) {
-        return IO_STDOUT_WRITE;
-    } else if (strcmp(nombre, "IO_FS_CREATE") == 0) {
-        return IO_FS_CREATE;
-    } else if (strcmp(nombre, "IO_FS_DELETE") == 0) {
-        return IO_FS_DELETE;
-    } else if (strcmp(nombre, "IO_FS_TRUNCATE") == 0) {
-        return IO_FS_TRUNCATE;
-    } else if (strcmp(nombre, "IO_FS_WRITE") == 0) {
-        return IO_FS_WRITE;
-    } else if (strcmp(nombre, "IO_FS_READ") == 0) {
-        return IO_FS_READ;
-    } else if (strcmp(nombre, "EXIIT") == 0) {
-        return EXIIT;
-    } else {
-        return -1;
-    }
-}
+
 
 void asignar_registro(cpu_registros* regs, const char* nombre_registro, uint8_t valor) {
     if (strcmp(nombre_registro, "PC") == 0)  {regs->PC=valor;}
@@ -201,7 +201,7 @@ void* obtener_valor_registro(cpu_registros* regs, char* nombre_registro) {
 void execute(t_decode* decode, t_pcb* pcb){
     
     instrucciones ins = decode->op_code;
-
+    printf("holaa\n");
     switch(ins){
     
         case 0:{
@@ -213,10 +213,11 @@ void execute(t_decode* decode, t_pcb* pcb){
         case 1:{}
         case 2:{}
         case 3:{
+            printf("entre\n");
             char* registroDestino = (char*)list_get(decode->registroCpu,0);
-            char* registroOrigen = (char*)list_get(decode->registroCpu,19);
-            printf("REGISTRO=.%s.", registroOrigen);
-            printf("REGISTRO=.%s.", registroDestino);
+            char* registroOrigen = (char*)list_get(decode->registroCpu,1);
+            printf("REGISTRO=.%s.\n", registroOrigen);
+            printf("REGISTRO=.%s.\n", registroDestino);
             uint8_t valor2 = (uint8_t) obtener_valor_registro(pcb->registros, registroDestino);
             uint8_t valor1 = (uint8_t) obtener_valor_registro(pcb->registros, registroOrigen);
             printf("VALOR BX1= %u", valor1);
