@@ -10,6 +10,7 @@ void validar_peticion(char* interfaz_a_validar, int tiempo) {
 
         if (interfaz_encontrada != NULL) {
             enviar_instruccion_a_interfaz(interfaz_encontrada, tiempo);
+            // SE BLOQUEA CUANDO RECIBA UN AVISO DE OPERACION VALIDADA (ESTO ESTA EN SERVER_KERNEL)
         } else {
             printf("La interfaz '%s' no existe en la lista.\n", interfaz_a_validar);
             //ENVIAR PR0CESO A EXIT
