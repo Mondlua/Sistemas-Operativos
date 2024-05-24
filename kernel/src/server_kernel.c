@@ -75,13 +75,36 @@ void atender_cliente(void *void_args)
         case AVISO_OPERACION_VALIDADA:
         {
             // CAMBIAR PCB A ESTADO BLOCK
-            // SUMAR PROCESO A COLA BLOCK DE INTERFAZ
+            /*
+            char* interfaz_recibida = recibir_op_validada(client_socket, logger);
+            int posicion_interfaz = buscar_posicion_interfaz_por_nombre(interfaz_recibida);
+            if (posicion_interfaz != -1) {
+                //interfaz* interfaz_encontrada = (interfaz*)list_get(interfaces, posicion_interfaz);
+                //interfaz_encontrada->cola_block = queue_push(pcb);
+                // SUMAR PROCESO A COLA BLOCK DE INTERFAZ
+            } else {
+                log_error(logger, "No se encontró la interfaz %s en la lista", interfaz_recibida);
+                free(interfaz_recibida); 
+            }
+            */
+            
             break;
         }
         case AVISO_OPERACION_FINALIZADA:
         {
             //CAMBIAR PCB A ESTADO READY O EXIT
-            // SACAR PROCESO DE COLA BLOCK DE INTERFAZ
+            
+            char* interfaz_recibida = recibir_op_finalizada(client_socket, logger);
+            /*int posicion_interfaz = buscar_posicion_interfaz_por_nombre(interfaz_recibida);
+            if (posicion_interfaz != -1) {
+                //interfaz* interfaz_encontrada = (interfaz*)list_get(interfaces, posicion_interfaz);
+                //interfaz_encontrada->cola_block = queue_pop(pcb);
+                // SACAR PROCESO DE COLA BLOCK DE INTERFAZ
+            } else {
+                log_error(logger, "No se encontró la interfaz %s en la lista", interfaz_recibida);
+                free(interfaz_recibida); 
+            }
+            */
         }
         default:
             log_error(logger, "Algo anduvo mal en el server de %s", server_name);

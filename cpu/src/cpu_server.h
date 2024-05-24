@@ -12,6 +12,8 @@
 #include <utils/funcionesUtiles.h>
 #include "main.h"
 #include "ciclo_inst.h"
+
+extern int kernel_socket;
 typedef struct
 {
     t_log *log;

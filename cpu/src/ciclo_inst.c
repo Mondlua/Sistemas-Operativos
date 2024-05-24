@@ -142,6 +142,10 @@ t_decode* decode(t_instruccion* instruccion){
         break;
         }
         case 10:{
+            char* interfaz = strdup(arrayIns[1]);
+            decode->interfaz = interfaz;
+            int unidadesTrabajo = atoi(arrayIns[2]);
+            decode->valor = unidadesTrabajo;
             break;
         }
         case 11:{
@@ -169,8 +173,11 @@ t_decode* decode(t_instruccion* instruccion){
             break;
         }
     }
-   
-   return decode;
+    for (int i = 0; arrayIns[i] != NULL; i++) {
+    free(arrayIns[i]);
+    }
+    free(arrayIns);
+    return decode;
 }
 
 void asignar_registro(cpu_registros* regs, const char* nombre_registro, void* valor) {
@@ -246,7 +253,20 @@ void execute(t_decode* decode, t_pcb* pcb){
         case 7:{}
         case 8:{}
         case 9:{}
-        case 10:{}
+        case 10:{
+            instruccion_params* parametros =  malloc(sizeof(instruccion_params));;
+            parametros->interfaz = strdup(decode->interfaz);;
+            parametros->params.io_gen_sleep_params.unidades_trabajo = decode->valor;
+
+            t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion));;
+            paquete->codigo_operacion = IO_GEN_SLEEP;
+            enviar_instruccion_a_Kernel(paquete, parametros, kernel_socket);
+        
+            free(parametros->interfaz); 
+            free(parametros);
+            free(paquete);
+            break;
+        }
         case 11:{}
         case 12:{}
         case 13:{}
