@@ -1,127 +1,25 @@
 #include "ciclo_inst.h"
 
-t_instruccion* fetch(t_pcb* pcb, int conexion_memoria){
+t_instruccion* fetch(int conexion_memoria, t_pcb* pcb){
     
     t_instruccion* instruccion;
 
     enviar_pc(int_to_char(pcb->p_counter),conexion_memoria);
+
+    // SEMAFORO
+    sleep(5);
+
     instruccion = recibir_instruccion_cpu(conexion_memoria);
     
     pcb->p_counter++;
+
     return instruccion;
 }
 
-t_decode* decode(t_instruccion* instruccion){
-
-    instrucciones ins;
-    char* buffer = (char*) instruccion->buffer->stream;
-    char** arrayIns = string_split(buffer," ");
-    string_trim(arrayIns);
-
-    for(int i=0; i<(sizeof(arrayIns)/sizeof(arrayIns[0])); i++){
-        printf("en el array hay %s", arrayIns[i]);
-        
+void eliminar_linea_n(char* linea){
+    if(linea[strlen(linea)-1] == '\n'){
+        linea[strlen(linea)-1]='\0';
     }
-    ins = obtener_instruccion(arrayIns[0]);
-    t_decode* decode = malloc(sizeof(t_decode));
-    decode->op_code = ins;
-    decode->registroCpu = list_create();
-    
-    switch(ins){
-        case 0:{
-        char* registro = arrayIns[1];
-        list_add(decode->registroCpu, registro);
-        int valor =atoi(arrayIns[2]);
-        decode->valor = valor;     
-        break;     
-        }
-        case 1:{
-        char* registroDatos = arrayIns[1];
-        list_add(decode->registroCpu,registroDatos);
-        char* registroDireccion = arrayIns[2];
-        list_add(decode->registroCpu,registroDireccion);     
-        break;
-        }
-        case 2:{
-        char* registroDireccion = arrayIns[1];
-        list_add(decode->registroCpu,registroDireccion);
-        char* registroDatos = arrayIns[2];
-        list_add(decode->registroCpu,registroDatos);   
-        decode->logicaAFisica= true;  
-        break;
-        }
-        case 3:{
-        char* registroDestino = strdup(arrayIns[1]);
-        printf("decode registro AX = .%s.", registroDestino);
-        list_add(decode->registroCpu,registroDestino);
-        char* registroOrigen= strdup(arrayIns[2]);
-        printf("decode registro BX=.%s. y length %d",registroOrigen, string_length(registroOrigen));
-        list_add(decode->registroCpu,registroOrigen);     
-        break;
-        }
-        case 4:{
-        char* registroDestino = arrayIns[1];
-        list_add(decode->registroCpu,registroDestino);
-        char* registroOrigen= arrayIns[2];
-        list_add(decode->registroCpu,registroOrigen);
-        break;
-        }
-        case 5:{
-        instrucciones ins = obtener_instruccion(arrayIns[1]);
-        decode->op_code= ins;
-        break;
-        }
-        case 6:{
-        int tamanio = atoi(arrayIns[1]);
-        decode->valor= tamanio;
-        break;
-        }   
-        case 7:{
-        int tamanio = atoi(arrayIns[1]);
-        decode->valor= tamanio;
-        break;
-        }
-        case 8:{
-        char *rec;
-        rec= arrayIns[1];
-        decode->recurso = rec;
-        break;
-        }
-        case 9:{
-        char* recu = arrayIns[1];
-        decode->recurso=recu;
-        break;
-        }
-        case 10:{
-            break;
-        }
-        case 11:{
-            break;
-        }
-        case 12:{
-            break;
-        }
-        case 13:{
-            break;
-        }
-        case 14:{
-            break;
-        }
-        case 15:{
-            break;
-        }
-        case 16:{
-            break;
-        }
-        case 17:{
-            break;
-        }
-        case 18:{
-            break;
-        }
-    }
-   
-   return decode;
 }
 
 instrucciones obtener_instruccion(char *nombre) {
@@ -168,7 +66,121 @@ instrucciones obtener_instruccion(char *nombre) {
     }
 }
 
-void asignar_registro(cpu_registros* regs, const char* nombre_registro, uint8_t valor) {
+t_decode* decode(t_instruccion* instruccion){
+
+    char* buffer = (char*) instruccion->buffer->stream;
+    eliminar_linea_n(buffer);
+    char** arrayIns = string_split(buffer," ");    
+    instrucciones ins= obtener_instruccion(arrayIns[0]);
+    t_decode* decode = malloc(sizeof(t_decode));
+    decode->op_code = ins;
+    decode->registroCpu = list_create();
+    
+    switch(ins){
+        case 0:{
+        char* registro = arrayIns[1];
+        list_add(decode->registroCpu, registro);
+        int valor =atoi(arrayIns[2]);
+        decode->valor = valor;     
+        break;     
+        }
+        case 1:{
+        char* registroDatos = arrayIns[1];
+        list_add(decode->registroCpu,registroDatos);
+        char* registroDireccion = arrayIns[2];
+        list_add(decode->registroCpu,registroDireccion);     
+        break;
+        }
+        case 2:{
+        char* registroDireccion = arrayIns[1];
+        list_add(decode->registroCpu,registroDireccion);
+        char* registroDatos = arrayIns[2];
+        list_add(decode->registroCpu,registroDatos);   
+        decode->logicaAFisica= true;  
+        break;
+        }
+        case 3:{
+        char* registroDestino = arrayIns[1];
+        list_add(decode->registroCpu,registroDestino);
+        char* registroOrigen= arrayIns[2];
+        list_add(decode->registroCpu,registroOrigen);     
+        break;
+        }
+        case 4:{
+        char* registroDestino = arrayIns[1];
+        list_add(decode->registroCpu,registroDestino);
+        char* registroOrigen= arrayIns[2];
+        list_add(decode->registroCpu,registroOrigen);
+        break;
+        }
+        case 5:{
+        char* registro=arrayIns[1];
+        list_add(decode->registroCpu,registro);
+        instrucciones ins = atoi(arrayIns[2]);
+        decode->instrucciones= ins;
+        break;
+        }
+        case 6:{
+        int tamanio = atoi(arrayIns[1]);
+        decode->valor= tamanio;
+        break;
+        }   
+        case 7:{
+        int tamanio = atoi(arrayIns[1]);
+        decode->valor= tamanio;
+        break;
+        }
+        case 8:{
+        char *rec;
+        rec= arrayIns[1];
+        decode->recurso = rec;
+        break;
+        }
+        case 9:{
+        char* recu = arrayIns[1];
+        decode->recurso=recu;
+        break;
+        }
+        case 10:{
+            char* interfaz = strdup(arrayIns[1]);
+            decode->interfaz = interfaz;
+            int unidadesTrabajo = atoi(arrayIns[2]);
+            decode->valor = unidadesTrabajo;
+            break;
+        }
+        case 11:{
+            break;
+        }
+        case 12:{
+            break;
+        }
+        case 13:{
+            break;
+        }
+        case 14:{
+            break;
+        }
+        case 15:{
+            break;
+        }
+        case 16:{
+            break;
+        }
+        case 17:{
+            break;
+        }
+        case 18:{
+            break;
+        }
+    }
+    for (int i = 0; arrayIns[i] != NULL; i++) {
+    free(arrayIns[i]);
+    }
+    free(arrayIns);
+    return decode;
+}
+
+void asignar_registro(cpu_registros* regs, const char* nombre_registro, void* valor) {
     if (strcmp(nombre_registro, "PC") == 0)  {regs->PC=valor;}
     else if (strcmp(nombre_registro, "AX") == 0)  {regs->AX=valor;}
     else if (strcmp(nombre_registro, "BX") == 0)  {regs->BX=valor;}
@@ -194,14 +206,12 @@ void* obtener_valor_registro(cpu_registros* regs, char* nombre_registro) {
     else if (strcmp(nombre_registro, "EDX") == 0) {return regs->EDX;}
     else if (strcmp(nombre_registro, "SI") == 0) {return regs->SI;}
     else if (strcmp(nombre_registro, "DI") == 0) {return regs->DI;}
-    
-   // else {return NULL;}
+    else {return NULL;}
 }
 
 void execute(t_decode* decode, t_pcb* pcb){
     
     instrucciones ins = decode->op_code;
-
     switch(ins){
     
         case 0:{
@@ -214,26 +224,49 @@ void execute(t_decode* decode, t_pcb* pcb){
         case 2:{}
         case 3:{
             char* registroDestino = (char*)list_get(decode->registroCpu,0);
-            char* registroOrigen = (char*)list_get(decode->registroCpu,19);
-            printf("REGISTRO=.%s.", registroOrigen);
-            printf("REGISTRO=.%s.", registroDestino);
+            char* registroOrigen = (char*)list_get(decode->registroCpu,1);
             uint8_t valor2 = (uint8_t) obtener_valor_registro(pcb->registros, registroDestino);
             uint8_t valor1 = (uint8_t) obtener_valor_registro(pcb->registros, registroOrigen);
-            printf("VALOR BX1= %u", valor1);
-            printf("VALOR AX2= %u", valor2);
             uint8_t suma = valor1 + valor2;
-            printf("valor suma %u", suma);
             asignar_registro(pcb->registros, registroDestino, suma);
-            printf("   en el ax ya sumado hay %u", pcb->registros->AX);
             break;
         }
-        case 4:{}
-        case 5:{}
+        case 4:{
+            char* registroDestino=(char*)list_get(decode->registroCpu, 0);
+            char* registroOrigen=(char*)list_get(decode->registroCpu, 1);
+            uint8_t valor2 = (uint8_t) obtener_valor_registro(pcb->registros, registroDestino);
+            uint8_t valor1 = (uint8_t) obtener_valor_registro(pcb->registros, registroOrigen);
+            uint8_t resta = valor2 - valor1;
+            asignar_registro(pcb->registros, registroDestino, resta);
+            break;
+        }
+        case 5:{
+            char* registro = (char*)list_get(decode->registroCpu, 0);
+            uint8_t valor=obtener_valor_registro(pcb->registros, registro);
+            if(valor!=0){
+                instrucciones ins= decode->instrucciones;
+                pcb->p_counter=ins;
+            }
+        break;
+        }
         case 6:{}
         case 7:{}
         case 8:{}
         case 9:{}
-        case 10:{}
+        case 10:{
+            instruccion_params* parametros =  malloc(sizeof(instruccion_params));;
+            parametros->interfaz = strdup(decode->interfaz);;
+            parametros->params.io_gen_sleep_params.unidades_trabajo = decode->valor;
+
+            t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion));;
+            paquete->codigo_operacion = IO_GEN_SLEEP;
+            enviar_instruccion_a_Kernel(paquete, parametros, kernel_socket);
+        
+            free(parametros->interfaz); 
+            free(parametros);
+            free(paquete);
+            break;
+        }
         case 11:{}
         case 12:{}
         case 13:{}
@@ -246,4 +279,8 @@ void execute(t_decode* decode, t_pcb* pcb){
 
 }
 
-
+void realizar_ciclo_inst(int conexion_memoria, t_pcb* pcb){
+   t_instruccion* ins = fetch(conexion_memoria,pcb);
+   t_decode* decodeado = decode(ins);
+   execute(decodeado, pcb);
+}

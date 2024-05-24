@@ -4,7 +4,7 @@
 instruccion_params* deserializar_io_gen_sleep(t_buffer_ins* buffer)
 {
     instruccion_params* parametros = malloc(sizeof(instruccion_params));
-    parametros->params.io_gen_sleep_params.unidades_trabajo = strdup(buffer->stream); // Asignar la cadena desde el stream
+    memcpy(&(parametros->params.io_gen_sleep_params.unidades_trabajo), buffer->stream, sizeof(int));
     return parametros;
 }
 
@@ -12,7 +12,7 @@ instruccion_params* recibir_instruccion(char* tipo_interfaz, int socket_servidor
 {
     t_paquete_instruccion* instruccion = malloc(sizeof(t_paquete_instruccion));
     instruccion->buffer = malloc(sizeof(t_buffer_ins));
-    recv(socket_servidor, &(instruccion->codigo_operacion), sizeof(IO_OPERATION), MSG_WAITALL);
+    recv(socket_servidor, &(instruccion->codigo_operacion), sizeof(instrucciones), MSG_WAITALL);
     recv(socket_servidor, &(instruccion->buffer->size), sizeof(uint32_t), MSG_WAITALL);
     instruccion->buffer->stream = malloc(instruccion->buffer->size);
     recv(socket_servidor, instruccion->buffer->stream, instruccion->buffer->size, MSG_WAITALL);
@@ -22,8 +22,8 @@ instruccion_params* recibir_instruccion(char* tipo_interfaz, int socket_servidor
     {
         case IO_GEN_SLEEP:
             param = deserializar_io_gen_sleep(instruccion->buffer);
-            char* aviso = "ENVIAR PROCESO A BLOCK!!";
-            aviso_segun_cod_op(aviso, socket_servidor, AVISO_OPERACION_VALIDADA);
+            aviso_segun_cod_op(nombre_interfaz, socket_servidor, AVISO_OPERACION_VALIDADA);
+           //meter a una cola de operaciones y hacer signal
             break;
         // OTRAS FUNCIONES
         default:
@@ -35,7 +35,7 @@ instruccion_params* recibir_instruccion(char* tipo_interfaz, int socket_servidor
     }
     else{
         char* error = "ERROR DE OPERACION!!";
-        aviso_segun_cod_op(error, socket_servidor, AVISO_DESCONEXION);
+        aviso_segun_cod_op(error, socket_servidor, AVISO_OPERACION_INVALIDA);
         param = NULL;
     }
     free(instruccion->buffer);
@@ -45,9 +45,9 @@ instruccion_params* recibir_instruccion(char* tipo_interfaz, int socket_servidor
 
 int validar_operacion(char* tipo_interfaz, int codigo_operacion){
     int resultado = 0;
-    if(strcmp(tipo_interfaz, "GENERICA") == 0 && codigo_operacion == 0){resultado = 1;}
-    else if(strcmp(tipo_interfaz, "STDIN") == 0 && codigo_operacion == 1){resultado = 1;}
-    else if(strcmp(tipo_interfaz, "STDOUT") == 0 && codigo_operacion == 2){resultado = 1;}
-    else if(strcmp(tipo_interfaz, "DIALFS") == 0 && (codigo_operacion > 2 && codigo_operacion < 8)){resultado = 1;}
+    if(strcmp(tipo_interfaz, "GENERICA") == 0 && codigo_operacion == 10){resultado = 1;}
+    else if(strcmp(tipo_interfaz, "STDIN") == 0 && codigo_operacion == 11){resultado = 1;}
+    else if(strcmp(tipo_interfaz, "STDOUT") == 0 && codigo_operacion == 12){resultado = 1;}
+    else if(strcmp(tipo_interfaz, "DIALFS") == 0 && (codigo_operacion > 12 && codigo_operacion < 18)){resultado = 1;}
     return resultado;
 }

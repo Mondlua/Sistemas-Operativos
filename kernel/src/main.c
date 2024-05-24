@@ -12,6 +12,8 @@ t_queue* colaExit;
 t_list* interfaces;
 sem_t sem_contador;
 sem_t grado_actual;
+sem_t pedido_io;
+
 
 int nivel_multiprog;
 
@@ -91,15 +93,18 @@ int main(void)
     
     pthread_t hilo;
     pthread_create(&hilo, NULL, (void *)server_escuchar, args);
-    sem_init(&sem_contador, 0, 0); //semaforo
+    sem_init(&sem_contador, 0, 0); //semaforo para lista de interfaces
+    sem_init(&pedido_io, 0, 0); //semaforo para cuando reciba una solicitud de cpu
     
     //Ver Consola
     
     inicializar_colas_estados();
     consola_interactiva();
     nivel_multiprog = queue_size(colaReady)+queue_size(colaBlocked)+queue_size(colaExec); 
-    validar_peticion("pepe","33");// nombre de la interfaz que se quiere conectar, 33 cant de tiempo
-
+    instruccion_params* instruccion_io = malloc(sizeof(instruccion_params));
+    instruccion_io = recibir_solicitud_cpu(conexion_cpu_dispatch);
+    sem_post(&pedido_io);
+    validar_peticion(instruccion_io->interfaz, instruccion_io->params.io_gen_sleep_params.unidades_trabajo);
 
     pthread_join(hilo,NULL);
 
