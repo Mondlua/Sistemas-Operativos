@@ -33,17 +33,25 @@ void atender_cliente(void *void_args)
         case PCB:
         {
             pcb = recibir_pcb(kernel_socket);
-			log_info(logger, "Me llego el PCB cuyo PID es %u", pcb->pid);
+			      log_info(logger, "Me llego el PCB cuyo PID es %u", pcb->pid);
             char* pc = int_to_char(pcb->p_counter);
-            sleep(10);
+            sleep(5);
+            realizar_ciclo_inst(conexion_memoria_cpu, pcb);
+            /*
             enviar_pc(pc,conexion_memoria_cpu);
             sleep(5);
             // VER
             t_instruccion* ins = recibir_instruccion_cpu(conexion_memoria_cpu);
             log_info(logger, "Me llego la INSTRUCCION %s", ins->buffer->stream);
             t_decode* decodeado= decode(ins);
+
             log_info(logger, "Me llego el decode %d", decodeado->op_code);
             execute(decodeado,pcb);
+            execute(decodeado,pcb);*/
+            log_info(logger, "Me llego el registroAX on %u",(uint8_t)pcb->registros->AX);
+            log_info(logger, "Me llego el registroBX con %u", (uint8_t)pcb->registros->BX);
+            log_info(logger, "el p counter quedo %d", pcb->p_counter);
+
 			break;
         }
             /*  case INSTRUCCION:{
