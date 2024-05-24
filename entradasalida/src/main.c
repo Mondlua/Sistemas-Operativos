@@ -1,5 +1,6 @@
 #include "main.h"
 
+char* nombre_interfaz;
 
 int main(void) {
 
@@ -18,7 +19,6 @@ int main(void) {
     int tiempo;
 
     char ruta[100];
-    char nombre_interfaz[100];
 
     entradasalida_log = iniciar_logger("entradasalida.log","entradasalida");
     printf("Ingrese el nombre de la interfaz: ");
@@ -55,8 +55,11 @@ int main(void) {
     instruccion_params* instruccion_recibir = recibir_instruccion(interfaz, conexion_kernel);
     if (instruccion_recibir != NULL)
     {
+        int result = 0;
         int unidades_trabajo_recibidas = instruccion_recibir->params.io_gen_sleep_params.unidades_trabajo;
-        printf("Instrucción recibida: IO_GEN_SLEEP a la interfaz 'pepe' de %i unidades de trabajo.\n", unidades_trabajo_recibidas);
+        result = unidades_trabajo_recibidas * tiempo; 
+        sleep(result);
+        aviso_segun_cod_op(nombre_interfaz, conexion_kernel, AVISO_OPERACION_FINALIZADA);
     }
     else
     {
