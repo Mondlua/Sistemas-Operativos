@@ -23,7 +23,10 @@ typedef enum
     AVISO_OPERACION_FINALIZADA,
     PC,
     INSTRUCCION,
-    PCB
+    PCB,
+    INS_EXIT,
+    BLOCK_IO,
+    BLOCK_RECURSO
 }op_code;
 
 typedef struct
