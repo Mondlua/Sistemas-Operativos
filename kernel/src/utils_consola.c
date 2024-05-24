@@ -15,10 +15,8 @@ t_pcb *crear_nuevo_pcb(uint32_t *pid_contador)
     nuevo_pcb->p_counter = 0; 
     nuevo_pcb->quantum = config_get_int_value(kernel_config, "QUANTUM");
     inicializar_registro(nuevo_pcb);
-    uint8_t x = 1;
-    uint8_t y = 2;
-    nuevo_pcb->registros->AX = x;
-    nuevo_pcb->registros->BX = y;
+    nuevo_pcb->registros->AX = 5;
+    nuevo_pcb->registros->BX = 2;
     nuevo_pcb->tabla_paginas = NULL;
     nuevo_pcb->algoritmo_planif = config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
     nuevo_pcb->estado = NEW;
@@ -166,7 +164,8 @@ void enviar_pcb_cpu(t_pcb* pcb, int socket_cliente){
     agregar_a_paquete(paquete, &(pcb->pid), sizeof(uint32_t));
     agregar_a_paquete(paquete, &(pcb->p_counter), sizeof(int));
     agregar_a_paquete(paquete, &(pcb->quantum), sizeof(int));
-    agregar_a_paquete(paquete, &(pcb->registros), sizeof(cpu_registros));
+
+    agregar_a_paquete(paquete, (pcb->registros), sizeof(cpu_registros));
     agregar_a_paquete(paquete, &(pcb->estado), sizeof(t_proceso_estado));
     agregar_a_paquete(paquete, (pcb->algoritmo_planif), sizeof(pcb->algoritmo_planif));
 
