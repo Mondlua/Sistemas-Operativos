@@ -1,5 +1,6 @@
 #include "main.h"
 
+char* nombre_interfaz;
 
 int main(void) {
 
@@ -18,7 +19,6 @@ int main(void) {
     int tiempo;
 
     char ruta[100];
-    char nombre_interfaz[100];
 
     entradasalida_log = iniciar_logger("entradasalida.log","entradasalida");
     printf("Ingrese el nombre de la interfaz: ");
@@ -50,13 +50,16 @@ int main(void) {
     // Interfaces
     interfaz = config_get_string_value(entradasalida_config, "TIPO_INTERFAZ");
     tiempo = config_get_int_value(entradasalida_config, "TIEMPO_UNIDAD_TRABAJO");
-    enviar_interfaz(nombre_interfaz, conexion_kernel);
+    aviso_segun_cod_op(nombre_interfaz, conexion_kernel, INTERFAZ);
 
     instruccion_params* instruccion_recibir = recibir_instruccion(interfaz, conexion_kernel);
     if (instruccion_recibir != NULL)
     {
-        char* unidades_trabajo_recibidas = instruccion_recibir->params.io_gen_sleep_params.unidades_trabajo;
-        printf("Instrucción recibida: IO_GEN_SLEEP a la interfaz 'pepe' de %s unidades de trabajo.\n", unidades_trabajo_recibidas);
+        int result = 0;
+        int unidades_trabajo_recibidas = instruccion_recibir->params.io_gen_sleep_params.unidades_trabajo;
+        result = unidades_trabajo_recibidas * tiempo; 
+        sleep(result);
+        aviso_segun_cod_op(nombre_interfaz, conexion_kernel, AVISO_OPERACION_FINALIZADA);
     }
     else
     {
@@ -66,7 +69,7 @@ int main(void) {
 
     terminar_io();
 
-    aviso_desconexion(nombre_interfaz, conexion_kernel);
+    aviso_segun_cod_op(nombre_interfaz, conexion_kernel, AVISO_DESCONEXION);
     return 0;
 }
 
