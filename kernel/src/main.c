@@ -12,7 +12,7 @@ t_queue* colaExit;
 t_list* interfaces;
 sem_t sem_contador;
 sem_t grado_actual;
-sem_t pedido_io;
+int quantum;
 
 
 int nivel_multiprog;
@@ -64,7 +64,7 @@ int main(void)
 
     log_info(kernel_log, "KERNEL se conectó a CPU DISPATCH");
     send_handshake(conexion_cpu_dispatch, kernel_log, "KERNEL / CPU DISPATCH");
-    
+    quantum=config_get_int_value(kernel_config, "QUANTUM");
     /*
     conexion_cpu_interrupt = crear_conexion(ip_cpu, puerto_cpu_interrupt);
     log_info(kernel_log, "KERNEL se conectó a CPU INTERRUPT");
@@ -94,8 +94,7 @@ int main(void)
     pthread_t hilo;
     pthread_create(&hilo, NULL, (void *)server_escuchar, args);
     sem_init(&sem_contador, 0, 0); //semaforo para lista de interfaces
-    sem_init(&pedido_io, 0, 0); //semaforo para cuando reciba una solicitud de cpu
-    
+
     //Ver Consola
     
     inicializar_colas_estados();

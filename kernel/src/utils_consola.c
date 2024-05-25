@@ -46,25 +46,6 @@ void liberar_pcb(t_pcb *pcb)
     }
 }
 
-t_queue *cola_de_estado(t_proceso_estado estado)
-{
-
-    switch (estado)
-    {
-    case 0:
-        return colaNew;
-    case 1:
-        return colaReady;
-    case 2:
-        return colaExec;
-    case 3:
-        return colaBlocked;
-    case 4:
-        return colaExit;
-    default:
-        return 0;
-    }
-}
 
 void mostrar_pids_en_estado(t_proceso_estado estado)
 {
@@ -189,9 +170,3 @@ void inicializar_registro(t_pcb* pcb)
     pcb->registros->SI = malloc(sizeof(uint32_t));
     pcb->registros->DI = malloc(sizeof(uint32_t));
 }
-
-/*void cambiar_cola(t_pcb* pcb,t_proceso_estado nuevo_estado){
-    t_queue* cola_actual= cola_de_estado(pcb->estado);
-    queue_pop();
-    pcb->estado=nuevo_estado;
-}*/

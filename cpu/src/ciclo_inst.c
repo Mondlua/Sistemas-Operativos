@@ -142,11 +142,11 @@ t_decode* decode(t_instruccion* instruccion){
         break;
         }
         case 10:{
-            char* interfaz = strdup(arrayIns[1]);
-            decode->interfaz = interfaz;
-            int unidadesTrabajo = atoi(arrayIns[2]);
-            decode->valor = unidadesTrabajo;
-            break;
+        char* interfaz = strdup(arrayIns[1]);
+        decode->interfaz = interfaz;
+        int unidadesTrabajo = atoi(arrayIns[2]);
+        decode->valor = unidadesTrabajo;
+        break;
         }
         case 11:{
             break;
@@ -254,6 +254,7 @@ void execute(t_decode* decode, t_pcb* pcb){
         case 8:{}
         case 9:{}
         case 10:{
+            enviar_motivo(BLOCK_IO, kernel_socket);
             instruccion_params* parametros =  malloc(sizeof(instruccion_params));;
             parametros->interfaz = strdup(decode->interfaz);;
             parametros->params.io_gen_sleep_params.unidades_trabajo = decode->valor;
@@ -261,7 +262,6 @@ void execute(t_decode* decode, t_pcb* pcb){
             t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion));;
             paquete->codigo_operacion = IO_GEN_SLEEP;
             enviar_instruccion_a_Kernel(paquete, parametros, kernel_socket);
-        
             free(parametros->interfaz); 
             free(parametros);
             free(paquete);
@@ -274,7 +274,10 @@ void execute(t_decode* decode, t_pcb* pcb){
         case 15:{}
         case 16:{}
         case 17:{}
-        case 18:{}
+        case 18:{
+            cambiar_a_cola(pcb_actualizado, EXIT);
+            enviar_motivo(INS_EXIT,kernel_socket);
+        }
     }
 
 }
@@ -283,4 +286,9 @@ void realizar_ciclo_inst(int conexion_memoria, t_pcb* pcb){
    t_instruccion* ins = fetch(conexion_memoria,pcb);
    t_decode* decodeado = decode(ins);
    execute(decodeado, pcb);
+
+   if(hay_interrupcion){
+    //VER
+    cambiar_a_cola(pcb, BLOCKED);
+   }
 }

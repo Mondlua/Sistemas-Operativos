@@ -8,6 +8,7 @@
 #include <utils/catedra/client.h>
 #include <utils/catedra/inicio.h>
 #include "io.h"
+#include <utils/funcionesUtiles.h>
 
 extern t_log* kernel_log;
 extern t_config* kernel_config;
@@ -22,5 +23,8 @@ extern int nivel_multiprog;
 
 extern int conexion_memoria;
 extern int conexion_cpu_dispatch;
+extern int conexion_cpu_interrupt
+
+extern int quantum;
 
 #endif

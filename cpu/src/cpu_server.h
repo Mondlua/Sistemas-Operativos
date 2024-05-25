@@ -13,6 +13,7 @@
 #include "main.h"
 #include "ciclo_inst.h"
 
+extern int hay_interrupcion;
 extern int kernel_socket;
 typedef struct
 {
@@ -23,5 +24,6 @@ typedef struct
 } t_atender_cliente_args;
 
 int server_escuchar(void *arg);
+void enviar_motivo(op_code FIN_QUANTUM, int kernel_socket);
 
 #endif

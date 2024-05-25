@@ -1,6 +1,7 @@
 #include "main.h"
 
 int conexion_memoria_cpu;
+int hay_interrupcion;
 
 int main(void){
 
@@ -16,7 +17,8 @@ int main(void){
     char* ip_memoria;       
     char* puerto_memoria; 
 
-    
+    hay_interrupcion = 0;
+     
     cpu_log = iniciar_logger("cpu.log","cpu");
     cpu_config = iniciar_config("cpu.config");
     
