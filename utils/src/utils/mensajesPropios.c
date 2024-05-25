@@ -25,11 +25,20 @@ void aviso_segun_cod_op(char* mensaje, int socket_cliente, int codigo_operacion)
 }
 
 
-void recibir_error_oi(int socket, t_log* logger){
+int recibir_error_oi(int socket){
     int size;
     char* buffer = recibir_buffer(&size, socket);
-    log_info(logger, ">> %s", buffer);
+    int logica = atoi(buffer);
     free(buffer);
+    return logica;
+}
+
+int recibir_op_validada(int socket){
+    int size;
+    char* buffer = recibir_buffer(&size, socket);
+    int logica = atoi(buffer);
+    free(buffer);
+    return logica;
 }
 
 char* recibir_desconexion(int socket_cliente, t_log* logger)
@@ -37,7 +46,7 @@ char* recibir_desconexion(int socket_cliente, t_log* logger)
     int size;
     char* buffer = recibir_buffer(&size, socket_cliente);
     log_info(logger, "Interfaz desconectada: %s", buffer);
-   return buffer;
+    return buffer;
 }
 
 //////////////////////////////* INSTRUCCIONES MEMORIA *//////////////////////////////////////
