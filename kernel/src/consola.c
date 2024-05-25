@@ -70,6 +70,7 @@ void iniciar_proceso(char* path){
     //sem_wait(&grado_actual);
     t_pcb* pcb_plp = queue_pop(colaNew);
     queue_push(colaReady, pcb_plp);
+    //ver si se puede pasar a ready (nivel multiprog)
     pcb->estado=READY;
     log_info(kernel_log,"Proceso con PID %u pasado a la cola READY",pcb->pid);
     
@@ -77,7 +78,6 @@ void iniciar_proceso(char* path){
 
     enviar_mensaje(path,conexion_memoria);
 
-    enviar_pcb_cpu(pcb,conexion_cpu_dispatch);
 }
 
 void finalizar_proceso(uint32_t pid){
@@ -88,11 +88,12 @@ void iniciar_planificacion(){
     char* algoritmo=config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
     if(strcmp(algoritmo, "FIFO")){
         pthread_t alg_planificacion;
-        pthread_create(&alg_planificacion, NULL, (void*) fifo, (void*) conexion_cpu_dispatch);
+        pthread_create(&alg_planificacion, NULL, (void*) fifo,  conexion_cpu_dispatch);
         pthread_detach(alg_planificacion);
+
     } else if(strcmp(algoritmo, "RR")){
         pthread_t alg_planificacion;
-        pthread_create(&alg_planificacion, NULL, (void*) rr, (void*) conexion_cpu_dispatch);
+        pthread_create(&alg_planificacion, NULL, (void*) rr, conexion_cpu_dispatch);
         pthread_detach(alg_planificacion);
     }
     log_info(kernel_log, ">> Se inicio la planificacion");
