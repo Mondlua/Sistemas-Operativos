@@ -10,7 +10,7 @@
 
 extern sem_t pedido_io;
 
-void validar_peticion(char* interfaz_a_validar, int tiempo);
+void validar_peticion(char* interfaz_a_validar, char* tiempo, t_pcb* pcb);
 void enviar_instruccion_a_interfaz(interfaz* interfaz_destino, int tiempo);
 interfaz* buscar_interfaz_por_nombre(char* nombre_interfaz);
 

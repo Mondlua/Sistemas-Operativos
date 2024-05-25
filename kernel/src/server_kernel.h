@@ -17,6 +17,7 @@
 
 extern t_list* interfaces;
 extern sem_t sem_contador;
+extern int logica_int;
 
 typedef struct
 {
