@@ -26,7 +26,8 @@ typedef enum
     PCB,
     INS_EXIT,
     BLOCK_IO,
-    BLOCK_RECURSO
+    BLOCK_RECURSO,
+    FIN_QUANTUM
 }op_code;
 
 typedef struct

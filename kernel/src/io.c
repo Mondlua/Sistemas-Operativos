@@ -4,8 +4,6 @@ int logica_int;
 
 void validar_peticion(char* interfaz_a_validar, char* tiempo, t_pcb* pcb) {
 
-    sem_wait(&pedido_io);
-
     sem_wait(&sem_contador);
     int tamanio_lista = list_size(interfaces);
 
@@ -16,13 +14,14 @@ void validar_peticion(char* interfaz_a_validar, char* tiempo, t_pcb* pcb) {
             sleep(10); //CAMBIAR A SEMAFORO
             if(logica_int){
                 interfaz_encontrada->cola_block = queue_push(pcb);
+                pcb->estado = BLOCKED;
             }
             else{
-                cambiar_a_exit(pcb);
+                cambiar_a_cola(pcb, EXIT);
             }
         } else {
             printf("La interfaz '%s' no existe en la lista.\n", interfaz_a_validar);
-            cambiar_a_exit(pcb);
+            cambiar_a_cola(pcb, EXIT);
         }
     } else {
         printf("La lista de interfaces está vacía.\n");

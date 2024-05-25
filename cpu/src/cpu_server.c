@@ -33,25 +33,11 @@ void atender_cliente(void *void_args)
         case PCB:
         {
             pcb = recibir_pcb(kernel_socket);
-			      log_info(logger, "Me llego el PCB cuyo PID es %u", pcb->pid);
+			log_info(logger, "Lleo a CPU el <PID> es <%u>", pcb->pid);
             char* pc = int_to_char(pcb->p_counter);
             sleep(5);
             realizar_ciclo_inst(conexion_memoria_cpu, pcb);
-            /*
-            enviar_pc(pc,conexion_memoria_cpu);
-            sleep(5);
-            // VER
-            t_instruccion* ins = recibir_instruccion_cpu(conexion_memoria_cpu);
-            log_info(logger, "Me llego la INSTRUCCION %s", ins->buffer->stream);
-            t_decode* decodeado= decode(ins);
-
-            log_info(logger, "Me llego el decode %d", decodeado->op_code);
-            execute(decodeado,pcb);
-            execute(decodeado,pcb);*/
-            log_info(logger, "Me llego el registroAX on %u",(uint8_t)pcb->registros->AX);
-            log_info(logger, "Me llego el registroBX con %u", (uint8_t)pcb->registros->BX);
-            log_info(logger, "el p counter quedo %d", pcb->p_counter);
-
+            enviar_pcb(pcb, kernel_socket);
 			break;
         }
             /*  case INSTRUCCION:{
@@ -63,7 +49,12 @@ void atender_cliente(void *void_args)
            
             break;
         } */
-        case PC:{}
+        case FIN_QUANTUM:{
+            recibir_interrupcion_finq(kernel_socket);
+            hay_interrupcion = 1;
+            enviar_motivo(FIN_QUANTUM, kernel_socket);
+        }
+        
         default:
             log_error(logger, "Algo anduvo mal en el server de %s", server_name);
             log_info(logger, "Cop: %d", cop);
@@ -98,4 +89,36 @@ int server_escuchar(void* arg)
         }
     }
     return 0;
+}
+
+void recibir_interrupcion_finq(int kernel_socket){
+    int size;
+    void* buffer;
+    recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
+    buffer = malloc(*size);
+    recv(socket_cliente, buffer, *size, MSG_WAITALL);
+    log_info(logger, "Me llego la Interrupcion %d", buffer);
+}
+
+void enviar_motivo(op_code motivo, int kernel_socket){
+
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+
+	paquete->codigo_operacion = motivo;
+	paquete->buffer = malloc(sizeof(t_buffer));
+	paquete->buffer->size = strlen(motivo) + 1;
+	paquete->buffer->stream = malloc(paquete->buffer->size);
+	memcpy(paquete->buffer->stream, motivo, paquete->buffer->size);
+
+	int bytes = paquete->buffer->size + 2*sizeof(int);
+
+	void* a_enviar = serializar_paquete(paquete, bytes);
+
+    int resultado_send = send(kernel_socket, a_enviar, bytes, MSG_NOSIGNAL);
+
+    if (resultado_send == -1) {
+        fprintf(stderr, "Error al enviar el mensaje: socket cerrado.\n");
+    }
+    free(a_enviar);
+    eliminar_paquete(paquete);
 }

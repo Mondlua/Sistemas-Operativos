@@ -8,7 +8,6 @@
 #include<commons/log.h>
 #include "server_kernel.h"
 
-extern sem_t pedido_io;
 
 void validar_peticion(char* interfaz_a_validar, char* tiempo, t_pcb* pcb);
 void enviar_instruccion_a_interfaz(interfaz* interfaz_destino, int tiempo);
