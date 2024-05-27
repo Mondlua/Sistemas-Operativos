@@ -2,15 +2,15 @@
 
 int logica_int;
 
-void validar_peticion(char* interfaz_a_validar, char* tiempo, t_pcb* pcb) {
+void validar_peticion(instruccion_params* parametros, t_pcb* pcb) {
 
     sem_wait(&sem_contador);
     int tamanio_lista = list_size(interfaces);
 
     if (tamanio_lista > 0) {
-        interfaz* interfaz_encontrada = buscar_interfaz_por_nombre(interfaz_a_validar);
+        interfaz* interfaz_encontrada = buscar_interfaz_por_nombre(parametros->interfaz);
         if (interfaz_encontrada != NULL) {
-            enviar_instruccion_a_interfaz(interfaz_encontrada, tiempo);
+            enviar_instruccion_a_interfaz(interfaz_encontrada, parametros);
             sleep(10); //CAMBIAR A SEMAFORO
             if(logica_int){
                 interfaz_encontrada->cola_block = queue_push(pcb);
@@ -20,7 +20,7 @@ void validar_peticion(char* interfaz_a_validar, char* tiempo, t_pcb* pcb) {
                 cambiar_a_cola(pcb, EXIT);
             }
         } else {
-            printf("La interfaz '%s' no existe en la lista.\n", interfaz_a_validar);
+            printf("La interfaz '%s' no existe en la lista.\n", parametros->interfaz);
             cambiar_a_cola(pcb, EXIT);
         }
     } else {
@@ -42,13 +42,10 @@ interfaz* buscar_interfaz_por_nombre(char* nombre_interfaz) {
     return interfaz_encontrada;
 }
 
-void enviar_instruccion_a_interfaz(interfaz* interfaz_destino, int tiempo) {
+void enviar_instruccion_a_interfaz(interfaz* interfaz_destino, instruccion_params* parametros) {
     t_paquete_instruccion* instruccion_enviar = malloc(sizeof(t_paquete_instruccion));
-    instruccion_params* parametros = malloc(sizeof(instruccion_params));
 
     instruccion_enviar->codigo_operacion = IO_GEN_SLEEP;
-    parametros->params.io_gen_sleep_params.unidades_trabajo = tiempo;
-
     enviar_instruccion(instruccion_enviar, parametros, interfaz_destino->socket_interfaz);
 
     free(parametros);
@@ -76,6 +73,24 @@ instruccion_params* deserializar_io_gen_sleep_con_interfaz(t_buffer_ins* buffer)
     return parametros;
 }
 
+
+instruccion_params* deserializar_io_stdin_stdout_con_interfaz(t_buffer_ins* buffer)
+{
+    instruccion_params* parametros = malloc(sizeof(instruccion_params));
+    
+    uint32_t offset = 0;
+    uint32_t interfaz_len;
+    memcpy(&interfaz_len, buffer->stream + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    parametros->interfaz = malloc(interfaz_len);
+    memcpy(parametros->interfaz, buffer->stream + offset, interfaz_len);
+    offset += interfaz_len;
+    memcpy(&(parametros->params.io_stdin_stdout.registro_direccion), buffer->stream + offset, sizeof(cpu_registros));
+    offset += sizeof(cpu_registros);
+    memcpy(&(parametros->params.io_stdin_stdout.registro_tamaño), buffer->stream + offset, sizeof(cpu_registros));
+    return parametros;
+}
+
 instruccion_params* recibir_solicitud_cpu(int socket_servidor)
 {
     t_paquete_instruccion* instruccion = malloc(sizeof(t_paquete_instruccion));
@@ -90,13 +105,22 @@ instruccion_params* recibir_solicitud_cpu(int socket_servidor)
     instruccion_params* param = NULL;
    
     switch (instruccion->codigo_operacion) {
-        case IO_GEN_SLEEP:
+        case IO_GEN_SLEEP:{
             param = deserializar_io_gen_sleep_con_interfaz(instruccion->buffer);
             break;
-            // Otros casos
-            default:
-                printf("Tipo de operación no válido.\n");
-                break;
+        }
+        case IO_STDIN_READ:{
+            param = deserializar_io_stdin_stdout_con_interfaz(instruccion->buffer);
+            break;
+        }
+        case IO_STDOUT_WRITE:{
+            param = deserializar_io_stdin_stdout_con_interfaz(instruccion->buffer);
+            break;
+        }
+         // Otros casos
+        default:
+            printf("Tipo de operación no válido.\n");
+            break;
         }
     
     free(instruccion->buffer->stream);

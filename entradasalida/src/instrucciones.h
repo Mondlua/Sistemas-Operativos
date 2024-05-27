@@ -14,6 +14,7 @@ extern char* nombre_interfaz;
 
 instruccion_params* recibir_instruccion(char*interfaz, int socket_servidor);
 instruccion_params* deserializar_io_gen_sleep(t_buffer_ins* buffer);
+instruccion_params* deserializar_io_stdin_stdout(t_buffer_ins* buffer);
 int validar_operacion(char* tipo_interfaz, int codigo_operacion);
 
 

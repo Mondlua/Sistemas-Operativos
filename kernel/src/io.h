@@ -9,8 +9,8 @@
 #include "server_kernel.h"
 
 
-void validar_peticion(char* interfaz_a_validar, char* tiempo, t_pcb* pcb);
-void enviar_instruccion_a_interfaz(interfaz* interfaz_destino, int tiempo);
+void validar_peticion(instruccion_params* parametros, t_pcb* pcb);
+void enviar_instruccion_a_interfaz(interfaz* interfaz_destino, instruccion_params* parametros);
 interfaz* buscar_interfaz_por_nombre(char* nombre_interfaz);
 
 instruccion_params* recibir_solicitud_cpu(int socket_servidor);

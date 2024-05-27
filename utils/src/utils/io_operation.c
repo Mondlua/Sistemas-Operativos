@@ -5,9 +5,19 @@ void enviar_instruccion(t_paquete_instruccion* instruccion, instruccion_params* 
     t_buffer_ins* buffer = NULL;
     switch (instruccion->codigo_operacion)
     {
-        case IO_GEN_SLEEP:
+        case IO_GEN_SLEEP:{
             buffer = serializar_io_gen_sleep(parametros);
             break;
+            
+        }
+        case IO_STDIN_READ:{
+            buffer = serializar_io_stdin_stdout_con_interfaz(parametros);
+            break;
+        }   
+        case IO_STDOUT_WRITE:{
+            buffer = serializar_io_stdin_stdout_con_interfaz(parametros);
+            break;
+        }  
         // OTRAS INSTRUCCIONES
         default:
             printf("Tipo de operación no válido.\n");
@@ -42,6 +52,20 @@ t_buffer_ins* serializar_io_gen_sleep(instruccion_params* param)
 }
 
 
+t_buffer_ins* serializar_io_stdin_stdout(instruccion_params* param){
+    
+    size_t size = sizeof(cpu_registros)*2;
+    t_buffer_ins* buffer = malloc(sizeof(t_buffer_ins));
+    buffer->size = size;
+    buffer->stream = malloc(size);
+    size_t offset = 0;
+    memcpy(buffer->stream + offset, &(param->params.io_stdin_stdout.registro_direccion), sizeof(cpu_registros));
+    offset += sizeof(cpu_registros);
+    memcpy(buffer->stream + offset, &(param->params.io_stdin_stdout.registro_tamaño), sizeof(cpu_registros));
+    
+    return buffer;
+}
+
 
 //  A KERNEL
 
@@ -63,14 +87,44 @@ t_buffer_ins* serializar_io_gen_sleep_con_interfaz(instruccion_params* param) {
     return buffer;
 }
 
+t_buffer_ins* serializar_io_stdin_stdout_con_interfaz(instruccion_params* param){
+    size_t interfaz_len = strlen(param->interfaz) + 1;
+    size_t size = sizeof(uint32_t) + interfaz_len + sizeof(cpu_registros)*2;
+    
+    t_buffer_ins* buffer = malloc(sizeof(t_buffer_ins));
+    buffer->size = size;
+    buffer->stream = malloc(size);
+    
+    size_t offset = 0;
+    memcpy(buffer->stream + offset, &interfaz_len, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    memcpy(buffer->stream + offset, param->interfaz, interfaz_len);
+    offset += interfaz_len;
+    memcpy(buffer->stream + offset, &(param->params.io_stdin_stdout.registro_direccion), sizeof(cpu_registros));
+    offset += sizeof(cpu_registros);
+    memcpy(buffer->stream + offset, &(param->params.io_stdin_stdout.registro_tamaño), sizeof(cpu_registros));
+    
+    return buffer;
+}
+
+
 
 void enviar_instruccion_a_Kernel(t_paquete_instruccion* instruccion, instruccion_params* parametros, int socket_cliente) {
     t_buffer_ins* buffer = NULL;
     
     switch (instruccion->codigo_operacion) {
-        case IO_GEN_SLEEP:
+        case IO_GEN_SLEEP:{
             buffer = serializar_io_gen_sleep_con_interfaz(parametros);
             break;
+        }
+        case IO_STDIN_READ:{
+            buffer = serializar_io_stdin_stdout_con_interfaz(parametros);
+            break;
+        }
+        case IO_STDOUT_WRITE:{
+            buffer = serializar_io_stdin_stdout_con_interfaz(parametros);
+        }
+           
         // Otras operaciones de serialización para otros tipos de operaciones
         default:
             printf("Tipo de operación no válido.\n");
