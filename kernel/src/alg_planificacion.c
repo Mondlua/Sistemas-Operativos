@@ -40,26 +40,7 @@ void fifo(int conexion_cpu_dispatch){
                 case BLOCK_IO:
                     instruccion_params* instruccion_io = malloc(sizeof(instruccion_params));
                     instruccion_io = recibir_solicitud_cpu(conexion_cpu_dispatch);
-                    validar_peticion(instruccion_io->interfaz, instruccion_io->params.io_gen_sleep_params.unidades_trabajo);
-                  /*  instruccion = recibir_instruccion_memoria(conexion_memoria);
-                    instruccion_string = instruccion->buffer->stream;
-                    array_palabras = string_split(instruccion_string, " ");
-
-                    char* instruccionIO = array_palabras[0];
-                    char* interfazIO = array_palabras[1];
-                    interfaz* interfaz = buscar_interfaz_por_nombre(interfazIO);
-
-                if(!validar_peticion(interfazIO)){ // Si no existe la interfaz o no esta conectada , el proceso pasa a EXIT
-                    cambiar_a_exit(pcb_actualizado);
-                    break;
-                } else if(!validar_operacion(tipoInterfaz,instruccion)){ // Si no puede realizar la operacion solicitada, el proceso pasa a EXIT
-                    cambiar_a_exit(pcb_actualizado);
-                    break;
-                } else if(interfaz->esta_libre){
-                    pcb_actualizado->estado=BLOCKED;
-                    queue_push(colaBlocked, pcb_actualizado);
-                    manejar_operacion_io(instruccion); // Un hilo para manejar las operaciones IO
-                    break;*/
+                    validar_peticion(instruccion_io, pcb_actualizado);
                 break;
                  }
                     

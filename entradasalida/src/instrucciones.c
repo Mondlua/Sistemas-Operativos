@@ -8,6 +8,15 @@ instruccion_params* deserializar_io_gen_sleep(t_buffer_ins* buffer)
     return parametros;
 }
 
+instruccion_params* deserializar_io_stdin_stdout(t_buffer_ins* buffer){
+    instruccion_params* parametros = malloc(sizeof(instruccion_params));
+    void* stream = buffer->stream;
+    memcpy(&(parametros->params.io_stdin_stdout.registro_direccion), stream, sizeof(cpu_registros));
+    stream += sizeof(cpu_registros);
+    memcpy(&(parametros->params.io_stdin_stdout.registro_tamaño), stream, sizeof(cpu_registros));
+    return parametros;
+}
+
 instruccion_params* recibir_instruccion(char* tipo_interfaz, int socket_servidor)
 {
     t_paquete_instruccion* instruccion = malloc(sizeof(t_paquete_instruccion));
@@ -20,11 +29,25 @@ instruccion_params* recibir_instruccion(char* tipo_interfaz, int socket_servidor
     if(validar_operacion(tipo_interfaz, instruccion->codigo_operacion)){
         switch (instruccion->codigo_operacion)
     {
-        case IO_GEN_SLEEP:
+        case IO_GEN_SLEEP:{
             param = deserializar_io_gen_sleep(instruccion->buffer);
             char* logica = "1";
             aviso_segun_cod_op(logica, socket_servidor, AVISO_OPERACION_VALIDADA);
             break;
+        }
+        case IO_STDIN_READ:{
+            param = deserializar_io_stdin_stdout(instruccion->buffer);
+            char* logica = "1";
+            aviso_segun_cod_op(logica, socket_servidor, AVISO_OPERACION_VALIDADA);
+            break;
+        }
+        case IO_STDOUT_WRITE:{
+            param = deserializar_io_stdin_stdout(instruccion->buffer);
+            char* logica = "1";
+            aviso_segun_cod_op(logica, socket_servidor, AVISO_OPERACION_VALIDADA);
+            break;
+        }
+
         // OTRAS FUNCIONES
         default:
             printf("Tipo de operación no válido.\n");
