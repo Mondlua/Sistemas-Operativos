@@ -23,7 +23,7 @@ extern int nivel_multiprog;
 
 extern int conexion_memoria;
 extern int conexion_cpu_dispatch;
-extern int conexion_cpu_interrupt
+extern int conexion_cpu_interrupt;
 
 extern int quantum;
 
