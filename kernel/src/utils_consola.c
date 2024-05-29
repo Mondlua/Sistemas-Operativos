@@ -138,22 +138,6 @@ t_pcb* buscar_pcb(uint32_t num_pid){
     return buscado;
 }
 
-void enviar_pcb_cpu(t_pcb* pcb, int socket_cliente){
-
-    t_paquete* paquete = crear_paquete();
-    paquete->codigo_operacion= PCB;
-    agregar_a_paquete(paquete, &(pcb->pid), sizeof(uint32_t));
-    agregar_a_paquete(paquete, &(pcb->p_counter), sizeof(int));
-    agregar_a_paquete(paquete, &(pcb->quantum), sizeof(int));
-
-    agregar_a_paquete(paquete, (pcb->registros), sizeof(cpu_registros));
-    agregar_a_paquete(paquete, &(pcb->estado), sizeof(t_proceso_estado));
-    agregar_a_paquete(paquete, (pcb->algoritmo_planif), sizeof(pcb->algoritmo_planif));
-
-    enviar_paquete(paquete, socket_cliente);
-    eliminar_paquete(paquete);
-}
-
 void inicializar_registro(t_pcb* pcb)
 {
 

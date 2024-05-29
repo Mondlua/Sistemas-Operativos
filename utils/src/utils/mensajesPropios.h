@@ -30,6 +30,7 @@ t_instruccion* recibir_instruccion_cpu(int socket_servidor);
 t_buffer_ins* serializar_instruccion(t_instruccion* ins);
 void enviar_instruccion_mem(int socket_cliente, t_instruccion* instruccion);
 
+void enviar_pcb(t_pcb* pcb, int socket_cliente);
 t_pcb* recibir_pcb(int socket_cliente);
 void enviar_pc(char* pc, int socket_cliente);
 char* recibir_pc(int socket_cliente);
