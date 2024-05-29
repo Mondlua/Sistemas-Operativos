@@ -170,3 +170,34 @@ void inicializar_registro(t_pcb* pcb)
     pcb->registros->SI = malloc(sizeof(uint32_t));
     pcb->registros->DI = malloc(sizeof(uint32_t));
 }
+
+
+void cambiar_a_cola(t_pcb* pcb, t_proceso_estado estado ){
+    t_proceso_estado ant = pcb->estado;
+    t_queue* colaAnt = cola_de_estado(pcb->estado);
+    queue_pop(colaAnt);
+    pcb->estado= estado;
+    t_queue* colaNueva = cola_de_estado(estado);
+    queue_push(colaReady, pcb);
+    log_info(kernel_log, "PID: <%u> - Estado Anterior: <%d> - Estado Actual: <%d>", pcb->pid, estado_a_string(ant), estado_a_string(pcb->estado));
+}
+
+t_queue *cola_de_estado(t_proceso_estado estado)
+{
+
+    switch (estado)
+    {
+    case 0:
+        return colaNew;
+    case 1:
+        return colaReady;
+    case 2:
+        return colaExec;
+    case 3:
+        return colaBlocked;
+    case 4:
+        return colaExit;
+    default:
+        return 0;
+    }
+}
