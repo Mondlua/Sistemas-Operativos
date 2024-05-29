@@ -41,30 +41,9 @@ void fifo(int conexion_cpu_dispatch){
                     instruccion_params* instruccion_io = malloc(sizeof(instruccion_params));
                     instruccion_io = recibir_solicitud_cpu(conexion_cpu_dispatch);
                     validar_peticion(instruccion_io->interfaz, instruccion_io->params.io_gen_sleep_params.unidades_trabajo);
-                  /*  instruccion = recibir_instruccion_memoria(conexion_memoria);
-                    instruccion_string = instruccion->buffer->stream;
-                    array_palabras = string_split(instruccion_string, " ");
-
-                    char* instruccionIO = array_palabras[0];
-                    char* interfazIO = array_palabras[1];
-                    interfaz* interfaz = buscar_interfaz_por_nombre(interfazIO);
-
-                if(!validar_peticion(interfazIO)){ // Si no existe la interfaz o no esta conectada , el proceso pasa a EXIT
-                    cambiar_a_exit(pcb_actualizado);
-                    break;
-                } else if(!validar_operacion(tipoInterfaz,instruccion)){ // Si no puede realizar la operacion solicitada, el proceso pasa a EXIT
-                    cambiar_a_exit(pcb_actualizado);
-                    break;
-                } else if(interfaz->esta_libre){
-                    pcb_actualizado->estado=BLOCKED;
-                    queue_push(colaBlocked, pcb_actualizado);
-                    manejar_operacion_io(instruccion); // Un hilo para manejar las operaciones IO
-                    break;*/
                 break;
-                 }
                     
-                case BLOCK_RECURSO:
-                   { 
+                case BLOCK_RECURSO: 
                     instruccion = recibir_instruccion_memoria(conexion_memoria);
                     instruccion_string = instruccion->buffer->stream;
                     array_palabras = string_split(instruccion_string, " ");
@@ -128,24 +107,24 @@ void rr(int conexion_cpu_dispatch){
     if(tamanioReady > 0){
        while( tamanioReady>0 && tamanioExec == 0 ){
         
-            pcb_a_planificar = queue_peek(colaReady);
+            pcb_a_planificar = queue_pop(colaReady);
             cambiar_a_cola(pcb_a_planificar,EXEC);
-            pthread_t hiloquantum= pthread_create(&hiloquantum, NULL, manejar_quantum, pcb_a_planificar->pid);
             enviar_pcb_cpu(pcb_a_planificar,conexion_cpu_dispatch);
+            pthread_t hiloquantum= pthread_create(&hiloquantum, NULL, manejar_quantum, pcb_a_planificar->pid);
 
             //SEMAFOROS
             motivo_desalojo = recibir_motivo(conexion_cpu_interrupt); 
             pcb_actualizado = recibir_pcb(conexion_cpu_dispatch);
 
             switch (motivo_desalojo) {
-                case 10://finalizo
+                case INS_EXIT://finalizo
                 {
                     borrar_pcb(pcb->pid);  //Falta que libere memoria y recursos, 
                     pthread_cancel(hiloquantum);
                     pthread_destroy(hiloquantum);
                     break;
                 }
-                case 11://block io
+                case BLOCK_IO://block io
                 {
                     cambiar_a_cola(pcb_actualizado, BLOCKED);
                     instruccion_params* instruccion_io = malloc(sizeof(instruccion_params));
@@ -153,11 +132,11 @@ void rr(int conexion_cpu_dispatch){
                     validar_peticion(instruccion_io->interfaz, instruccion_io->params.io_gen_sleep_params.unidades_trabajo);
                     break;
                 }    
-                case 12://recursos VER
+                case BLOCK_RECURSO://recursos VER
                 { 
                     cambiar_a_cola(pcb_actualizado, BLOCKED);
                 }
-                case 13://fin q
+                case FIN_QUANTUM://fin q
                 {   
                     log_info(cpu_log, "PID: <%u> - Desalojado por fin de Quantum", pcb->pid);
                     cambiar_a_cola(pcb_actualizado, READY);
@@ -184,7 +163,7 @@ void enviar_interrupcion_finq(uint32_t pid, int conexion_cpu_interrupt){
 
 	paquete->codigo_operacion = FIN_QUANTUM;
 	paquete->buffer = malloc(sizeof(t_buffer));
-	paquete->buffer->size = strlen(pid) + 1;
+	paquete->buffer->size = strlen(pid) + 1; // strlen a un uint?
 	paquete->buffer->stream = malloc(paquete->buffer->size);
 	memcpy(paquete->buffer->stream, pid, paquete->buffer->size);
 
