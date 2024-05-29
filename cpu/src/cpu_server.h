@@ -25,5 +25,6 @@ typedef struct
 
 int server_escuchar(void *arg);
 void enviar_motivo(op_code FIN_QUANTUM, int kernel_socket);
+void recibir_interrupcion_finq(int socket_cliente);
 
 #endif

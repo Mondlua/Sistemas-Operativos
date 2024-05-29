@@ -275,7 +275,7 @@ void execute(t_decode* decode, t_pcb* pcb){
         case 16:{}
         case 17:{}
         case 18:{
-            cambiar_a_cola(pcb_actualizado, EXIT); // solo el kernel deberia cambiar esto
+            //cambiar_a_cola(pcb_actualizado, EXIT); // solo el kernel deberia cambiar esto
             enviar_motivo(INS_EXIT,kernel_socket);
         }
     }
@@ -289,6 +289,6 @@ void realizar_ciclo_inst(int conexion_memoria, t_pcb* pcb){
 
    if(hay_interrupcion){
     //VER
-    cambiar_a_cola(pcb, BLOCKED);
+    //cambiar_a_cola(pcb, BLOCKED);
    }
 }

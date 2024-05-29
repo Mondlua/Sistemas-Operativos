@@ -163,7 +163,7 @@ void enviar_interrupcion_finq(uint32_t pid, int conexion_cpu_interrupt){
 
 	paquete->codigo_operacion = FIN_QUANTUM;
 	paquete->buffer = malloc(sizeof(t_buffer));
-	paquete->buffer->size = strlen(pid) + 1; // strlen a un uint?
+	paquete->buffer->size = strlen(pid) + 1; // strlen a un uint? sizeof(uint32_t)
 	paquete->buffer->stream = malloc(paquete->buffer->size);
 	memcpy(paquete->buffer->stream, pid, paquete->buffer->size);
 
