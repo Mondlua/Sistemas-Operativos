@@ -26,7 +26,7 @@ void fifo(int conexion_cpu_dispatch){
     if(tamanioReady > 0){
        while( tamanioReady>0 && tamanioExec == 0 ){ //Cuando se implimente el comando "DETENER_PLANIFICACION", validar tambien que la planif no haya sido pausada
             cambiar_a_cola(pcb_a_planificar,EXEC);
-            enviar_pcb_cpu(pcb_a_planificar,conexion_cpu_dispatch);
+            enviar_pcb(pcb_a_planificar,conexion_cpu_dispatch);
 
             motivo_desalojo = recibir_interrupcion(conexion_cpu_interrupt); VER
             pcb_actualizado = recibir_pcb(conexion_cpu_dispatch);
@@ -109,7 +109,7 @@ void rr(int conexion_cpu_dispatch){
         
             pcb_a_planificar = queue_pop(colaReady);
             cambiar_a_cola(pcb_a_planificar,EXEC);
-            enviar_pcb_cpu(pcb_a_planificar,conexion_cpu_dispatch);
+            enviar_pcb(pcb_a_planificar,conexion_cpu_dispatch);
             pthread_t hiloquantum= pthread_create(&hiloquantum, NULL, manejar_quantum, pcb_a_planificar->pid);
 
             //SEMAFOROS

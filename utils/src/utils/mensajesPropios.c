@@ -140,6 +140,22 @@ char* recibir_pc(int socket_cliente){
     return buffer;
 }
 
+void enviar_pcb(t_pcb* pcb, int socket_cliente){
+
+    t_paquete* paquete = crear_paquete();
+    paquete->codigo_operacion= PCB;
+    agregar_a_paquete(paquete, &(pcb->pid), sizeof(uint32_t));
+    agregar_a_paquete(paquete, &(pcb->p_counter), sizeof(int));
+    agregar_a_paquete(paquete, &(pcb->quantum), sizeof(int));
+
+    agregar_a_paquete(paquete, (pcb->registros), sizeof(cpu_registros));
+    agregar_a_paquete(paquete, &(pcb->estado), sizeof(t_proceso_estado));
+    agregar_a_paquete(paquete, (pcb->algoritmo_planif), sizeof(pcb->algoritmo_planif));
+
+    enviar_paquete(paquete, socket_cliente);
+    eliminar_paquete(paquete);
+}
+
 t_pcb* recibir_pcb(int socket_cliente) {
     t_list* valores_paquete = recibir_paquete(socket_cliente);
     if (valores_paquete == NULL) {
