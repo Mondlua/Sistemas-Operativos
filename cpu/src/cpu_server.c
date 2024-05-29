@@ -91,13 +91,17 @@ int server_escuchar(void* arg)
     return 0;
 }
 
-void recibir_interrupcion_finq(int kernel_socket){
-    int size;
+void recibir_interrupcion_finq(int socket_cliente){
+    /*int size;
     void* buffer;
     recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
     buffer = malloc(*size);
-    recv(socket_cliente, buffer, *size, MSG_WAITALL);
-    log_info(logger, "Me llego la Interrupcion %d", buffer);
+    recv(socket_cliente, buffer, *size, MSG_WAITALL);*/
+    int size;
+    uint32_t* buffer = (uint32_t*)recibir_buffer(&size, socket_cliente);
+    //log_info(logger, "Me llego la Interrupcion %u", buffer);
+    printf("Me llego la Interrupcion %u", buffer);
+
 }
 
 void enviar_motivo(op_code motivo, int kernel_socket){
@@ -106,9 +110,9 @@ void enviar_motivo(op_code motivo, int kernel_socket){
 
 	paquete->codigo_operacion = motivo;
 	paquete->buffer = malloc(sizeof(t_buffer));
-	paquete->buffer->size = strlen(motivo) + 1;
+	paquete->buffer->size = sizeof(op_code);
 	paquete->buffer->stream = malloc(paquete->buffer->size);
-	memcpy(paquete->buffer->stream, motivo, paquete->buffer->size);
+	memcpy(paquete->buffer->stream, &(motivo), paquete->buffer->size);
 
 	int bytes = paquete->buffer->size + 2*sizeof(int);
 
