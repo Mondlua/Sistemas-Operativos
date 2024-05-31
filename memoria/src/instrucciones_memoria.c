@@ -4,11 +4,17 @@
 t_list* abrir_pseudocodigo(char* path){
 
     char* path_instrucciones = config_get_string_value(memoria_config ,"PATH_INSTRUCCIONES");
-    FILE* arch_pseudocodigo = fopen(strcat(strcat(path_instrucciones,"/"),path), "r");
+    size_t total_length = strlen(path_instrucciones) + strlen(path) + 2; // 1 para el '/' y 1 para el '\0'
+    char* path_completo = malloc(total_length);
+    snprintf(path_completo, total_length, "%s/%s", path_instrucciones, path);
+    FILE* arch_pseudocodigo = fopen(path_completo, "r");
         if(arch_pseudocodigo == NULL){
-         log_error(memoria_log, "No se pudo abrir el archivo.\n");
-         EXIT_FAILURE;
-         }
+            log_error(memoria_log, "No se pudo abrir el archivo.\n");
+            EXIT_FAILURE;
+        }
+    free(path_completo);
+
+    //FILE* arch_pseudocodigo = fopen(strcat(strcat(path_instrucciones,"/"),path), "r"); // strcat no permite crear mas de 1 proceso
 
     t_list* lista_inst= list_create();
     char instruccionlinea[50]; //Ver 
@@ -37,8 +43,3 @@ t_list* abrir_pseudocodigo(char* path){
     fclose(arch_pseudocodigo);
     return lista_inst;
 }
-
-
-// Luego la CPU, con strtok() podria leer la hasta que haya un " " y ahi tomaria el nombre de la funcion (p.e. SET)
-// en las commons hay funciones de DICCIONARIO, creo que se puede asociar las KEYs(SET, SUM, SUB, etc) con sus respectivas funciones
-// para ejecutar las instrucciones segun se corresponda.
