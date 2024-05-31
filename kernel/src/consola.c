@@ -86,15 +86,16 @@ void finalizar_proceso(uint32_t pid){
 }
 void iniciar_planificacion(){
     char* algoritmo=config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
-    if(strcmp(algoritmo, "FIFO")){
+    log_info(kernel_log, "El algoritmo configurado es: %s", algoritmo);
+    if(strcmp(algoritmo, "FIFO") == 0){
         pthread_t alg_planificacion;
         pthread_create(&alg_planificacion, NULL, (void*) fifo,  conexion_cpu_dispatch);
         pthread_detach(alg_planificacion);
 
-    } else if(strcmp(algoritmo, "RR")){
-        pthread_t alg_planificacion;
+    } else if(strcmp(algoritmo, "RR") == 0){
+        /*pthread_t alg_planificacion;
         pthread_create(&alg_planificacion, NULL, (void*) rr, conexion_cpu_dispatch);
-        pthread_detach(alg_planificacion);
+        pthread_detach(alg_planificacion);*/
     }
     log_info(kernel_log, ">> Se inicio la planificacion");
 }
