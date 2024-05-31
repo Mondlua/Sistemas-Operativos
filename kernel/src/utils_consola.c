@@ -158,12 +158,12 @@ void inicializar_registro(t_pcb* pcb)
 
 void cambiar_a_cola(t_pcb* pcb, t_proceso_estado estado ){
     t_proceso_estado ant = pcb->estado;
-    t_queue* colaAnt = cola_de_estado(pcb->estado);
-    queue_pop(colaAnt);
-    pcb->estado= estado;
+    //t_queue* colaAnt = cola_de_estado(pcb->estado);
+    //queue_pop(colaAnt);
+    pcb->estado = estado;
     t_queue* colaNueva = cola_de_estado(estado);
-    queue_push(colaReady, pcb);
-    log_info(kernel_log, "PID: <%u> - Estado Anterior: <%d> - Estado Actual: <%d>", pcb->pid, estado_a_string(ant), estado_a_string(pcb->estado));
+    queue_push(colaNueva, pcb);
+    log_info(kernel_log, "PID: <%u> - Estado Anterior: <%s> - Estado Actual: <%s>", pcb->pid, estado_a_string(ant), estado_a_string(pcb->estado));
 }
 
 t_queue *cola_de_estado(t_proceso_estado estado)
