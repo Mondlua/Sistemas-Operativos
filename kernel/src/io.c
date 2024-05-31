@@ -13,7 +13,7 @@ void validar_peticion(char* interfaz_a_validar, char* tiempo, t_pcb* pcb) {
             enviar_instruccion_a_interfaz(interfaz_encontrada, tiempo);
             sleep(10); //CAMBIAR A SEMAFORO
             if(logica_int){
-                interfaz_encontrada->cola_block = queue_push(pcb);
+                queue_push(interfaz_encontrada->cola_block, pcb);
                 pcb->estado = BLOCKED;
             }
             else{

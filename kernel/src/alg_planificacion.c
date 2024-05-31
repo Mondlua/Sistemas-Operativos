@@ -15,7 +15,6 @@
 
 
 void fifo(int conexion_cpu_dispatch){
-
    int tamanioReady = queue_size(colaReady);
    int tamanioExec = queue_size(colaExec);
    int motivo_desalojo;
@@ -27,12 +26,13 @@ void fifo(int conexion_cpu_dispatch){
 
     if(tamanioReady > 0){
        while( tamanioReady>0 && tamanioExec == 0 ){ //Cuando se implimente el comando "DETENER_PLANIFICACION", validar tambien que la planif no haya sido pausada
+            pcb_a_planificar = queue_pop(colaReady);
             cambiar_a_cola(pcb_a_planificar,EXEC);
             enviar_pcb(pcb_a_planificar,conexion_cpu_dispatch);
 
-      //      motivo_desalojo = recibir_interrupcion(conexion_cpu_interrupt); // VER
+      //    motivo_desalojo = recibir_interrupcion(conexion_cpu_interrupt); // VER
             pcb_actualizado = recibir_pcb(conexion_cpu_dispatch);
-
+            queue_pop(colaExec);
             switch (motivo_desalojo) {
                 case INS_EXIT:
                     cambiar_a_cola(pcb_actualizado, EXIT);
@@ -87,7 +87,9 @@ void fifo(int conexion_cpu_dispatch){
         }
    }
 
-void rr(int conexion_cpu_dispatch){
+}
+
+/*void rr(int conexion_cpu_dispatch){
 
    int tamanioReady = queue_size(colaReady);
    int tamanioExec = queue_size(colaExec);
@@ -180,3 +182,4 @@ op_code recibir_motivo(int socket_cliente){
     log_info(logger, "Me llego el Motivo %d", buffer);
     return buffer;
 }
+*/
