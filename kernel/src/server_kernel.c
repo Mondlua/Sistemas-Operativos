@@ -80,32 +80,33 @@ void atender_cliente(void *void_args)
         case AVISO_OPERACION_FINALIZADA:
         {
             //CAMBIAR PCB A ESTADO READY O EXIT
-            
+          /*  
             char* interfaz_recibida = recibir_op_finalizada(client_socket, logger);
             int posicion_interfaz = buscar_posicion_interfaz_por_nombre(interfaz_recibida);
             if (posicion_interfaz != -1) {
                 interfaz* interfaz_encontrada = (interfaz*)list_get(interfaces, posicion_interfaz);
-                interfaz_encontrada->cola_block = queue_pop(pcb);
+                //interfaz_encontrada->cola_block = queue_pop(pcb);
+                pcb = queue_pop(interfaz_encontrada->cola_block);
+                cambiar_a_cola(pcb, READY);
                 //DAR SIGNAL DE SEMAFORO PARA MANDAR LA INSTRUCCION
             } else {
                 log_error(logger, "No se encontró la interfaz %s en la lista", interfaz_recibida);
                 free(interfaz_recibida); 
+                */
             }
-            */
-        }
         default:
             log_error(logger, "Algo anduvo mal en el server de %s", server_name);
             log_info(logger, "Cop: %d", cop);
-            
             break;
+        }
+            
             
         }
-        
+      //log_warning(logger, "El cliente se desconecto de %s server", server_name);  
     }
 
-    log_warning(logger, "El cliente se desconecto de %s server", server_name);
-    return;
-}
+    
+
 
 int server_escuchar(void* arg)
 {   
