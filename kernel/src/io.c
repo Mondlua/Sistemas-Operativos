@@ -2,7 +2,7 @@
 
 int logica_int;
 
-void validar_peticion(instruccion_params* parametros, t_pcb* pcb) {
+void validar_peticion(instruccion_params* parametros, t_pcb* pcb, int codigo_op) {
 
     sem_wait(&sem_contador);
     int tamanio_lista = list_size(interfaces);
@@ -10,7 +10,7 @@ void validar_peticion(instruccion_params* parametros, t_pcb* pcb) {
     if (tamanio_lista > 0) {
         interfaz* interfaz_encontrada = buscar_interfaz_por_nombre(parametros->interfaz);
         if (interfaz_encontrada != NULL) {
-            enviar_instruccion_a_interfaz(interfaz_encontrada, parametros);
+            enviar_instruccion_a_interfaz(interfaz_encontrada, parametros, codigo_op);
             sleep(10); //CAMBIAR A SEMAFORO
             if(logica_int){
                 interfaz_encontrada->cola_block = queue_push(pcb);
@@ -42,10 +42,10 @@ interfaz* buscar_interfaz_por_nombre(char* nombre_interfaz) {
     return interfaz_encontrada;
 }
 
-void enviar_instruccion_a_interfaz(interfaz* interfaz_destino, instruccion_params* parametros) {
+void enviar_instruccion_a_interfaz(interfaz* interfaz_destino, instruccion_params* parametros, int codigo_op) {
     t_paquete_instruccion* instruccion_enviar = malloc(sizeof(t_paquete_instruccion));
 
-    instruccion_enviar->codigo_operacion = IO_GEN_SLEEP;
+    instruccion_enviar->codigo_operacion = codigo_op;
     enviar_instruccion(instruccion_enviar, parametros, interfaz_destino->socket_interfaz);
 
     free(parametros);
@@ -91,7 +91,7 @@ instruccion_params* deserializar_io_stdin_stdout_con_interfaz(t_buffer_ins* buff
     return parametros;
 }
 
-instruccion_params* recibir_solicitud_cpu(int socket_servidor)
+void recibir_solicitud_cpu(int socket_servidor, t_pcb* pcb)
 {
     t_paquete_instruccion* instruccion = malloc(sizeof(t_paquete_instruccion));
     instruccion->buffer = malloc(sizeof(t_buffer_ins));
@@ -122,10 +122,8 @@ instruccion_params* recibir_solicitud_cpu(int socket_servidor)
             printf("Tipo de operación no válido.\n");
             break;
         }
-    
+    validar_peticion(param, pcb, instruccion->codigo_operacion);
     free(instruccion->buffer->stream);
     free(instruccion->buffer);
     free(instruccion);
-    
-    return param;
 }

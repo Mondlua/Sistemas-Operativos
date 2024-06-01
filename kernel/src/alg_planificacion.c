@@ -34,15 +34,14 @@ void fifo(int conexion_cpu_dispatch){
             switch (motivo_desalojo) {
                 case INS_EXIT:
                     cambiar_a_cola(pcb_actualizado, EXIT);
-                    borrar_pcb(pcb->pid);
+                    borrar_pcb(pcb_actualizado->pid);
                     //Falta que libere memoria y recursos
                     break;
                 case BLOCK_IO:
                     instruccion_params* instruccion_io = malloc(sizeof(instruccion_params));
-                    instruccion_io = recibir_solicitud_cpu(conexion_cpu_dispatch);
-                    validar_peticion(instruccion_io, pcb_actualizado);
+                    recibir_solicitud_cpu(conexion_cpu_dispatch, pcb_actualizado);
                 break;
-                 }
+
                     
                 case BLOCK_RECURSO:
                    { 
@@ -85,7 +84,7 @@ void fifo(int conexion_cpu_dispatch){
             tamanioExec = queue_size(colaExec);
         }
    }
-
+    }
    //---------------------------------
   t_instruccion* recibir_instruccion_memoria(int socket_conexion){
     enviar_pc(int_to_char(pcb_actualizado->p_counter),conexion_memoria);
@@ -151,7 +150,9 @@ void rr(int conexion_cpu_dispatch){
             tamanioReady = queue_size(colaReady);
             tamanioExec = queue_size(colaExec);
         }
+    }
 }
+
 
 void* manejar_quantum(uint32_t pid){
     usleep(quantum);

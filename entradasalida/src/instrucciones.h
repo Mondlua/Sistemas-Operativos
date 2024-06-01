@@ -11,8 +11,11 @@
 #include <stdint.h>
 
 extern char* nombre_interfaz;
+extern int conexion_kernel;
+extern int conexion_memoria;
+extern int tiempo_unidad_trabajo;
 
-instruccion_params* recibir_instruccion(char*interfaz, int socket_servidor);
+void recibir_instruccion(char*interfaz);
 instruccion_params* deserializar_io_gen_sleep(t_buffer_ins* buffer);
 instruccion_params* deserializar_io_stdin_stdout(t_buffer_ins* buffer);
 int validar_operacion(char* tipo_interfaz, int codigo_operacion);

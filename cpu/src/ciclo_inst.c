@@ -335,3 +335,10 @@ void realizar_ciclo_inst(int conexion_memoria, t_pcb* pcb){
     cambiar_a_cola(pcb, BLOCKED);
    }
 }
+
+t_dir_fisica* traducir_direc_logica(int tam_pag, uint32_t dir_logica){
+    t_dir_fisica* dir = malloc(sizeof(t_dir_fisica));    
+    dir->nro_pagina= floor(dir_logica / tam_pag);
+    dir->desplazamiento = dir_logica - ((dir->nro_pagina) * tam_pag);
+    return dir;
+}
