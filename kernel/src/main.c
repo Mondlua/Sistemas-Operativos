@@ -94,16 +94,11 @@ int main(void)
     pthread_t hilo;
     pthread_create(&hilo, NULL, (void *)server_escuchar, args);
     sem_init(&sem_contador, 0, 0); //semaforo para lista de interfaces
-
     //Ver Consola
     
     inicializar_colas_estados();
     consola_interactiva();
     nivel_multiprog = queue_size(colaReady)+queue_size(colaBlocked)+queue_size(colaExec); 
-    instruccion_params* instruccion_io = malloc(sizeof(instruccion_params));
-    instruccion_io = recibir_solicitud_cpu(conexion_cpu_dispatch);
-    sem_post(&pedido_io);
-    validar_peticion(instruccion_io->interfaz, instruccion_io->params.io_gen_sleep_params.unidades_trabajo);
 
     pthread_join(hilo,NULL);
 

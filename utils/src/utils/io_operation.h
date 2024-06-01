@@ -49,4 +49,9 @@ t_buffer_ins* serializar_io_stdin_stdout_con_interfaz(instruccion_params* param)
 void enviar_instruccion_a_Kernel(t_paquete_instruccion* instruccion, instruccion_params* parametros ,int socket_cliente);
 
 
+//A MEMORIA
+t_buffer_ins* serializar_io_stdin_con_texto(instruccion_params* param);
+void enviar_instruccion_IO_Mem(t_paquete_instruccion* instruccion, instruccion_params* parametros, int socket_cliente);
+
+
 #endif

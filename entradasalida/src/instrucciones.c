@@ -17,14 +17,14 @@ instruccion_params* deserializar_io_stdin_stdout(t_buffer_ins* buffer){
     return parametros;
 }
 
-instruccion_params* recibir_instruccion(char* tipo_interfaz, int socket_servidor)
+void recibir_instruccion(char* tipo_interfaz)
 {
     t_paquete_instruccion* instruccion = malloc(sizeof(t_paquete_instruccion));
     instruccion->buffer = malloc(sizeof(t_buffer_ins));
-    recv(socket_servidor, &(instruccion->codigo_operacion), sizeof(instrucciones), MSG_WAITALL);
-    recv(socket_servidor, &(instruccion->buffer->size), sizeof(uint32_t), MSG_WAITALL);
+    recv(conexion_kernel, &(instruccion->codigo_operacion), sizeof(instrucciones), MSG_WAITALL);
+    recv(conexion_kernel, &(instruccion->buffer->size), sizeof(uint32_t), MSG_WAITALL);
     instruccion->buffer->stream = malloc(instruccion->buffer->size);
-    recv(socket_servidor, instruccion->buffer->stream, instruccion->buffer->size, MSG_WAITALL);
+    recv(conexion_kernel, instruccion->buffer->stream, instruccion->buffer->size, MSG_WAITALL);
     instruccion_params* param;
     if(validar_operacion(tipo_interfaz, instruccion->codigo_operacion)){
         switch (instruccion->codigo_operacion)
@@ -32,19 +32,19 @@ instruccion_params* recibir_instruccion(char* tipo_interfaz, int socket_servidor
         case IO_GEN_SLEEP:{
             param = deserializar_io_gen_sleep(instruccion->buffer);
             char* logica = "1";
-            aviso_segun_cod_op(logica, socket_servidor, AVISO_OPERACION_VALIDADA);
+            aviso_segun_cod_op(logica, conexion_kernel, AVISO_OPERACION_VALIDADA);
             break;
         }
         case IO_STDIN_READ:{
             param = deserializar_io_stdin_stdout(instruccion->buffer);
             char* logica = "1";
-            aviso_segun_cod_op(logica, socket_servidor, AVISO_OPERACION_VALIDADA);
+            aviso_segun_cod_op(logica, conexion_kernel, AVISO_OPERACION_VALIDADA);
             break;
         }
         case IO_STDOUT_WRITE:{
             param = deserializar_io_stdin_stdout(instruccion->buffer);
             char* logica = "1";
-            aviso_segun_cod_op(logica, socket_servidor, AVISO_OPERACION_VALIDADA);
+            aviso_segun_cod_op(logica, conexion_kernel, AVISO_OPERACION_VALIDADA);
             break;
         }
 
@@ -58,12 +58,51 @@ instruccion_params* recibir_instruccion(char* tipo_interfaz, int socket_servidor
     }
     else{
         char* error = "0";
-        aviso_segun_cod_op(error, socket_servidor, AVISO_OPERACION_INVALIDA);
+        aviso_segun_cod_op(error, conexion_kernel, AVISO_OPERACION_INVALIDA);
         param = NULL;
     }
+    atender_cod_op(param, instruccion->codigo_operacion);
     free(instruccion->buffer);
     free(instruccion);
-    return param;
+    free(param);
+}
+
+void atender_cod_op(instruccion_params* parametros, instrucciones op_code){
+    switch (op_code)
+    {
+    case IO_GEN_SLEEP:{
+        int result = 0;
+        int unidades_trabajo_recibidas = instruccion_recibir->params.io_gen_sleep_params.unidades_trabajo;
+        result = unidades_trabajo_recibidas * tiempo_unidad_trabajo; 
+        sleep(result);
+        break;
+    }
+    case IO_STDIN_READ:{
+        cpu_registros* tamaño = parametros->params.io_stdin_stdout.registro_tamaño;
+        char* texto = (char*)malloc(tamaño)
+        printf("Ingrese el texto: ");
+        fgets(texto, tamaño, stdin);
+        t_paquete_instruccion* instruccion_enviar = malloc(sizeof(t_paquete_instruccion));
+        instruccion_enviar->codigo_operacion = IO_STDIN_READ;
+        enviar_instruccion_IO_Mem(instruccion_enviar,parametros,conexion_memoria);
+        free(texto);
+        free(instruccion_enviar);
+        break;
+    }
+    case IO_STDOUT_WRITE:{
+        t_paquete_instruccion* instruccion_enviar = malloc(sizeof(t_paquete_instruccion));
+        instruccion_enviar->codigo_operacion = IO_STDOUT_WRITE;
+        enviar_instruccion_IO_Mem(instruccion_enviar,parametros,conexion_memoria);
+        free(instruccion_enviar);
+        sleep(tiempo_unidad_trabajo);
+      
+        break;
+    }
+    default:
+        break;
+    }
+    aviso_segun_cod_op(nombre_interfaz, conexion_kernel,AVISO_OPERACION_FINALIZADA);
+    free(parametros);
 }
 
 int validar_operacion(char* tipo_interfaz, int codigo_operacion){

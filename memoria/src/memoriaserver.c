@@ -50,6 +50,21 @@ void atender_cliente(void *void_args)
            
             break;
         }
+        case IO_STDIN_READ:{
+            instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
+            parametros_io = recibir_io_stdin(client_socket);
+            //GUARDAR TEXTO EN REGISTRO_DIRECCION
+            free(parametros_io);
+            break;
+        }
+        case IO_STDOUT_WRITE: {
+            instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
+            parametros_io = recibir_io_stdout(client_socket);
+            //BUSCAR EN REGISTRO_DIRECCION Y LEER EL REGISTRO_TAMAÑO
+            //MANDAR RESULTADO A IO
+            free(parametros_io);
+            break;
+        }
         default:
             log_error(logger, "Algo anduvo mal en el server de %s", server_name);
             log_info(logger, "Cop: %d", cop);
