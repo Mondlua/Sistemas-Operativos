@@ -12,8 +12,6 @@ void atender_cliente(void *void_args)
     
     free(args);
 
-    t_pcb* pcb;
-
     //MEMORIA a CPU
     
     while (kernel_socket != -1)
@@ -32,23 +30,16 @@ void atender_cliente(void *void_args)
         case PAQUETE:{}
         case PCB:
         {
+           t_pcb* pcb;
             pcb = recibir_pcb(kernel_socket);
-			log_info(logger, "Lleo a CPU el <PID> es <%u>", pcb->pid);
-            char* pc = int_to_char(pcb->p_counter);
-            sleep(5);
+			log_info(logger, "Llego a CPU el <PID> es <%u>", pcb->pid);
             realizar_ciclo_inst(conexion_memoria_cpu, pcb);
-            enviar_pcb(pcb, kernel_socket);
+            log_info(logger, "Complete ciclo");
+            log_info(logger, "mi quantum es %d", pcb->quantum);
+            //enviar_pcb(pcb, kernel_socket);
+            sleep(5);
 			break;
         }
-            /*  case INSTRUCCION:{
-          t_instruccion* ins = recibir_instruccion_cpu(conexion_memoria_cpu);
-            log_info(logger, "Me llego la INSTRUCCION %s", ins->buffer->stream);
-            t_decode* decodeado= decode(ins);
-            log_info(logger, "Me llego el decode %d", decodeado->op_code);
-            log_info(logger, "Registro es %s", list_get(decodeado->registroCpu, 0));
-           
-            break;
-        } */
         case FIN_QUANTUM:{
             recibir_interrupcion_finq(kernel_socket);
             hay_interrupcion = 1;

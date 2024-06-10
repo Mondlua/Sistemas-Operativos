@@ -26,4 +26,5 @@ typedef struct
 
 int server_escuchar(void *arg);
 
+void eliminar_linea_n(char* linea);
 #endif

@@ -9,11 +9,8 @@ void atender_cliente(void *void_args)
     t_log *logger = args->log;
     int client_socket = args->c_socket;
     char *server_name = args->server_name;
-    
+    uint32_t pid;
     free(args);
-
-    t_pcb* pcb;
-    
 
     //MEMORIA a CPU
     
@@ -35,17 +32,26 @@ void atender_cliente(void *void_args)
             lista_arch = list_create();
             lista_arch = abrir_pseudocodigo(path);
             free(path);
-            
             break;
         }
-        case PAQUETE:{}
+        case PID:{
+            char * pid_recibido =recibir_pc(client_socket);
+            pid = atoi(pid_recibido);
+            log_info(logger, "Mi PID:%u", pid);
+            break;
+        }
         case PC:
         {
             char * pc_recibido = recibir_pc(client_socket);
-            int pc = atoi(pc_recibido);
+            uint32_t pc = atoi(pc_recibido);
             sem_wait(&semaforo_mem);
             t_instruccion* instruccion = (t_instruccion*)list_get(lista_arch,pc);
             log_info(logger, "Mando la INSTRUCCION %s", instruccion->buffer->stream);
+            
+            char* ins  = instruccion->buffer->stream;
+            eliminar_linea_n(ins);
+            cargar_a_mem(ins, pid);
+
             enviar_instruccion_mem(client_socket,instruccion);
            
             break;
@@ -86,4 +92,10 @@ int server_escuchar(void* arg)
         }
     }
     return 0;
+}
+
+void eliminar_linea_n(char* linea){
+    if(linea[strlen(linea)-1] == '\n'){
+        linea[strlen(linea)-1]='\0';
+    }
 }

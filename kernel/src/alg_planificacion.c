@@ -29,14 +29,16 @@ void fifo(int conexion_cpu_dispatch){
             pcb_a_planificar = queue_pop(colaReady);
             cambiar_a_cola(pcb_a_planificar,EXEC);
             enviar_pcb(pcb_a_planificar,conexion_cpu_dispatch);
-
-      //    motivo_desalojo = recibir_interrupcion(conexion_cpu_interrupt); // VER
-            pcb_actualizado = recibir_pcb(conexion_cpu_dispatch);
-            queue_pop(colaExec);
+            sleep(40);
+            motivo_desalojo = INS_EXIT; //recibir_interrupcion(conexion_cpu_interrupt); // VER
+            log_info(kernel_log, "ok");
+            pcb_a_planificar = recibir_pcb(conexion_cpu_dispatch);
+            log_info(kernel_log, "recibi");
+            //queue_pop(colaExec);
             switch (motivo_desalojo) {
                 case INS_EXIT:
-                    cambiar_a_cola(pcb_actualizado, EXIT);
-                    borrar_pcb(pcb_actualizado->pid);
+                    cambiar_a_cola(pcb_a_planificar, EXIT);
+                    borrar_pcb(pcb_a_planificar->pid);
                     //Falta que libere memoria y recursos
                     break;
                 case BLOCK_IO:
@@ -82,8 +84,8 @@ void fifo(int conexion_cpu_dispatch){
                 
             }
             
-            tamanioReady = queue_size(colaReady);
-            tamanioExec = queue_size(colaExec);
+            tamanioReady =0; //queue_size(colaReady);
+            tamanioExec =0;//queue_size(colaExec);
         }
    }
 

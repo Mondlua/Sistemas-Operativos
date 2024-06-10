@@ -68,12 +68,11 @@ void iniciar_proceso(char* path){
     }*/
 
     //sem_wait(&grado_actual);
-    t_pcb* pcb_plp = queue_pop(colaNew);
-    queue_push(colaReady, pcb_plp);
+    pcb = queue_pop(colaNew);
+    queue_push(colaReady, pcb);
     //ver si se puede pasar a ready (nivel multiprog)
     pcb->estado=READY;
     log_info(kernel_log,"Proceso con PID %u pasado a la cola READY",pcb->pid);
-    
     log_info(kernel_log, ">> Se crea el proceso %s en NEW", path);
 
     enviar_mensaje(path,conexion_memoria);
