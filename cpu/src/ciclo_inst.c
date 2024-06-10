@@ -1,17 +1,16 @@
 #include "ciclo_inst.h"
 
-t_instruccion* fetch(int conexion_memoria, t_pcb* pcb){
+t_instruccion* fetch(int conexion, t_pcb* pcb){
     
     t_instruccion* instruccion;
-
-    enviar_pc(int_to_char(pcb->p_counter),conexion_memoria);
-
-    // SEMAFORO
+    enviar_pid(int_to_char(pcb->pid), conexion);
     sleep(5);
-
-    instruccion = recibir_instruccion_cpu(conexion_memoria);
+    enviar_pc(int_to_char(pcb->registros->PC),conexion);
+    // SEMAFORO
+    sleep(10);
+    instruccion = recibir_instruccion_cpu(conexion);
     
-    pcb->p_counter++;
+    pcb->registros->PC++;
 
     return instruccion;
 }
@@ -245,7 +244,7 @@ void execute(t_decode* decode, t_pcb* pcb){
             uint8_t valor=obtener_valor_registro(pcb->registros, registro);
             if(valor!=0){
                 instrucciones ins= decode->instrucciones;
-                pcb->p_counter=ins;
+                //pcb->p_counter=ins;
             }
         break;
         }
@@ -282,13 +281,14 @@ void execute(t_decode* decode, t_pcb* pcb){
 
 }
 
-void realizar_ciclo_inst(int conexion_memoria, t_pcb* pcb){
-   t_instruccion* ins = fetch(conexion_memoria,pcb);
+void realizar_ciclo_inst(int conexion, t_pcb* pcb){
+   t_instruccion* ins = fetch(conexion,pcb);
    t_decode* decodeado = decode(ins);
-   execute(decodeado, pcb);
-
-   if(hay_interrupcion){
+   execute(decodeado,pcb);
+    enviar_pcb(pcb, kernel_socket);
+    
+   //if(hay_interrupcion){
     //VER
     //cambiar_a_cola(pcb, BLOCKED);
-   }
+   //}
 }

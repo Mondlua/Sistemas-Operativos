@@ -100,12 +100,7 @@ int main(void)
     inicializar_colas_estados();
     consola_interactiva();
     nivel_multiprog = queue_size(colaReady)+queue_size(colaBlocked)+queue_size(colaExec); 
-    /*instruccion_params* instruccion_io = malloc(sizeof(instruccion_params));
-    instruccion_io = recibir_solicitud_cpu(conexion_cpu_dispatch);
-    sem_post(&pedido_io);
-    validar_peticion(instruccion_io->interfaz, instruccion_io->params.io_gen_sleep_params.unidades_trabajo);
-    */ //lo pasamos a alg_planificacion
-
+  
     pthread_join(hilo,NULL);
 
     list_destroy(interfaces);

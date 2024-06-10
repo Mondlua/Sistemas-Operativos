@@ -11,14 +11,9 @@ t_pcb *crear_nuevo_pcb(uint32_t *pid_contador)
         return NULL;
     }
 
-    nuevo_pcb->pid = *pid_contador;
-    nuevo_pcb->p_counter = 0; 
-    nuevo_pcb->quantum = config_get_int_value(kernel_config, "QUANTUM");
     inicializar_registro(nuevo_pcb);
-    nuevo_pcb->registros->AX = 5;
-    nuevo_pcb->registros->BX = 2;
-    nuevo_pcb->tabla_paginas = NULL;
-    nuevo_pcb->algoritmo_planif = config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
+    nuevo_pcb->pid = *pid_contador;
+    nuevo_pcb->quantum = config_get_int_value(kernel_config, "QUANTUM");
     nuevo_pcb->estado = NEW;
 
     log_info(kernel_log, "Se crea el proceso con PID = %u en NEW", nuevo_pcb->pid);
@@ -41,7 +36,7 @@ void liberar_pcb(t_pcb *pcb)
 {
     if (pcb != NULL)
     {
-        free(pcb->tabla_paginas);
+        //free(pcb->registros);
         free(pcb);
     }
 }
@@ -114,6 +109,8 @@ void borrar_pcb(uint32_t num_pid)
             }
             contador++;
         }
+
+    log_info(kernel_log, "Borre PCB");
 }
 
 t_pcb* buscar_pcb(uint32_t num_pid){
@@ -153,6 +150,18 @@ void inicializar_registro(t_pcb* pcb)
     pcb->registros->EDX = malloc(sizeof(uint32_t));
     pcb->registros->SI = malloc(sizeof(uint32_t));
     pcb->registros->DI = malloc(sizeof(uint32_t));
+
+    pcb->registros->PC = 0;
+    pcb->registros->AX = 0;
+    pcb->registros->BX = 0;
+    pcb->registros->CX = 0;
+    pcb->registros->DX = 0;
+    pcb->registros->EAX = 0;
+    pcb->registros->EBX = 0;
+    pcb->registros->ECX = 0;
+    pcb->registros->EDX = 0;
+    pcb->registros->SI = 0;
+    pcb->registros->DI = 0;
 }
 
 

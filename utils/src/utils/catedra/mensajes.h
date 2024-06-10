@@ -22,6 +22,7 @@ typedef enum
     AVISO_OPERACION_VALIDADA,
     AVISO_OPERACION_FINALIZADA,
     PC,
+    PID,
     INSTRUCCION,
     PCB,
     INS_EXIT,

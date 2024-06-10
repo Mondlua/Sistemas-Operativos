@@ -125,6 +125,29 @@ void enviar_pc(char* pc, int socket_cliente){
     eliminar_paquete(paquete);
 }
 
+void enviar_pid(char* pc, int socket_cliente){
+
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = PID;
+    paquete->buffer = malloc(sizeof(t_buffer));
+    paquete->buffer->size = strlen(pc)+1;
+    paquete->buffer->stream = malloc(paquete->buffer->size);
+    memcpy(paquete->buffer->stream, pc, paquete->buffer->size);
+
+    int bytes = paquete->buffer->size + 2*sizeof(int);
+
+    void* a_enviar = serializar_paquete(paquete, bytes);
+    
+    int resultado_send = send(socket_cliente, a_enviar, bytes, MSG_NOSIGNAL);  
+
+    if (resultado_send == -1)
+        {
+            printf("Error al enviar la instrucción: socket cerrado.\n");
+        }
+    
+    eliminar_paquete(paquete);
+}
+
 
 char* recibir_pc(int socket_cliente){
 
@@ -145,34 +168,26 @@ void enviar_pcb(t_pcb* pcb, int socket_cliente){
     t_paquete* paquete = crear_paquete();
     paquete->codigo_operacion= PCB;
     agregar_a_paquete(paquete, &(pcb->pid), sizeof(uint32_t));
-    agregar_a_paquete(paquete, &(pcb->p_counter), sizeof(int));
     agregar_a_paquete(paquete, &(pcb->quantum), sizeof(int));
-
     agregar_a_paquete(paquete, (pcb->registros), sizeof(cpu_registros));
     agregar_a_paquete(paquete, &(pcb->estado), sizeof(t_proceso_estado));
-    agregar_a_paquete(paquete, (pcb->algoritmo_planif), sizeof(pcb->algoritmo_planif));
-
     enviar_paquete(paquete, socket_cliente);
     eliminar_paquete(paquete);
 }
 
 t_pcb* recibir_pcb(int socket_cliente) {
+    t_pcb* pcb = malloc(sizeof(t_pcb));
+    pcb->registros = inicializar_registros();
     t_list* valores_paquete = recibir_paquete(socket_cliente);
     if (valores_paquete == NULL) {
         return NULL;
     }
-
-    t_pcb* pcb = malloc(sizeof(t_pcb));
     pcb->pid = *((uint32_t *) list_get(valores_paquete, 0)) ;
-    pcb->p_counter = *((int*) list_get(valores_paquete, 1));
-    pcb -> quantum = *((int*) list_get(valores_paquete, 2));
-    pcb->registros= ((cpu_registros*) list_get(valores_paquete, 3));
-    pcb->tabla_paginas = NULL;
-    pcb->estado=*((t_proceso_estado*)list_get(valores_paquete, 4));
-    pcb->algoritmo_planif= ((char*)list_get(valores_paquete, 5));
-    return pcb;
+    pcb->quantum = *((int*) list_get(valores_paquete, 1));
+    pcb->registros= ((cpu_registros*) list_get(valores_paquete, 2));
+    pcb->estado=*((t_proceso_estado*)list_get(valores_paquete, 3));
     list_destroy(valores_paquete);
-
+    return pcb;
 }
 
 char *estado_a_string(t_proceso_estado estado)

@@ -5,6 +5,7 @@
 #include<stdlib.h>
 #include <utils/catedra/mensajes.h>
 #include <utils/catedra/inicio.h>
+#include <utils/utils_consola.h>
 
 typedef struct {
     uint32_t size; // Tamaño del payload
@@ -33,6 +34,8 @@ void enviar_instruccion_mem(int socket_cliente, t_instruccion* instruccion);
 void enviar_pcb(t_pcb* pcb, int socket_cliente);
 t_pcb* recibir_pcb(int socket_cliente);
 void enviar_pc(char* pc, int socket_cliente);
+void enviar_pid(char* pid, int socket_cliente);
 char* recibir_pc(int socket_cliente);
+
 
 #endif
