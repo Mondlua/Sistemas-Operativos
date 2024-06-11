@@ -5,7 +5,6 @@
 #include<stdlib.h>
 #include <utils/catedra/mensajes.h>
 #include <utils/catedra/inicio.h>
-#include <utils/utils_consola.h>
 
 typedef struct {
     uint32_t size; // Tamaño del payload
