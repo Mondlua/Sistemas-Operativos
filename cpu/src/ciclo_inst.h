@@ -26,7 +26,7 @@ typedef struct {
 
 t_instruccion* fetch(int conexion, t_pcb* pcb);
 t_decode* decode(t_instruccion* ins);
-void execute(t_decode* deacodeado, t_pcb* pcb);
+t_pcb* execute(t_decode* deacodeado, t_pcb* pcb);
 instrucciones obtener_instruccion(char *nombre);
 void realizar_ciclo_inst(int conexion, t_pcb* pcb);
 
