@@ -208,7 +208,7 @@ void* obtener_valor_registro(cpu_registros* regs, char* nombre_registro) {
     else {return NULL;}
 }
 
-void execute(t_decode* decode, t_pcb* pcb){
+t_pcb* execute(t_decode* decode, t_pcb* pcb){
     
     instrucciones ins = decode->op_code;
     switch(ins){
@@ -278,6 +278,8 @@ void execute(t_decode* decode, t_pcb* pcb){
             enviar_motivo(INS_EXIT,kernel_socket);
         }
     }
+
+    return pcb;
     
 }
 
