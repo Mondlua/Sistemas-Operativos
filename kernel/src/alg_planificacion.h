@@ -2,7 +2,7 @@
 #define PLANIFICACION_H_
 
 #include "main.h"
-
+#include <utils/mensajesPropios.h>
 void fifo(int conexion_cpu_dispatch);
 void rr(int conexion_cpu_dispatch);
 void* manejar_quantum(uint32_t pid);
