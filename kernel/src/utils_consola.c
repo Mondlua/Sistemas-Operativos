@@ -17,7 +17,6 @@ t_pcb *crear_nuevo_pcb(uint32_t *pid_contador)
     nuevo_pcb->estado = NEW;
 
     log_info(kernel_log, "Se crea el proceso con PID = %u en NEW", nuevo_pcb->pid);
-    log_info(kernel_log, "Se crea el proceso con ax = %u en NEW", nuevo_pcb->registros->AX);
     (*pid_contador)++;
     
     return nuevo_pcb;
@@ -133,35 +132,6 @@ t_pcb* buscar_pcb(uint32_t num_pid){
             contador++;
         }
     return buscado;
-}
-
-void inicializar_registro(t_pcb* pcb)
-{
-
-    pcb->registros= malloc(sizeof(cpu_registros));
-    pcb->registros->PC = malloc(sizeof(uint32_t));
-    pcb->registros->AX = malloc(sizeof(uint8_t));
-    pcb->registros->BX = malloc(sizeof(uint8_t));
-    pcb->registros->CX = malloc(sizeof(uint8_t));
-    pcb->registros->DX = malloc(sizeof(uint8_t));
-    pcb->registros->EAX = malloc(sizeof(uint32_t));
-    pcb->registros->EBX = malloc(sizeof(uint32_t));
-    pcb->registros->ECX = malloc(sizeof(uint32_t));
-    pcb->registros->EDX = malloc(sizeof(uint32_t));
-    pcb->registros->SI = malloc(sizeof(uint32_t));
-    pcb->registros->DI = malloc(sizeof(uint32_t));
-
-    pcb->registros->PC = 0;
-    pcb->registros->AX = 0;
-    pcb->registros->BX = 0;
-    pcb->registros->CX = 0;
-    pcb->registros->DX = 0;
-    pcb->registros->EAX = 0;
-    pcb->registros->EBX = 0;
-    pcb->registros->ECX = 0;
-    pcb->registros->EDX = 0;
-    pcb->registros->SI = 0;
-    pcb->registros->DI = 0;
 }
 
 

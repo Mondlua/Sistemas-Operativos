@@ -29,22 +29,37 @@ char* recibir_mensaje(int socket_cliente, t_log* logger)
     return buffer;
 }
 
-t_list* recibir_paquete(int socket_cliente)
-{
+t_list* recibir_paquete(int socket_cliente) {
     int size;
     int desplazamiento = 0;
     void * buffer;
     t_list* valores = list_create();
-    int tamanio;
+    if (!valores) {
+        fprintf(stderr, "Error al crear lista de valores\n");
+        return NULL;
+    }
 
     buffer = recibir_buffer(&size, socket_cliente);
-    while(desplazamiento < size)
-    {
+    if (!buffer) {
+        list_destroy(valores);
+        return NULL;
+    }
+
+    while (desplazamiento < size) {
+        int tamanio;
         memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
-        desplazamiento+=sizeof(int);
+        desplazamiento += sizeof(int);
+
         char* valor = malloc(tamanio);
-        memcpy(valor, buffer+desplazamiento, tamanio);
-        desplazamiento+=tamanio;
+        if (!valor) {
+            fprintf(stderr, "Error al asignar memoria para valor\n");
+            free(buffer);
+            list_destroy(valores);
+            return NULL;
+        }
+
+        memcpy(valor, buffer + desplazamiento, tamanio);
+        desplazamiento += tamanio;
         list_add(valores, valor);
     }
     free(buffer);
@@ -55,14 +70,13 @@ void* serializar_paquete(t_paquete* paquete, int bytes)
 {
 	void * magic = malloc(bytes);
 	int desplazamiento = 0;
-
-	memcpy(magic + desplazamiento, &(paquete->codigo_operacion), sizeof(int));
-	desplazamiento+= sizeof(int);
-	memcpy(magic + desplazamiento, &(paquete->buffer->size), sizeof(int));
-	desplazamiento+= sizeof(int);
-	memcpy(magic + desplazamiento, paquete->buffer->stream, paquete->buffer->size);
-	desplazamiento+= paquete->buffer->size;
-	return magic;
+    
+    memcpy(magic + desplazamiento, &(paquete->codigo_operacion), sizeof(int));
+    desplazamiento += sizeof(int);
+    memcpy(magic + desplazamiento, &(paquete->buffer->size), sizeof(int));
+    desplazamiento += sizeof(int);
+    memcpy(magic + desplazamiento, paquete->buffer->stream, paquete->buffer->size);
+    return magic;
 }
 
 void enviar_mensaje(char* mensaje, int socket_cliente)

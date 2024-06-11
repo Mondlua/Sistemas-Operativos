@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdint.h>
 #include <commons/log.h>
 #include <commons/config.h>
@@ -43,5 +44,6 @@ typedef struct t_pcb
 
 t_log* iniciar_logger(char* ruta, char* emisor);
 t_config* iniciar_config(char* ruta);
+void inicializar_registro(t_pcb* pcb);
 
 #endif

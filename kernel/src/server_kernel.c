@@ -11,8 +11,6 @@ void atender_cliente(void *void_args)
 
     
     free(args);
-
-    t_pcb* pcb;
     
     while (client_socket != -1)
     {   

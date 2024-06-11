@@ -36,7 +36,7 @@ void atender_cliente(void *void_args)
             realizar_ciclo_inst(conexion_memoria_cpu, pcb);
             log_info(logger, "Complete ciclo");
             log_info(logger, "mi quantum es %d", pcb->quantum);
-            //enviar_pcb(pcb, kernel_socket);
+            enviar_pcb(pcb, kernel_socket);
             sleep(5);
 			break;
         }

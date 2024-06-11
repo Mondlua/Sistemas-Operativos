@@ -177,16 +177,15 @@ void enviar_pcb(t_pcb* pcb, int socket_cliente){
 
 t_pcb* recibir_pcb(int socket_cliente) {
     t_pcb* pcb = malloc(sizeof(t_pcb));
-    pcb->registros = inicializar_registros();
     t_list* valores_paquete = recibir_paquete(socket_cliente);
-    if (valores_paquete == NULL) {
-        return NULL;
-    }
-    pcb->pid = *((uint32_t *) list_get(valores_paquete, 0)) ;
-    pcb->quantum = *((int*) list_get(valores_paquete, 1));
-    pcb->registros= ((cpu_registros*) list_get(valores_paquete, 2));
-    pcb->estado=*((t_proceso_estado*)list_get(valores_paquete, 3));
+    inicializar_registro(pcb);
+
+    pcb->pid = *((uint32_t*)list_get(valores_paquete, 0));
+    pcb->quantum = *((int*)list_get(valores_paquete, 1));
+    pcb->registros = list_get(valores_paquete, 2);
+    pcb->estado = *((t_proceso_estado*)list_get(valores_paquete, 3));
     list_destroy(valores_paquete);
+
     return pcb;
 }
 

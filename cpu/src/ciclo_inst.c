@@ -216,6 +216,7 @@ void execute(t_decode* decode, t_pcb* pcb){
         case 0:{
             int valor = decode->valor;
             char* registro_adepositar=(char*)list_get(decode->registroCpu,0);
+            printf("El registro es %s", registro_adepositar);
             asignar_registro(pcb->registros, registro_adepositar, valor);
             break;
          }
@@ -278,14 +279,14 @@ void execute(t_decode* decode, t_pcb* pcb){
             enviar_motivo(INS_EXIT,kernel_socket);
         }
     }
-
+    
 }
 
 void realizar_ciclo_inst(int conexion, t_pcb* pcb){
    t_instruccion* ins = fetch(conexion,pcb);
    t_decode* decodeado = decode(ins);
    execute(decodeado,pcb);
-    enviar_pcb(pcb, kernel_socket);
+    //enviar_pcb(pcb, kernel_socket);
     
    //if(hay_interrupcion){
     //VER
