@@ -31,13 +31,20 @@ void atender_cliente(void *void_args)
         case PCB:
         {
            t_pcb* pcb;
+
             pcb = recibir_pcb(kernel_socket);
 			log_info(logger, "Llego a CPU el <PID> es <%u>", pcb->pid);
+            sleep(2);
+            enviar_mensaje("hola prueba2", kernel_socket);
+            sleep(2);
             realizar_ciclo_inst(conexion_memoria_cpu, pcb);
             log_info(logger, "Complete ciclo");
-            log_info(logger, "mi quantum es %d", pcb->quantum);
+            sleep(20);
+            enviar_mensaje("emicami", kernel_socket);
+            sleep(2);
+            enviar_mensaje("hola prueba", kernel_socket);
+            sleep(3);
             enviar_pcb(pcb, kernel_socket);
-            sleep(5);
 			break;
         }
         case FIN_QUANTUM:{
