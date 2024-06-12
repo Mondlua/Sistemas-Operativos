@@ -22,4 +22,5 @@ t_queue* cola_pcb(uint32_t num_pid); //devuelve la cola en la que se encuentra e
 void borrar_pcb(uint32_t num_pid);
 t_pcb* buscar_pcb(uint32_t num_pid);
 
+
 #endif

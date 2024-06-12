@@ -7,7 +7,7 @@ void* memoria;
 t_bitarray* bitarray;
 
 
-void cargar_a_mem(char* instruccion, uint32_t pid){
+void cargar_a_mem(char* instruccion, uint32_t pid){ // Mejorar segun dir fisica y ver si nos pasamos
 
     int tam_instruccion = strlen(instruccion) + 1;
     log_info(memoria_log, "tam: %d", tam_instruccion);
@@ -15,8 +15,8 @@ void cargar_a_mem(char* instruccion, uint32_t pid){
     log_info(memoria_log, "frames: %d", num_frames);
     log_info(memoria_log, "tam pag: %d", tam_pagina);
 
-    t_tabla* tabla_del_pid;
-   
+    t_tabla* tabla_del_pid = buscar_por_pid_return(pid);
+   /*
    if(!buscar_por_pid_bool(pid)){
     t_tabla* tabla = malloc(sizeof(t_tabla));
     tabla->pid = pid;
@@ -24,7 +24,7 @@ void cargar_a_mem(char* instruccion, uint32_t pid){
     list_add(tabla_pags, tabla);
     tabla_del_pid = buscar_por_pid_return(pid);
     log_info(memoria_log, "cree tabla del pid");
-   }
+   }*/
     //ENTRA EN UNA PAGINA
     if(tam_instruccion <= tam_pagina){
         log_info(memoria_log, "entre");
