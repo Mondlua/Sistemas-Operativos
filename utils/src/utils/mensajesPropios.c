@@ -169,38 +169,24 @@ void enviar_pcb(t_pcb* pcb, int socket_cliente){
     paquete->codigo_operacion= PCB;
     agregar_a_paquete(paquete, &(pcb->pid), sizeof(uint32_t));
     agregar_a_paquete(paquete, &(pcb->quantum), sizeof(int));
-    agregar_a_paquete(paquete, (pcb->registros), sizeof(cpu_registros));
+    agregar_a_paquete(paquete, pcb->registros, sizeof(cpu_registros));
     agregar_a_paquete(paquete, &(pcb->estado), sizeof(t_proceso_estado));
     enviar_paquete(paquete, socket_cliente);
-    printf("el size del paquete enviado es %d\n",sizeof(paquete->buffer->size));
-    printf("el size deberia ser: %d\n",(sizeof(uint32_t)+ sizeof(int) +sizeof(cpu_registros) +sizeof(t_proceso_estado)));
     eliminar_paquete(paquete);
 }
 
 t_pcb* recibir_pcb(int socket_cliente) {
     t_pcb* pcb = malloc(sizeof(t_pcb));
-    printf("hola\n");
     t_list* valores_paquete = recibir_paquete(socket_cliente);
-    printf("hola2\n");
-    printf("el tamaño de la lista es %d\n", list_size(valores_paquete) );
     pcb->registros = malloc(sizeof(cpu_registros));
-
-    printf("pid recibido %u\n", *((uint32_t*)list_get(valores_paquete, 0)));
-    printf(" el pid primero es %u\n", pcb->pid);
     pcb->pid = *((uint32_t*)list_get(valores_paquete, 0));
-    printf(" el pid dsp es %u\n", pcb->pid);
     pcb->quantum = *((int*)list_get(valores_paquete, 1));
-    printf("quatum recibido %d\n", *((int*)list_get(valores_paquete, 1)));
-   // pcb->registros = list_get(valores_paquete, 2);
-    cpu_registros* registros_recibidos = list_get(valores_paquete, 2);
-    pcb->registros = registros_recibidos;
-    printf("registro recibido %u\n",(registros_recibidos->BX));
+    pcb->registros = (cpu_registros*)list_get(valores_paquete, 2);
     pcb->estado = *((t_proceso_estado*)list_get(valores_paquete, 3));
-    printf("estado recibido %d\n", *((t_proceso_estado*)list_get(valores_paquete, 3)));
- 
     list_destroy(valores_paquete);
     return pcb;
 }
+
 
 char *estado_a_string(t_proceso_estado estado)
 {

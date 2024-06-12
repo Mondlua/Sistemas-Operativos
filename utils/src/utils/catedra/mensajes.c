@@ -34,14 +34,10 @@ t_list* recibir_paquete(int socket_cliente) {
     int desplazamiento = 0;
     void * buffer;
     t_list* valores = list_create();
-    if (!valores) {
-        fprintf(stderr, "Error al crear lista de valores\n");
-        return NULL;
-    }
-
+    
     buffer = recibir_buffer(&size, socket_cliente);
     if (!buffer) {
-        list_destroy(valores);
+        fprintf(stderr, "Error al recibir buffer\n");
         return NULL;
     }
 
@@ -53,7 +49,7 @@ t_list* recibir_paquete(int socket_cliente) {
         char* valor = malloc(tamanio);
         if (!valor) {
             fprintf(stderr, "Error al asignar memoria para valor\n");
-            free(buffer);
+            free(buffer); // Liberar el buffer antes de retornar NULL
             list_destroy(valores);
             return NULL;
         }
@@ -62,9 +58,11 @@ t_list* recibir_paquete(int socket_cliente) {
         desplazamiento += tamanio;
         list_add(valores, valor);
     }
-    free(buffer);
+
+    free(buffer); // Liberar el buffer después de procesarlo completamente
     return valores;
 }
+
 
 void* serializar_paquete(t_paquete* paquete, int bytes)
 {
