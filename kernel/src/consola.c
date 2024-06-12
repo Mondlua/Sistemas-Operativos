@@ -75,14 +75,22 @@ void iniciar_proceso(char* path){
     log_info(kernel_log,"Proceso con PID %u pasado a la cola READY",pcb->pid);
     log_info(kernel_log, ">> Se crea el proceso %s en NEW", path);
 
-    enviar_mensaje(path,conexion_memoria);
+    char* pathpid = path+"$"+int_to_char(pid);
+    enviar_mensaje(pathpid,conexion_memoria);
 
 }
 
 void finalizar_proceso(uint32_t pid){
+
     borrar_pcb(pid);
-    log_info(kernel_log, ">> Se finaliza proceso %i", pid);
+    char* pid_char= int_to_char(pid);
+    enviar_mensaje_finalizacion(pid_char,conexion_memoria);
+
+    log_info(kernel_log, ">> Se finaliza proceso %u <<", pid);
 }
+
+bool tabla_pid
+
 void iniciar_planificacion(){
     char* algoritmo=config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
     log_info(kernel_log, "El algoritmo configurado es: %s", algoritmo);

@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include "main.h"
 
+extern int retardo;
 extern int tam_pagina;
 extern int tam_memoria;
 extern t_list* tabla_pags;
@@ -15,7 +16,7 @@ extern void* memoria;
 extern t_bitarray* bitarray;
 
 typedef struct t_dir_fisica{
-    int nro_pagina;
+    int nro_frame;
     int desplazamiento;
 }t_dir_fisica;
 
