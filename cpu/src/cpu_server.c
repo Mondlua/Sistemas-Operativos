@@ -2,6 +2,7 @@
 
 int kernel_socket;
 
+
 void atender_cliente(void *void_args)
 {
     t_atender_cliente_args *args = (t_atender_cliente_args *)void_args;
@@ -13,7 +14,6 @@ void atender_cliente(void *void_args)
     free(args);
 
     //MEMORIA a CPU
-    
     while (kernel_socket != -1)
     {   
         op_code cop = recibir_operacion(kernel_socket);
@@ -31,19 +31,17 @@ void atender_cliente(void *void_args)
         case PCB:
         {
            t_pcb* pcb;
-
+        
+           
             pcb = recibir_pcb(kernel_socket);
 			log_info(logger, "Llego a CPU el <PID> es <%u>", pcb->pid);
             t_instruccion* ins = fetch(conexion_memoria_cpu,pcb);
             printf("el pc es %d", pcb->registros->PC);
             t_decode* decodeado = decode(ins);
             pcb = execute(decodeado,pcb);
-            printf("el AX es %d", pcb->registros->AX);
             //realizar_ciclo_inst(conexion_memoria_cpu, pcb);
             log_info(logger, "Complete ciclo");
-            sleep(5);
             enviar_pcb(pcb, kernel_socket);
-            sleep(30);
 			break;
         }
         case FIN_QUANTUM:{

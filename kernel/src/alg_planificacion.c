@@ -29,8 +29,9 @@ void fifo(int conexion_cpu_dispatch){
             pcb_a_planificar = queue_pop(colaReady);
             cambiar_a_cola(pcb_a_planificar,EXEC);
             enviar_pcb(pcb_a_planificar,conexion_cpu_dispatch);
-            motivo_desalojo = INS_EXIT; //recibir_interrupcion(conexion_cpu_interrupt); // VER
-            sleep(40);
+             //recibir_interrupcion(conexion_cpu_interrupt); // VER
+            motivo_desalojo= recibir_operacion(conexion_cpu_dispatch);
+            motivo_desalojo = INS_EXIT;
             pcb_a_planificar = recibir_pcb(conexion_cpu_dispatch);
             log_info(kernel_log, "Recibi un PCB con AX %d y PC %d ", pcb_a_planificar->registros->AX,pcb_a_planificar->registros->PC) ;
             //queue_pop(colaExec);
