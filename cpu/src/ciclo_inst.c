@@ -146,10 +146,22 @@ t_decode* decode(t_instruccion* instruccion){
         break;
         }
         case 11:{
-            break;
+        char* interfaz = strdup(arrayIns[1]);
+        decode->interfaz = interfaz;
+        char* registro_direccion = arrayIns[2];
+        list_add(decode->registroCpu, registro_direccion);
+        char* registro_tamaño = arrayIns[3];
+        list_add(decode->registroCpu, registro_tamaño);  
+        break;
         }
         case 12:{
-            break;
+        char* interfaz = strdup(arrayIns[1]);
+        decode->interfaz = interfaz;
+        char* registro_direccion = arrayIns[2];
+        list_add(decode->registroCpu, registro_direccion);
+        char* registro_tamaño = arrayIns[3];
+        list_add(decode->registroCpu, registro_tamaño);  
+        break;
         }
         case 13:{
             break;
@@ -174,6 +186,7 @@ t_decode* decode(t_instruccion* instruccion){
     free(arrayIns[i]);
     }
     free(arrayIns);
+    list_destroy(decode->registroCpu);
     return decode;
 }
 
@@ -285,11 +298,11 @@ void execute(t_decode* decode, t_pcb* pcb){
         case 9:{}
         case 10:{
             enviar_motivo(BLOCK_IO, kernel_socket);
-            instruccion_params* parametros =  malloc(sizeof(instruccion_params));;
-            parametros->interfaz = strdup(decode->interfaz);;
+            instruccion_params* parametros =  malloc(sizeof(instruccion_params));
+            parametros->interfaz = strdup(decode->interfaz);
             parametros->params.io_gen_sleep_params.unidades_trabajo = decode->valor;
 
-            t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion));;
+            t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion));
             paquete->codigo_operacion = IO_GEN_SLEEP;
             enviar_instruccion_a_Kernel(paquete, parametros, kernel_socket);
             free(parametros->interfaz); 
@@ -297,15 +310,45 @@ void execute(t_decode* decode, t_pcb* pcb){
             free(paquete);
             break;
         }
-        case 11:{ break;}
-        case 12:{ break;}
-        case 13:{ break;}
-        case 14:{ break;}
-        case 15:{ break;}
-        case 16:{ break;}
-        case 17:{ break;}
+
+        case 11:{
+            enviar_motivo(BLOCK_IO, kernel_socket);
+            instruccion_params* parametros =  malloc(sizeof(instruccion_params));
+            parametros->interfaz = strdup(decode->interfaz);
+            char* registro_direccion = (char*)list_get(decode->registroCpu, 0);
+            char* registro_tamaño = (char*)list_get(decode->registroCpu, 1);
+            parametros->params.io_stdin_stdout.registro_direccion = (cpu_registros*)obtener_valor_registro(pcb->registros, registro_direccion);
+            parametros->params.io_stdin_stdout.registro_tamaño = (cpu_registros*)obtener_valor_registro(pcb->registros, registro_tamaño);
+            t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion));
+            paquete->codigo_operacion = IO_STDIN_READ;
+            enviar_instruccion_a_Kernel(paquete, parametros, kernel_socket);
+            free(parametros->interfaz); 
+            free(parametros);
+            free(paquete);
+            break;
+        }
+        case 12:{
+            enviar_motivo(BLOCK_IO, kernel_socket);
+            instruccion_params* parametros =  malloc(sizeof(instruccion_params));
+            parametros->interfaz = strdup(decode->interfaz);
+            char* registro_direccion = (char*)list_get(decode->registroCpu, 0);
+            char* registro_tamaño = (char*)list_get(decode->registroCpu, 1);
+            parametros->params.io_stdin_stdout.registro_direccion = (cpu_registros*)obtener_valor_registro(pcb->registros, registro_direccion);
+            parametros->params.io_stdin_stdout.registro_tamaño = (cpu_registros*)obtener_valor_registro(pcb->registros, registro_tamaño);
+            t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion));
+            paquete->codigo_operacion = IO_STDOUT_WRITE;
+            enviar_instruccion_a_Kernel(paquete, parametros, kernel_socket);
+            free(parametros->interfaz); 
+            free(parametros);
+            free(paquete);
+            break;
+        }
+        case 13:{}
+        case 14:{}
+        case 15:{}
+        case 16:{}
+        case 17:{}
         case 18:{
-            //cambiar_a_cola(pcb_actualizado, EXIT); // solo el kernel deberia cambiar esto
             enviar_motivo(INS_EXIT,kernel_socket);
             break;
         }

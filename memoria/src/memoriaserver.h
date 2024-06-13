@@ -12,8 +12,10 @@
 #include <pthread.h>
 #include <utils/mensajesPropios.h>
 #include <semaphore.h>
+#include <utils/io_operation.h>
 #include "memoriautils.h"
 #include <commons/string.h>
+
 
 extern t_list* lista_arch;
 extern sem_t semaforo_mem;
@@ -27,6 +29,7 @@ typedef struct
 } t_atender_cliente_args;
 
 int server_escuchar(void *arg);
+void atender_cliente(void *void_args);
 
 void eliminar_linea_n(char* linea);
 #endif

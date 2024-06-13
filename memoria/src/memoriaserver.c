@@ -74,6 +74,21 @@ void atender_cliente(void *void_args)
            
             break;
         }
+
+        case IO_STDIN_READ:{
+            instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
+            parametros_io = recibir_io_stdin(client_socket);
+            //GUARDAR TEXTO EN REGISTRO_DIRECCION
+            free(parametros_io);
+            break;
+        }
+        case IO_STDOUT_WRITE: {
+            instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
+            parametros_io = recibir_io_stdout(client_socket);
+            //BUSCAR EN REGISTRO_DIRECCION Y LEER EL REGISTRO_TAMAÑO
+            //MANDAR RESULTADO A IO
+            free(parametros_io);
+
         case ACCESO_TABLA:
         {
             char* pidpag = recibir_mensaje(client_socket, logger);
@@ -196,6 +211,7 @@ void atender_cliente(void *void_args)
             log_info(logger, "PID: <%u> - Tamaño: <%d>", pid, list_size(tabla_pid->tabla));
 
             free(tabla_pid);
+
             break;
         }
         default:
@@ -236,8 +252,11 @@ int server_escuchar(void* arg)
     return 0;
 }
 
+
+
 void eliminar_linea_n(char* linea){
     if(linea[strlen(linea)-1] == '\n'){
         linea[strlen(linea)-1]='\0';
     }
 }
+

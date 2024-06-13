@@ -45,8 +45,7 @@ void fifo(int conexion_cpu_dispatch){
                     break;
                 case BLOCK_IO:
                     instruccion_params* instruccion_io = malloc(sizeof(instruccion_params));
-                    instruccion_io = recibir_solicitud_cpu(conexion_cpu_dispatch);
-                    validar_peticion(instruccion_io->interfaz, instruccion_io->params.io_gen_sleep_params.unidades_trabajo, pcb_actualizado);
+                    recibir_solicitud_cpu(conexion_cpu_dispatch, pcb_actualizado);
                 break;
                     
                 case BLOCK_RECURSO: 
@@ -90,8 +89,8 @@ void fifo(int conexion_cpu_dispatch){
             tamanioExec =0;//queue_size(colaExec);
         }
    }
-
-}
+    
+   //--------------------------------
 
 /*void rr(int conexion_cpu_dispatch){
 
@@ -146,7 +145,9 @@ void fifo(int conexion_cpu_dispatch){
             tamanioReady = queue_size(colaReady);
             tamanioExec = queue_size(colaExec);
         }
+    }
 }
+
 
 void* manejar_quantum(uint32_t pid){
     usleep(quantum);
