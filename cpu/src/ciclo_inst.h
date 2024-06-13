@@ -23,11 +23,19 @@ typedef struct {
     size_t tamano; 
 } registro_mapa;
 
+typedef enum {
+    NO_BLOCK,
+    IO_BLOCK,
+    EXIT_BLOCK
+} t_cpu_blockeo;
 
 t_instruccion* fetch(int conexion, t_pcb* pcb);
 t_decode* decode(t_instruccion* ins);
-void execute(t_decode* deacodeado, t_pcb* pcb);
+t_cpu_blockeo execute(t_decode* deacodeado, t_pcb* pcb, t_log *logger);
 instrucciones obtener_instruccion(char *nombre);
-void realizar_ciclo_inst(int conexion, t_pcb* pcb);
+void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log *logger);
+
+void loggear_registros(t_pcb* pcb, t_log* logger);
+
 
 #endif

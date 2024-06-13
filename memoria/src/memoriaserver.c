@@ -20,6 +20,7 @@ void atender_cliente(void *void_args)
     while (client_socket != -1)
     {   
         op_code cop = recibir_operacion(client_socket);
+        usleep(retardo*1000);
 
         if (cop == -1)
         {
@@ -45,7 +46,7 @@ void atender_cliente(void *void_args)
             tabla->pid = pid;
             tabla->tabla = list_create();
             list_add(tabla_pags, tabla);
-            log_info(memoria_log, "PID: <%u> - Tamaño: <0>", pid);
+            log_info(memoria_log, "PID: <%d> - Tamaño: <%d>", pid, list_size(tabla->tabla));
 
             break;
         }
@@ -68,7 +69,7 @@ void atender_cliente(void *void_args)
             cargar_a_mem(ins, pid);
 
             enviar_instruccion_mem(client_socket,instruccion);
-           
+            
             break;
         }
         // case ACCESO_TABLA:
@@ -156,7 +157,6 @@ void atender_cliente(void *void_args)
         case PED_ESCRITURA:{
             char* a_escribir=recibir_mensaje(client_socket, logger);//hacer funcion especifica(paquete)
             t_dir_fisica* dir_fisica = recibir_mensaje(client_socket, logger);//idem
-            usleep(retardo);
             void* inicio_espacio_de_mem = memoria + ((dir_fisica->nro_frame)*tam_pagina) + (dir_fisica->desplazamiento);    
             //escribir_a_mem(a_escribir,,);
             break;
@@ -164,7 +164,6 @@ void atender_cliente(void *void_args)
         case FINALIZACION:
         {
             char* pidc = recibir_mensaje(client_socket, logger);
-            usleep(retardo);
             uint32_t pid = atoi(pidc);
 
             t_tabla* tabla = list_remove(tabla_pags, buscar_por_pid_return(pid));
