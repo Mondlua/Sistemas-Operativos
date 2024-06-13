@@ -46,7 +46,6 @@ void atender_cliente(void *void_args)
             tabla->tabla = list_create();
             list_add(tabla_pags, tabla);
             log_info(memoria_log, "PID: <%u> - Tamaño: <0>", pid);
-
             break;
         }
         case PID:{

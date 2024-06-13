@@ -4,7 +4,7 @@ int logica_int;
 
 void validar_peticion(char* interfaz_a_validar, char* tiempo, t_pcb* pcb) {
 
-    sem_wait(&sem_contador);
+    sem_wait(&sem_contador_int);
     int tamanio_lista = list_size(interfaces);
 
     if (tamanio_lista > 0) {
