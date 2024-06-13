@@ -15,7 +15,8 @@
 
 extern int hay_interrupcion;
 extern int kernel_socket;
-typedef struct
+extern int tam_pag;
+typedef struct t_atender_cliente_args
 {
     t_log *log;
     int c_socket;

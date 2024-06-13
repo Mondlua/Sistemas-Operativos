@@ -33,6 +33,8 @@ void enviar_instruccion_mem(int socket_cliente, t_instruccion* instruccion);
 void enviar_pcb(t_pcb* pcb, int socket_cliente);
 t_pcb* recibir_pcb(int socket_cliente);
 void enviar_pc(char* pc, int socket_cliente);
+void enviar_pid(char* pid, int socket_cliente);
 char* recibir_pc(int socket_cliente);
+
 
 #endif

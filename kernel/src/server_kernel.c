@@ -11,8 +11,6 @@ void atender_cliente(void *void_args)
 
     
     free(args);
-
-    t_pcb* pcb;
     
     while (client_socket != -1)
     {   
@@ -46,7 +44,7 @@ void atender_cliente(void *void_args)
             new_client->socket_interfaz = client_socket;
             new_client->cola_block = queue_create();
             list_add(interfaces, new_client);
-            sem_post(&sem_contador);
+            sem_post(&sem_contador_int);
             break;
         }
         case AVISO_DESCONEXION:

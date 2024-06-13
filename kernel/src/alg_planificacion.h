@@ -2,6 +2,11 @@
 #define PLANIFICACION_H_
 
 #include "main.h"
+#include <utils/mensajesPropios.h>
+
+
+extern sem_t grado_planificiacion;
+extern sem_t cola_ready;
 
 void fifo(int conexion_cpu_dispatch);
 void rr(int conexion_cpu_dispatch);
