@@ -1,6 +1,7 @@
 #include "cpu_server.h"
 
 int kernel_socket;
+int tam_pag;
 
 void atender_cliente(void *void_args)
 {
@@ -9,13 +10,11 @@ void atender_cliente(void *void_args)
     t_log *logger = args->log;
     kernel_socket = args->c_socket;
     char *server_name = args->server_name;
+
     
     free(args);
 
-    t_pcb* pcb;
-
     //MEMORIA a CPU
-    
     while (kernel_socket != -1)
     {   
         op_code cop = recibir_operacion(kernel_socket);
@@ -28,27 +27,21 @@ void atender_cliente(void *void_args)
 
         switch (cop) 
         {
-        case MENSAJE:{}
+        case MENSAJE:{
+        }
         case PAQUETE:{}
         case PCB:
         {
+           t_pcb* pcb;
+        
+           
             pcb = recibir_pcb(kernel_socket);
-			log_info(logger, "Lleo a CPU el <PID> es <%u>", pcb->pid);
-            char* pc = int_to_char(pcb->p_counter);
-            sleep(5);
+			log_info(logger, "Llego a CPU el <PID> es <%u>", pcb->pid);
             realizar_ciclo_inst(conexion_memoria_cpu, pcb);
+            log_info(logger, "Complete ciclo");
             enviar_pcb(pcb, kernel_socket);
 			break;
         }
-            /*  case INSTRUCCION:{
-          t_instruccion* ins = recibir_instruccion_cpu(conexion_memoria_cpu);
-            log_info(logger, "Me llego la INSTRUCCION %s", ins->buffer->stream);
-            t_decode* decodeado= decode(ins);
-            log_info(logger, "Me llego el decode %d", decodeado->op_code);
-            log_info(logger, "Registro es %s", list_get(decodeado->registroCpu, 0));
-           
-            break;
-        } */
         case FIN_QUANTUM:{
             recibir_interrupcion_finq(kernel_socket);
             hay_interrupcion = 1;
