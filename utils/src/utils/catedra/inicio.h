@@ -42,6 +42,16 @@ typedef struct t_pcb
 
 } t_pcb;
 
+
+typedef struct t_dir_fisica{
+    int nro_frame;
+    int desplazamiento;
+}t_dir_fisica;
+typedef struct t_tabla{
+    uint32_t pid;
+    t_list* tabla;
+}t_tabla;
+
 t_log* iniciar_logger(char* ruta, char* emisor);
 t_config* iniciar_config(char* ruta);
 void inicializar_registro(t_pcb* pcb);
