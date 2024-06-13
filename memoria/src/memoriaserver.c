@@ -75,7 +75,7 @@ void atender_cliente(void *void_args)
         {
             char* pidpag = recibir_mensaje(client_socket, logger);
             usleep(retardo);
-            char** split = string_split(pathpid, "$");
+            char** split = string_split(pidpag, "$");
             uint32_t pid = split[0];
             int pag = atoi(split[1]);
             t_tabla* tabla_pid = buscar_por_pid_return(pid);
@@ -89,11 +89,11 @@ void atender_cliente(void *void_args)
             }
             break;
         }
-        case RESIZE:
+        case CPU_RESIZE:
         {   
             char* pidtam = recibir_mensaje(client_socket, logger);
             usleep(retardo);
-            char** split = string_split(pathpid, "$");
+            char** split = string_split(pidtam, "$");
             uint32_t pid = split[0];
             int tamanio = atoi(split[1]);
 
@@ -134,8 +134,8 @@ void atender_cliente(void *void_args)
                 int bytes_a_reducir = tamanio - tamanio_pid;
                 int cantframes_a_reducir=  bytes_a_reducir/tam_pagina;
                 int cant_pags_nueva = cant_pags - cantframes_a_reducir;
-                
-                for(i=(cant_pags-1); i>cant_pags_nueva; i--){
+                                
+                for(int i=(cant_pags-1); i>cant_pags_nueva; i--){
                     int frame = list_get(tabla_pid->tabla, i);
                     list_remove(tabla_pid->tabla, i);
                     bitarray_clean_bit(bitarray,frame);
@@ -144,9 +144,9 @@ void atender_cliente(void *void_args)
             }
             break;
         }
-        case PED_LECTURA:
+        /*case PED_LECTURA:
         {
-            t_dir_fisica* dir_fisica = recibir_paquete(client_socket, logger);//modificar a funcion especifica
+            t_dir_fisica* dir_fisica = recibir_paquete(client_socket);//modificar a funcion especifica
             usleep(retardo);
             void* inicio_espacio_de_mem = memoria + ((dir_fisica->nro_frame)*tam_pagina) + (dir_fisica->desplazamiento);
             char* leido;
@@ -154,28 +154,28 @@ void atender_cliente(void *void_args)
             break;
         }
         case PED_ESCRITURA:{
-            char* a_escribir=recibir_mensaje(client_scoket, logger);//hacer funcion especifica(paquete)
+            char* a_escribir=recibir_mensaje(client_socket, logger);//hacer funcion especifica(paquete)
             t_dir_fisica* dir_fisica = recibir_mensaje(client_scoket, logger);//idem
             usleep(retardo);
             void* inicio_espacio_de_mem = memoria + ((dir_fisica->nro_frame)*tam_pagina) + (dir_fisica->desplazamiento);    
             //escribir_a_mem(a_escribir,,);
             break;
-        }
+        }*/
         case FINALIZACION:
         {
             char* pidc = recibir_mensaje(client_socket, logger);
             usleep(retardo);
             uint32_t pid = atoi(pidc);
 
-            t_tabla* tabla = list_remove(tabla_pags, buscar_por_pid_return(pid));
-            for(i=0; i<list_size(tabla_pid->tabla), i++){
+            t_tabla* tabla_pid = list_remove(tabla_pags, buscar_por_pid_return(pid));
+            for(int i=0; i<list_size(tabla_pid->tabla); i++){
                 int frame = list_get(tabla_pid->tabla, i);
                 bitarray_clean_bit(bitarray, frame);
             }
 
             log_info(logger, "PID: <%u> - Tamaño: <%d>", pid, list_size(tabla_pid->tabla));
 
-            free(tabla);
+            free(tabla_pid);
             break;
         }
         default:

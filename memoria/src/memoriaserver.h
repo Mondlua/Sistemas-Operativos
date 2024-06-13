@@ -13,6 +13,7 @@
 #include <utils/mensajesPropios.h>
 #include <semaphore.h>
 #include "memoriautils.h"
+#include <commons/string.h>
 
 extern t_list* lista_arch;
 extern sem_t semaforo_mem;
