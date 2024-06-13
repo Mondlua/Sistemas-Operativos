@@ -4,7 +4,7 @@ int logica_int;
 
 void validar_peticion(instruccion_params* parametros, t_pcb* pcb, int codigo_op) {
 
-    sem_wait(&sem_contador);
+    sem_wait(&sem_contador_int);
     int tamanio_lista = list_size(interfaces);
 
     if (tamanio_lista > 0) {
@@ -13,7 +13,7 @@ void validar_peticion(instruccion_params* parametros, t_pcb* pcb, int codigo_op)
             enviar_instruccion_a_interfaz(interfaz_encontrada, parametros, codigo_op);
             sleep(10); //CAMBIAR A SEMAFORO
             if(logica_int){
-                interfaz_encontrada->cola_block = queue_push(pcb);
+                queue_push(interfaz_encontrada->cola_block, pcb);
                 pcb->estado = BLOCKED;
             }
             else{

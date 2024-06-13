@@ -1,7 +1,7 @@
 #include "alg_planificacion.h"
 
 
-int buscar_posicion_recurso_por_nombre(char* recurso){
+/*int buscar_posicion_recurso_por_nombre(char* recurso){
     int tamanio_lista = list_size(recursos);
     for (int i = 0; i < tamanio_lista; i++) {
         char* posible_recurso = list_get(recursos, i);
@@ -11,9 +11,10 @@ int buscar_posicion_recurso_por_nombre(char* recurso){
     }
     return -1;
 }
+*/ //Falta hacer el manejo de recursos
+
 
 void fifo(int conexion_cpu_dispatch){
-
    int tamanioReady = queue_size(colaReady);
    int tamanioExec = queue_size(colaExec);
    int motivo_desalojo;
@@ -23,29 +24,32 @@ void fifo(int conexion_cpu_dispatch){
    char* instruccion_string;
    char** array_palabras;
 
-    if(tamanioReady > 0){
-       while( tamanioReady>0 && tamanioExec == 0 ){ //Cuando se implimente el comando "DETENER_PLANIFICACION", validar tambien que la planif no haya sido pausada
+    if(tamanioReady >= 0){
+       while(tamanioExec == 0 ){ //Cuando se implimente el comando "DETENER_PLANIFICACION", validar tambien que la planif no haya sido pausada
+            sem_wait(&cola_ready);
+            pcb_a_planificar = queue_pop(colaReady);
             cambiar_a_cola(pcb_a_planificar,EXEC);
-            enviar_pcb_cpu(pcb_a_planificar,conexion_cpu_dispatch);
-
-            motivo_desalojo = recibir_interrupcion(conexion_cpu_interrupt); VER
-            pcb_actualizado = recibir_pcb(conexion_cpu_dispatch);
-
+            enviar_pcb(pcb_a_planificar,conexion_cpu_dispatch);
+             //recibir_interrupcion(conexion_cpu_interrupt); // VER
+            motivo_desalojo= recibir_operacion(conexion_cpu_dispatch);
+            motivo_desalojo = INS_EXIT;
+            pcb_a_planificar = recibir_pcb(conexion_cpu_dispatch);
+            log_info(kernel_log, "Recibi un PCB con AX %d y PC %d ", pcb_a_planificar->registros->AX,pcb_a_planificar->registros->PC) ;
+            //queue_pop(colaExec);
             switch (motivo_desalojo) {
                 case INS_EXIT:
-                    cambiar_a_cola(pcb_actualizado, EXIT);
-                    borrar_pcb(pcb_actualizado->pid);
+                    cambiar_a_cola(pcb_a_planificar, EXIT);
+                    borrar_pcb(pcb_a_planificar->pid);
+                    sem_post(&grado_planificiacion);
                     //Falta que libere memoria y recursos
                     break;
                 case BLOCK_IO:
                     instruccion_params* instruccion_io = malloc(sizeof(instruccion_params));
                     recibir_solicitud_cpu(conexion_cpu_dispatch, pcb_actualizado);
                 break;
-
                     
-                case BLOCK_RECURSO:
-                   { 
-                    instruccion = recibir_instruccion_memoria(conexion_memoria);
+                case BLOCK_RECURSO: 
+                   /* instruccion = recibir_instruccion_memoria(conexion_memoria);
                     instruccion_string = instruccion->buffer->stream;
                     array_palabras = string_split(instruccion_string, " ");
 
@@ -74,30 +78,21 @@ void fifo(int conexion_cpu_dispatch){
                     break;
                 }
                 
-                   }
+                   }*/
                 
-                default:{ }
+                default:
+                break;
                 
             }
             
-            tamanioReady = queue_size(colaReady);
-            tamanioExec = queue_size(colaExec);
+            tamanioReady =0; //queue_size(colaReady);
+            tamanioExec =0;//queue_size(colaExec);
         }
    }
-    }
-   //---------------------------------
-  t_instruccion* recibir_instruccion_memoria(int socket_conexion){
-    enviar_pc(int_to_char(pcb_actualizado->p_counter),conexion_memoria);
-    t_instruccion* instruccion = recibir_instruccion_cpu(conexion_memoria); // esta funcion tednria que tener nombre de recibir_instruccion_memoria
-   }
+    
+   //--------------------------------
 
-   void manejar_operacion_io(t_instruccion* instruccion, char* interfazIO){
-    enviar_instruccion();
-    //enviar instruccion a la IO correspondiente
-    //recibir notificacion de la IO
-   }
-
-void rr(int conexion_cpu_dispatch){
+/*void rr(int conexion_cpu_dispatch){
 
    int tamanioReady = queue_size(colaReady);
    int tamanioExec = queue_size(colaExec);
@@ -108,38 +103,38 @@ void rr(int conexion_cpu_dispatch){
     if(tamanioReady > 0){
        while( tamanioReady>0 && tamanioExec == 0 ){
         
-            pcb_a_planificar = queue_peek(colaReady);
+            pcb_a_planificar = queue_pop(colaReady);
             cambiar_a_cola(pcb_a_planificar,EXEC);
+            enviar_pcb(pcb_a_planificar,conexion_cpu_dispatch);
             pthread_t hiloquantum= pthread_create(&hiloquantum, NULL, manejar_quantum, pcb_a_planificar->pid);
-            enviar_pcb_cpu(pcb_a_planificar,conexion_cpu_dispatch);
 
             //SEMAFOROS
             motivo_desalojo = recibir_motivo(conexion_cpu_interrupt); 
             pcb_actualizado = recibir_pcb(conexion_cpu_dispatch);
 
             switch (motivo_desalojo) {
-                case 10://finalizo
+                case INS_EXIT://finalizo
                 {
-                    borrar_pcb(pcb->pid);  //Falta que libere memoria y recursos, 
+                    borrar_pcb(pcb_actualizado->pid);  //Falta que libere memoria y recursos, 
                     pthread_cancel(hiloquantum);
                     pthread_destroy(hiloquantum);
                     break;
                 }
-                case 11://block io
+                case BLOCK_IO://block io
                 {
                     cambiar_a_cola(pcb_actualizado, BLOCKED);
                     instruccion_params* instruccion_io = malloc(sizeof(instruccion_params));
                     instruccion_io = recibir_solicitud_cpu(conexion_cpu_dispatch);
-                    validar_peticion(instruccion_io->interfaz, instruccion_io->params.io_gen_sleep_params.unidades_trabajo);
+                    validar_peticion(instruccion_io->interfaz, instruccion_io->params.io_gen_sleep_params.unidades_trabajo, pcb_actualizado);
                     break;
                 }    
-                case 12://recursos VER
+                case BLOCK_RECURSO://recursos VER
                 { 
                     cambiar_a_cola(pcb_actualizado, BLOCKED);
                 }
-                case 13://fin q
+                case FIN_QUANTUM://fin q
                 {   
-                    log_info(cpu_log, "PID: <%u> - Desalojado por fin de Quantum", pcb->pid);
+                    log_info(kernel_log, "PID: <%u> - Desalojado por fin de Quantum", pcb_actualizado->pid);
                     cambiar_a_cola(pcb_actualizado, READY);
                     pthread_join(hiloquantum);
                     pthread_destroy(hiloquantum);
@@ -166,7 +161,7 @@ void enviar_interrupcion_finq(uint32_t pid, int conexion_cpu_interrupt){
 
 	paquete->codigo_operacion = FIN_QUANTUM;
 	paquete->buffer = malloc(sizeof(t_buffer));
-	paquete->buffer->size = strlen(pid) + 1;
+	paquete->buffer->size = strlen(pid) + 1; // strlen a un uint? sizeof(uint32_t)
 	paquete->buffer->stream = malloc(paquete->buffer->size);
 	memcpy(paquete->buffer->stream, pid, paquete->buffer->size);
 
@@ -183,7 +178,7 @@ void enviar_interrupcion_finq(uint32_t pid, int conexion_cpu_interrupt){
     eliminar_paquete(paquete);
 }
 
-op_code recibir_motivo(int conexion_cpu_interrupt){
+op_code recibir_motivo(int socket_cliente){
     int size;
     void* buffer;
     recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
@@ -192,3 +187,4 @@ op_code recibir_motivo(int conexion_cpu_interrupt){
     log_info(logger, "Me llego el Motivo %d", buffer);
     return buffer;
 }
+*/

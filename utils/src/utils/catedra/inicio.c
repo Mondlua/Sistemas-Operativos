@@ -27,3 +27,21 @@ t_config* iniciar_config(char* ruta)
     
     return nuevo_config;
 }
+
+
+void inicializar_registro(t_pcb* pcb)
+{
+
+    pcb->registros= malloc(sizeof(cpu_registros));
+    pcb->registros->PC = 0;
+    pcb->registros->AX = 0;
+    pcb->registros->BX = 0;
+    pcb->registros->CX = 0;
+    pcb->registros->DX = 0;
+    pcb->registros->EAX = 0;
+    pcb->registros->EBX = 0;
+    pcb->registros->ECX = 0;
+    pcb->registros->EDX = 0;
+    pcb->registros->SI = 0;
+    pcb->registros->DI = 0;
+}
