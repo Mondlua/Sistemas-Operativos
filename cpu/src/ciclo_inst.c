@@ -58,7 +58,7 @@ instrucciones obtener_instruccion(char *nombre) {
         return IO_FS_WRITE;
     } else if (strcmp(nombre, "IO_FS_READ") == 0) {
         return IO_FS_READ;
-    } else if (strcmp(nombre, "EXIIT") == 0) {
+    } else if (strcmp(nombre, "EXIT") == 0) {
         return EXIIT;
     } else {
         return -1;
@@ -208,7 +208,7 @@ void* obtener_valor_registro(cpu_registros* regs, char* nombre_registro) {
     else {return NULL;}
 }
 
-t_pcb* execute(t_decode* decode, t_pcb* pcb){
+void execute(t_decode* decode, t_pcb* pcb){
     
     instrucciones ins = decode->op_code;
     switch(ins){
@@ -274,23 +274,25 @@ t_pcb* execute(t_decode* decode, t_pcb* pcb){
         case 16:{}
         case 17:{}
         case 18:{
+            printf("Ejecutando EXIT\n");
+            hay_interrupcion = 1;
             //cambiar_a_cola(pcb_actualizado, EXIT); // solo el kernel deberia cambiar esto
-            enviar_motivo(INS_EXIT,kernel_socket);
+            //enviar_motivo(INS_EXIT,kernel_socket);
         }
     }
-
-    return pcb;
-    
 }
 
 void realizar_ciclo_inst(int conexion, t_pcb* pcb){
-   t_instruccion* ins = fetch(conexion,pcb);
-   t_decode* decodeado = decode(ins);
-   execute(decodeado,pcb);
-    //enviar_pcb(pcb, kernel_socket);
-    
-   //if(hay_interrupcion){
-    //VER
-    //cambiar_a_cola(pcb, BLOCKED);
-   //}
+   
+    while(!hay_interrupcion)
+    {
+        t_instruccion* ins = fetch(conexion,pcb);
+        printf("Fetch\n");
+        t_decode* decodeado = decode(ins);
+        printf("Decode!\n");
+        execute(decodeado,pcb);
+        printf("Bucle!\n");
+    }
+
+    // Atender interrupt
 }

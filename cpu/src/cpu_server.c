@@ -35,11 +35,11 @@ void atender_cliente(void *void_args)
            
             pcb = recibir_pcb(kernel_socket);
 			log_info(logger, "Llego a CPU el <PID> es <%u>", pcb->pid);
-            t_instruccion* ins = fetch(conexion_memoria_cpu,pcb);
-            printf("el pc es %d", pcb->registros->PC);
-            t_decode* decodeado = decode(ins);
-            pcb = execute(decodeado,pcb);
-            //realizar_ciclo_inst(conexion_memoria_cpu, pcb);
+            // t_instruccion* ins = fetch(conexion_memoria_cpu,pcb);
+            // printf("el pc es %d", pcb->registros->PC);
+            // t_decode* decodeado = decode(ins);
+            // pcb = execute(decodeado,pcb);
+            realizar_ciclo_inst(conexion_memoria_cpu, pcb);
             log_info(logger, "Complete ciclo");
             enviar_pcb(pcb, kernel_socket);
 			break;

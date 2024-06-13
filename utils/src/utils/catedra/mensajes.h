@@ -17,7 +17,7 @@ typedef enum
     MENSAJE,
     PAQUETE,
     INTERFAZ,
-    RESIZE,
+    CPU_MEMORIA_RESIZE,
     PED_LECTURA,
     PED_ESCRITURA,
     FINALIZACION,
@@ -32,8 +32,9 @@ typedef enum
     INS_EXIT,
     BLOCK_IO,
     BLOCK_RECURSO,
-    FIN_QUANTUM
-}op_code;
+    FIN_QUANTUM,
+    ACCESO_TABLA
+} op_code;
 
 typedef struct
 {
