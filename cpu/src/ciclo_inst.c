@@ -4,10 +4,8 @@ t_instruccion* fetch(int conexion, t_pcb* pcb){
     
     t_instruccion* instruccion;
     enviar_pid(int_to_char(pcb->pid), conexion);
-    sleep(5);
     enviar_pc(int_to_char(pcb->registros->PC),conexion);
-    // SEMAFORO
-    sleep(5);
+    
     instruccion = recibir_instruccion_cpu(conexion);
     
     pcb->registros->PC++;

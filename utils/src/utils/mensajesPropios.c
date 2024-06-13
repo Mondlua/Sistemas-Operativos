@@ -157,9 +157,6 @@ char* recibir_pc(int socket_cliente){
     if(buffer==NULL){
         printf("No se recibio nada\n");
     }
-    else{
-        printf("Me llego el mensaje %s\n", buffer);
-    }
     return buffer;
 }
 
