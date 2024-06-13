@@ -8,8 +8,7 @@ int main(void) {
     
     char* puerto;
     int memoria_server;
-    int tam_pagina;
-    int tam_memoria;
+ 
 
     memoria_log = iniciar_logger("memoria.log","memoria");
     memoria_config = iniciar_config("memoria.config");
@@ -22,6 +21,19 @@ int main(void) {
     tam_memoria=config_get_int_value(memoria_config, "TAM_MEMORIA");
     tam_pagina=config_get_int_value(memoria_config, "TAM_PAGINA");
     puerto = config_get_string_value(memoria_config ,"PUERTO_ESCUCHA");
+
+    // INICIALIZO MEMORIA //
+    memoria = malloc(tam_memoria);
+    //INICIALIZO BITARRAY//
+    size_t num_frames = tam_memoria / tam_pagina; 
+    char* bitarray_data = malloc(num_frames); 
+    bitarray = bitarray_create_with_mode(bitarray_data, num_frames, LSB_FIRST);
+    
+    for(int i=0; i<num_frames; i++){
+        bitarray_clean_bit(bitarray, i); //0 esta libre
+    }
+    //TABLA//
+    tabla_pags = list_create();
 
     // Inicio server 
 
@@ -36,9 +48,10 @@ int main(void) {
 
     pthread_t hilo;
     pthread_create(&hilo, NULL, (void *)server_escuchar, args);
-    
+
+
     pthread_join(hilo,NULL);
+     
+    
     return 0;
 }
-
-

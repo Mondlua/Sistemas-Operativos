@@ -48,8 +48,47 @@ void funciones(char* leido) {
 
 
 void ejecutar_script(char* path){
+    char* complemento = "/home/utnso"; 
+    size_t len_path = strlen(path);
+    size_t len_complemento = strlen(complemento);
+    size_t len_total = len_path + len_complemento + 2;
+    char* ruta_completa = malloc(len_total);
+    if (ruta_completa == NULL) {
+        log_error(kernel_log, "Error: No se pudo asignar memoria para la ruta completa.");
+        return;
+    }
+    strcpy(ruta_completa, complemento);
+    strcat(ruta_completa, path);
+
     log_info(kernel_log, ">> Se ejecuta el script %s", path);
+    log_info(kernel_log, ">> Se ejecuta el script %s", ruta_completa);
+
+    FILE* file = fopen(ruta_completa, "r");
+    if (file == NULL) {
+        log_error(kernel_log, "No se pudo abrir el archivo: %s", path);
+        return;
+    }
+
+    char* linea = NULL;
+    size_t len = 0;
+    ssize_t read;
+
+    while ((read = getline(&linea, &len, file)) != -1) {
+        linea[strcspn(linea, "\n")] = 0;
+     /*   // Ignorar líneas vacías
+        if (strlen(linea) == 0) {
+            continue;
+        }*/
+
+        log_info(kernel_log, ">> Ejecutando comando: %s", linea);
+        funciones(linea);
+    }
+
+    free(linea);
+    fclose(file);
+    log_info(kernel_log, ">> Finalizó la ejecución del script %s", path);
 }
+
 void iniciar_proceso(char* path){
 
     t_pcb *pcb;
@@ -67,34 +106,52 @@ void iniciar_proceso(char* path){
         log_info(kernel_log,"Proceso con PID %u pasado a la cola READY",pcb->pid);
     }*/
 
-    //sem_wait(&grado_actual);
-    t_pcb* pcb_plp = queue_pop(colaNew);
-    queue_push(colaReady, pcb_plp);
+    
+    pcb = queue_pop(colaNew);
+    sem_wait(&grado_planificiacion);
+    queue_push(colaReady, pcb);
+    sem_post(&cola_ready);
     //ver si se puede pasar a ready (nivel multiprog)
     pcb->estado=READY;
     log_info(kernel_log,"Proceso con PID %u pasado a la cola READY",pcb->pid);
-    
     log_info(kernel_log, ">> Se crea el proceso %s en NEW", path);
 
-    enviar_mensaje(path,conexion_memoria);
+   // char* pathpid = path+"$"+int_to_char(pcb->pid); ACA DA ERROR DE OPERANDOS INVALIDOS
+    char *pid_str = int_to_char(pcb->pid);
+    size_t len = strlen(path) + strlen(pid_str) + 2;
+    char *pathpid = malloc(len);
+    strcpy(pathpid, path);
+    strcat(pathpid, "$");
+    strcat(pathpid, pid_str);
+    enviar_mensaje(pathpid,conexion_memoria);
+    free(pid_str);
+    free(pathpid);
 
 }
 
 void finalizar_proceso(uint32_t pid){
+
     borrar_pcb(pid);
-    log_info(kernel_log, ">> Se finaliza proceso %i", pid);
+    char* pid_char= int_to_char(pid); 
+    //enviar_mensaje_finalizacion(pid_char,conexion_memoria);  NO ESTA LA FUNCION, HACER O BUSCAR
+
+    log_info(kernel_log, ">> Se finaliza proceso %u <<", pid);
 }
+
+//bool tabla_pid
+
 void iniciar_planificacion(){
     char* algoritmo=config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
-    if(strcmp(algoritmo, "FIFO")){
+    log_info(kernel_log, "El algoritmo configurado es: %s", algoritmo);
+    if(strcmp(algoritmo, "FIFO") == 0){
         pthread_t alg_planificacion;
         pthread_create(&alg_planificacion, NULL, (void*) fifo,  conexion_cpu_dispatch);
         pthread_detach(alg_planificacion);
 
-    } else if(strcmp(algoritmo, "RR")){
-        pthread_t alg_planificacion;
+    } else if(strcmp(algoritmo, "RR") == 0){
+        /*pthread_t alg_planificacion;
         pthread_create(&alg_planificacion, NULL, (void*) rr, conexion_cpu_dispatch);
-        pthread_detach(alg_planificacion);
+        pthread_detach(alg_planificacion);*/
     }
     log_info(kernel_log, ">> Se inicio la planificacion");
 }

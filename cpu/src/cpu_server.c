@@ -1,6 +1,7 @@
 #include "cpu_server.h"
 
 int kernel_socket;
+int tam_pag;
 
 void atender_cliente(void *void_args)
 {
@@ -9,13 +10,11 @@ void atender_cliente(void *void_args)
     t_log *logger = args->log;
     kernel_socket = args->c_socket;
     char *server_name = args->server_name;
+
     
     free(args);
 
-    t_pcb* pcb;
-
     //MEMORIA a CPU
-    
     while (kernel_socket != -1)
     {   
         op_code cop = recibir_operacion(kernel_socket);
@@ -28,27 +27,21 @@ void atender_cliente(void *void_args)
 
         switch (cop) 
         {
-        case MENSAJE:{}
+        case MENSAJE:{
+        }
         case PAQUETE:{}
         case PCB:
         {
+           t_pcb* pcb;
+        
+           
             pcb = recibir_pcb(kernel_socket);
-			log_info(logger, "Lleo a CPU el <PID> es <%u>", pcb->pid);
-            char* pc = int_to_char(pcb->p_counter);
-            sleep(5);
+			log_info(logger, "Llego a CPU el <PID> es <%u>", pcb->pid);
             realizar_ciclo_inst(conexion_memoria_cpu, pcb);
+            log_info(logger, "Complete ciclo");
             enviar_pcb(pcb, kernel_socket);
 			break;
         }
-            /*  case INSTRUCCION:{
-          t_instruccion* ins = recibir_instruccion_cpu(conexion_memoria_cpu);
-            log_info(logger, "Me llego la INSTRUCCION %s", ins->buffer->stream);
-            t_decode* decodeado= decode(ins);
-            log_info(logger, "Me llego el decode %d", decodeado->op_code);
-            log_info(logger, "Registro es %s", list_get(decodeado->registroCpu, 0));
-           
-            break;
-        } */
         case FIN_QUANTUM:{
             recibir_interrupcion_finq(kernel_socket);
             hay_interrupcion = 1;
@@ -91,13 +84,17 @@ int server_escuchar(void* arg)
     return 0;
 }
 
-void recibir_interrupcion_finq(int kernel_socket){
-    int size;
+void recibir_interrupcion_finq(int socket_cliente){
+    /*int size;
     void* buffer;
     recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
     buffer = malloc(*size);
-    recv(socket_cliente, buffer, *size, MSG_WAITALL);
-    log_info(logger, "Me llego la Interrupcion %d", buffer);
+    recv(socket_cliente, buffer, *size, MSG_WAITALL);*/
+    int size;
+    uint32_t* buffer = (uint32_t*)recibir_buffer(&size, socket_cliente);
+    //log_info(logger, "Me llego la Interrupcion %u", buffer);
+    printf("Me llego la Interrupcion %u", buffer);
+
 }
 
 void enviar_motivo(op_code motivo, int kernel_socket){
@@ -106,9 +103,9 @@ void enviar_motivo(op_code motivo, int kernel_socket){
 
 	paquete->codigo_operacion = motivo;
 	paquete->buffer = malloc(sizeof(t_buffer));
-	paquete->buffer->size = strlen(motivo) + 1;
+	paquete->buffer->size = sizeof(op_code);
 	paquete->buffer->stream = malloc(paquete->buffer->size);
-	memcpy(paquete->buffer->stream, motivo, paquete->buffer->size);
+	memcpy(paquete->buffer->stream, &(motivo), paquete->buffer->size);
 
 	int bytes = paquete->buffer->size + 2*sizeof(int);
 

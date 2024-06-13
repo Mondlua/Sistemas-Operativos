@@ -13,5 +13,5 @@
 #include <utils/funcionesUtiles.h>
 
 extern int conexion_memoria_cpu;
-
+extern t_log* cpu_log;
 #endif

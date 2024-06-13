@@ -2,10 +2,10 @@
 
 int conexion_memoria_cpu;
 int hay_interrupcion;
+t_log* cpu_log;
 
 int main(void){
 
-    t_log* cpu_log;
 	t_config* cpu_config;   
     char* ip_cpu;
     
@@ -35,6 +35,9 @@ int main(void){
 	conexion_memoria_cpu = crear_conexion(ip_memoria, puerto_memoria);
     log_info(cpu_log, "CPU conectado a MEMORIA");
     send_handshake(conexion_memoria_cpu, cpu_log, "CPU / MEMORIA");
+    enviar_pedido_tam_mem(conexion_memoria_cpu);
+    recibir_tamanio_pag(conexion_memoria_cpu, cpu_log, &tam_pag);
+
     
     // Recibir PCB
 
