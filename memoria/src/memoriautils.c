@@ -77,8 +77,6 @@ t_tabla* buscar_por_pid_return(uint32_t pid) {
     }
     return NULL; 
 }
-
-
 bool buscar_por_pid_bool(uint32_t pid) {
     t_link_element* current = tabla_pags->head;
     while (current != NULL) {
@@ -134,3 +132,6 @@ int buscar_frame_disp(t_bitarray* bit, int tam ){
     }
     return i; 
 }
+
+
+

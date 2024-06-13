@@ -20,7 +20,6 @@ void atender_cliente(void *void_args)
     while (client_socket != -1)
     {   
         op_code cop = recibir_operacion(client_socket);
-
         if (cop == -1)
         {
             log_info(logger, "DISCONNECT!");
@@ -29,6 +28,11 @@ void atender_cliente(void *void_args)
 
         switch (cop) 
         {
+        case TAM_PAG: {
+            recibir_ped_tamanio_pag(client_socket, logger);
+            enviar_tamanio_pag(client_socket, tam_pagina);
+           break;  
+        }
         case MENSAJE:
         {
             char* pathpid = recibir_mensaje(client_socket, logger);
@@ -90,12 +94,11 @@ void atender_cliente(void *void_args)
         }
         case CPU_RESIZE:
         {   
-            char* pidtam = recibir_mensaje(client_socket, logger);
+            uint32_t pid= (uint32_t) recibir_pedido_resize(client_socket, logger);
+            int tamanio = recibir_pedido_resize(client_socket, logger);
+           
             usleep(retardo);
-            char** split = string_split(pidtam, "$");
-            uint32_t pid = split[0];
-            int tamanio = atoi(split[1]);
-
+  
             t_tabla* tabla_pid = buscar_por_pid_return(pid);
             int cant_pags = list_size(tabla_pid->tabla);
             int tamanio_pid = cant_pags * tam_pagina;
@@ -125,7 +128,8 @@ void atender_cliente(void *void_args)
                 }
                 else{
                     log_error(logger, "Out Of Memory");
-                    // Ver que le mando Kernel finalizacion 
+                    // mandarle mensaje al cpu en el case de resize para que envie el contexto al kernel
+                    //INTERRUPCION OUT OF MEMORY
                 } 
             }     
             else{
@@ -143,23 +147,40 @@ void atender_cliente(void *void_args)
             }
             break;
         }
-        /*case PED_LECTURA:
+        case PED_LECTURA:
         {
-            t_dir_fisica* dir_fisica = recibir_paquete(client_socket);//modificar a funcion especifica
+            t_dir_fisica* dir_fisica = recibir_pedido_lectura(client_socket, logger); 
             usleep(retardo);
-            void* inicio_espacio_de_mem = memoria + ((dir_fisica->nro_frame)*tam_pagina) + (dir_fisica->desplazamiento);
-            char* leido;
-            memcpy(leido, (void*)memoria + inicio_espacio_de_mem, tam_pag-(dir_fisica->desplazamiento));
+            void* inicio_espacio_de_mem = (char*)memoria + ((dir_fisica->nro_frame) * tam_pagina) + (dir_fisica->desplazamiento);
+    
+            char* leido = malloc(tam_pagina - (dir_fisica->desplazamiento));
+            if (leido == NULL) {
+            fprintf(stderr, "Failed to allocate memory for leido.\n");
+            break;
+            }
+    
+            memcpy(leido, inicio_espacio_de_mem, tam_pagina - (dir_fisica->desplazamiento));
+            enviar_mensaje(leido, client_socket);
+    
+            free(leido);   
             break;
         }
+        /*
         case PED_ESCRITURA:{
-            char* a_escribir=recibir_mensaje(client_socket, logger);//hacer funcion especifica(paquete)
-            t_dir_fisica* dir_fisica = recibir_mensaje(client_scoket, logger);//idem
+            t_dir_fisica* dir_fisica = recibir_pedido_escritura(client_socket, logger); 
+            uint8_t valor = recibir_valor_escritura(client_scoket, logger);
             usleep(retardo);
-            void* inicio_espacio_de_mem = memoria + ((dir_fisica->nro_frame)*tam_pagina) + (dir_fisica->desplazamiento);    
-            //escribir_a_mem(a_escribir,,);
+            void* inicio_espacio_de_mem = (char*)memoria + ((dir_fisica->nro_frame) * tam_pagina) + (dir_fisica->desplazamiento);    
+            //escribir_a_mem(a_escribir, donde);
             break;
         }*/
+        
+        case CPY_STRING:{
+            char* a_escribir = recibir_cpy_string(client_socket, logger);
+            //escribir_a_mem(a_escribir, void* donde);
+
+            break;
+        }
         case FINALIZACION:
         {
             char* pidc = recibir_mensaje(client_socket, logger);
@@ -200,7 +221,7 @@ int server_escuchar(void* arg)
     while (1){
         
         int client_socket = esperar_cliente(server_socket, logger);
-
+        
         if (client_socket != -1) // != error
         {
             pthread_t hilo;

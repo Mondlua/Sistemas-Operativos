@@ -206,7 +206,7 @@ void* obtener_valor_registro(cpu_registros* regs, char* nombre_registro) {
     else {return NULL;}
 }
 
-t_pcb* execute(t_decode* decode, t_pcb* pcb){
+void execute(t_decode* decode, t_pcb* pcb){
     
     instrucciones ins = decode->op_code;
     switch(ins){
@@ -217,8 +217,26 @@ t_pcb* execute(t_decode* decode, t_pcb* pcb){
             asignar_registro(pcb->registros, registro_adepositar, valor);    
             break;
          }
-        case 1:{}
-        case 2:{}
+        case 1:{
+            char* registro_datos = list_get(decode->registroCpu,0);
+            char* registro_direccion = list_get(decode->registroCpu,1);
+            uint8_t dir_logica = (uint8_t) obtener_valor_registro(pcb->registros, registro_direccion);
+            t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
+            enviar_pedido_lectura(conexion_memoria_cpu, dir_fisica);
+            char* leido = recibir_mensaje(conexion_memoria_cpu, cpu_log);
+            asignar_registro(pcb->registros, registro_datos, leido);
+        }
+        case 2:{
+            char* registro_datos = list_get(decode->registroCpu,1);
+            char* registro_direccion = list_get(decode->registroCpu,0);
+            uint8_t dir_logica = (uint8_t) obtener_valor_registro(pcb->registros, registro_direccion);
+            t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
+
+            uint8_t valor = (uint8_t) obtener_valor_registro(pcb->registros, registro_datos);
+
+            enviar_pedido_escritura(conexion_memoria_cpu, dir_fisica);
+            enviar_valor_escritura(conexion_memoria_cpu, valor);        
+        }
         case 3:{
             char* registroDestino = (char*)list_get(decode->registroCpu,0);
             char* registroOrigen = (char*)list_get(decode->registroCpu,1);
@@ -246,8 +264,23 @@ t_pcb* execute(t_decode* decode, t_pcb* pcb){
             }
         break;
         }
-        case 6:{}
-        case 7:{}
+        case 6:{
+            int tamanio_resize = decode->valor;
+            enviar_pedido_resize(conexion_memoria_cpu, pcb->pid);
+            enviar_pedido_resize(conexion_memoria_cpu, tamanio_resize);
+
+            break;
+        }
+        case 7:{
+            int bytes = decode->valor;
+            int cant_char = bytes / sizeof(char*);
+            char* string =obtener_valor_registro(pcb->registros, "SI");
+            void* dir_apuntada =obtener_valor_registro(pcb->registros, "DI");
+        
+        	char* string_cortado= string_substring_until(string,cant_char);
+            enviar_cpy_string(conexion_memoria_cpu, string_cortado);
+            break;
+        }
         case 8:{}
         case 9:{}
         case 10:{
@@ -264,16 +297,17 @@ t_pcb* execute(t_decode* decode, t_pcb* pcb){
             free(paquete);
             break;
         }
-        case 11:{}
-        case 12:{}
-        case 13:{}
-        case 14:{}
-        case 15:{}
-        case 16:{}
-        case 17:{}
+        case 11:{ break;}
+        case 12:{ break;}
+        case 13:{ break;}
+        case 14:{ break;}
+        case 15:{ break;}
+        case 16:{ break;}
+        case 17:{ break;}
         case 18:{
             //cambiar_a_cola(pcb_actualizado, EXIT); // solo el kernel deberia cambiar esto
             enviar_motivo(INS_EXIT,kernel_socket);
+            break;
         }
     }
 
@@ -291,4 +325,21 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb){
     //VER
     //cambiar_a_cola(pcb, BLOCKED);
    //}
+}
+
+t_dir_fisica* mmu(int dir_logica, uint32_t pid){
+
+   //t_list* tabla_pags; // HACER TLB NECESARIO
+   int numero_pagina = floor(dir_logica / tam_pag);
+   int desplazamiento = dir_logica - numero_pagina * tam_pag;
+
+   //t_tabla* tabla=buscar_por_pid_return(pid); //VER
+   t_tabla* tabla;
+   int frame= list_get(tabla->tabla, numero_pagina);
+
+   t_dir_fisica* direccionFisica = malloc(sizeof(t_dir_fisica));
+   direccionFisica->nro_frame = frame;
+   direccionFisica->desplazamiento = desplazamiento;
+
+   return direccionFisica;
 }
