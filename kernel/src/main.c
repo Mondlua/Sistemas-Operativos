@@ -95,6 +95,7 @@ int main(void)
     
     pthread_t hilo;
     pthread_create(&hilo, NULL, (void *)server_escuchar, args);
+ //semaforo para lista de interfaces
     sem_init(&sem_contador_int, 0, 0); //semaforo para lista de interfaces
 
     //Ver Consola
