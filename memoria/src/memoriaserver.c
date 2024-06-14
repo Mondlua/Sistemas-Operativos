@@ -88,6 +88,8 @@ void atender_cliente(void *void_args)
             //BUSCAR EN REGISTRO_DIRECCION Y LEER EL REGISTRO_TAMAÑO
             //MANDAR RESULTADO A IO
             free(parametros_io);
+            break;
+        }
 
         case ACCESO_TABLA:
         {
@@ -227,6 +229,7 @@ void atender_cliente(void *void_args)
     log_warning(logger, "El cliente se desconecto de %s server", server_name);
     return;
 }
+
 
 int server_escuchar(void* arg)
 {   
