@@ -59,7 +59,7 @@ instrucciones obtener_instruccion(char *nombre) {
     } else if (strcmp(nombre, "EXIIT") == 0) {
         return EXIIT;
     } else {
-        return -1;
+        return -1; 
     }
 }
 
@@ -186,7 +186,6 @@ t_decode* decode(t_instruccion* instruccion){
     free(arrayIns[i]);
     }
     free(arrayIns);
-    list_destroy(decode->registroCpu);
     return decode;
 }
 
@@ -221,12 +220,14 @@ void* obtener_valor_registro(cpu_registros* regs, char* nombre_registro) {
 
 void execute(t_decode* decode, t_pcb* pcb){
     
+    
     instrucciones ins = decode->op_code;
     switch(ins){
     
         case 0:{
+            
             int valor = decode->valor;
-            char* registro_adepositar = list_get(decode->registroCpu,0);        
+            char* registro_adepositar = list_get(decode->registroCpu,0);      
             asignar_registro(pcb->registros, registro_adepositar, valor);    
             break;
          }
@@ -238,6 +239,7 @@ void execute(t_decode* decode, t_pcb* pcb){
             enviar_pedido_lectura(conexion_memoria_cpu, dir_fisica);
             char* leido = recibir_mensaje(conexion_memoria_cpu, cpu_log);
             asignar_registro(pcb->registros, registro_datos, leido);
+            break;
         }
         case 2:{
             char* registro_datos = list_get(decode->registroCpu,1);
@@ -248,7 +250,8 @@ void execute(t_decode* decode, t_pcb* pcb){
             uint8_t valor = (uint8_t) obtener_valor_registro(pcb->registros, registro_datos);
 
             enviar_pedido_escritura(conexion_memoria_cpu, dir_fisica);
-            enviar_valor_escritura(conexion_memoria_cpu, valor);        
+            enviar_valor_escritura(conexion_memoria_cpu, valor);       
+            break; 
         }
         case 3:{
             char* registroDestino = (char*)list_get(decode->registroCpu,0);
@@ -275,7 +278,7 @@ void execute(t_decode* decode, t_pcb* pcb){
                 instrucciones ins= decode->instrucciones;
                 //pcb->p_counter=ins;
             }
-        break;
+            break;
         }
         case 6:{
             int tamanio_resize = decode->valor;
@@ -353,17 +356,15 @@ void execute(t_decode* decode, t_pcb* pcb){
             break;
         }
     }
-
-    return pcb;
-    
+    free(decode);
+   
 }
 
 void realizar_ciclo_inst(int conexion, t_pcb* pcb){
    t_instruccion* ins = fetch(conexion,pcb);
    t_decode* decodeado = decode(ins);
    execute(decodeado,pcb);
-    //enviar_pcb(pcb, kernel_socket);
-    
+
    //if(hay_interrupcion){
     //VER
     //cambiar_a_cola(pcb, BLOCKED);
