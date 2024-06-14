@@ -19,7 +19,6 @@ typedef enum
     PAQUETE,
     INTERFAZ,
     CPU_RESIZE,
-    ACCESO_TABLA,
     PED_LECTURA,
     PED_ESCRITURA,
     CPY_STRING,
