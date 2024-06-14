@@ -24,8 +24,9 @@ void fifo(int conexion_cpu_dispatch){
    char* instruccion_string;
    char** array_palabras;
 
-    if(tamanioReady > 0){
-       while( tamanioReady>0 && tamanioExec == 0 ){ //Cuando se implimente el comando "DETENER_PLANIFICACION", validar tambien que la planif no haya sido pausada
+    if(tamanioReady >= 0){
+       while(tamanioExec == 0 ){ //Cuando se implimente el comando "DETENER_PLANIFICACION", validar tambien que la planif no haya sido pausada
+            sem_wait(&cola_ready);
             pcb_a_planificar = queue_pop(colaReady);
             cambiar_a_cola(pcb_a_planificar,EXEC);
             enviar_pcb(pcb_a_planificar,conexion_cpu_dispatch);
@@ -39,12 +40,12 @@ void fifo(int conexion_cpu_dispatch){
                 case INS_EXIT:
                     cambiar_a_cola(pcb_a_planificar, EXIT);
                     borrar_pcb(pcb_a_planificar->pid);
+                    sem_post(&grado_planificiacion);
                     //Falta que libere memoria y recursos
                     break;
                 case BLOCK_IO:
                     instruccion_params* instruccion_io = malloc(sizeof(instruccion_params));
-                    instruccion_io = recibir_solicitud_cpu(conexion_cpu_dispatch);
-                    validar_peticion(instruccion_io->interfaz, instruccion_io->params.io_gen_sleep_params.unidades_trabajo, pcb_actualizado);
+                    recibir_solicitud_cpu(conexion_cpu_dispatch, pcb_actualizado);
                 break;
                     
                 case BLOCK_RECURSO: 
@@ -88,8 +89,9 @@ void fifo(int conexion_cpu_dispatch){
             tamanioExec =0;//queue_size(colaExec);
         }
    }
-
-}
+   }
+    
+   //--------------------------------
 
 /*void rr(int conexion_cpu_dispatch){
 
@@ -144,7 +146,9 @@ void fifo(int conexion_cpu_dispatch){
             tamanioReady = queue_size(colaReady);
             tamanioExec = queue_size(colaExec);
         }
+    }
 }
+
 
 void* manejar_quantum(uint32_t pid){
     usleep(quantum);

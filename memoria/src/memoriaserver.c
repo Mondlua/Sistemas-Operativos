@@ -20,7 +20,7 @@ void atender_cliente(void *void_args)
     while (client_socket != -1)
     {   
         op_code cop = recibir_operacion(client_socket);
-        usleep(retardo*1000);
+        // usleep(retardo*1000);
 
         if (cop == -1)
         {
@@ -30,6 +30,11 @@ void atender_cliente(void *void_args)
 
         switch (cop) 
         {
+        case TAM_PAG: {
+            recibir_ped_tamanio_pag(client_socket, logger);
+            enviar_tamanio_pag(client_socket, tam_pagina);
+           break;  
+        }
         case MENSAJE:
         {
             char* pathpid = recibir_mensaje(client_socket, logger);
@@ -58,6 +63,7 @@ void atender_cliente(void *void_args)
         }
         case PC:
         {
+            usleep(retardo*1000);
             char * pc_recibido = recibir_pc(client_socket);
             uint32_t pc = atoi(pc_recibido);
             sem_wait(&semaforo_mem);
@@ -69,96 +75,128 @@ void atender_cliente(void *void_args)
             cargar_a_mem(ins, pid);
 
             enviar_instruccion_mem(client_socket,instruccion);
-            
+           
             break;
         }
-        // case ACCESO_TABLA:
-        // {
-        //     char* pidpag = recibir_mensaje(client_socket, logger);
-        //     usleep(retardo);
-        //     char** split = string_split(pathpid, "$");
-        //     uint32_t pid = split[0];
-        //     int pag = atoi(split[1]);
-        //     t_tabla* tabla_pid = buscar_por_pid_return(pid);
-        //     if(pag<list_size(tabla_pid->tabla)){
-        //     int frame = list_get(tabla_pid->tabla, pag);
-        //     enviar_mensaje(int_to_char(frame), client_socket); //ver funcion de enviar(crearla)
-        //     log_info(logger,"PID: %u - Pagina: %d - Marco: %d",pid, pag, frame);
-        //     }
-        //     else{
-        //         log_error(logger, "No se pudo acceder a la pagina <%d> de la Tabla del Pid <%u>",pag, pid);
-        //     }
-        //     break;
-        // }
-        // case CPU_MEMORIA_RESIZE:
-        // {   
-        //     char* pidtam = recibir_mensaje(client_socket, logger);
-        //     usleep(retardo);
-        //     char** split = string_split(pathpid, "$");
-        //     uint32_t pid = split[0];
-        //     int tamanio = atoi(split[1]);
-
-        //     t_tabla* tabla_pid = buscar_por_pid_return(pid);
-        //     int cant_pags = list_size(tabla_pid->tabla);
-        //     int tamanio_pid = cant_pags * tam_pagina;
-        //     if(tamanio > tamanio_pid){
-        //     //AMPLIAR PROCESO
-        //         int bytes_a_ampliar = tamanio - tamanio_pid;
-        //         int cantframes_a_ocupar=  bytes_a_ampliar/tam_pagina;
-        //         size_t count = 0;
-        //         for (size_t i = 0; i < bitarray->size; i++) {
-        //             if (bitarray_test_bit(bitarray, i) == 0) {
-        //                 count++;
-        //             }
-        //         }
-        //         if(count>=cantframes_a_ocupar){
-        //             int frames_ocupados=0;
-        //             for (int i = 0; i < bitarray->size; i++) {
-        //                  if (bitarray_test_bit(bitarray, i) == 0) {
-        //                     bitarray_set_bit(bitarray, i);
-        //                     list_add(tabla_pid->tabla, i);
-        //                     frames_ocupados++;
-        //                 }
-        //                  if (frames_ocupados == cantframes_a_ocupar) {
-        //                     break;
-        //                }
-        //             }
-        //         log_info(logger, "PID: <%u> - Tamaño Actual: <%d> - Tamaño a Ampliar: <%d>", pid, tamanio_pid, tamanio); 
-        //         }
-        //         else{
-        //             log_error(logger, "Out Of Memory");
-        //             // Ver que le mando Kernel finalizacion 
-        //         } 
-        //     }     
-        //     else{
-        //         //REDUCIR PROCESO
-        //         int bytes_a_reducir = tamanio - tamanio_pid;
-        //         int cantframes_a_reducir=  bytes_a_reducir/tam_pagina;
-        //         int cant_pags_nueva = cant_pags - cantframes_a_reducir;
-                
-        //         for(int i = (cant_pags-1); i>cant_pags_nueva; i--){
-        //             int frame = list_get(tabla_pid->tabla, i);
-        //             list_remove(tabla_pid->tabla, i);
-        //             bitarray_clean_bit(bitarray,frame);
-        //         }
-        //         log_info(logger,"PID: <%d> - Tamaño Actual: <%d> - Tamaño a Reducir: <%d>", pid,tamanio_pid, tamanio);
-        //     }
-        //     break;
-        // }
-        // case PED_LECTURA:
-        // {
-        //     t_dir_fisica* dir_fisica = recibir_paquete(client_socket);//modificar a funcion especifica
-        //     usleep(retardo);
-        //     void* inicio_espacio_de_mem = memoria + ((dir_fisica->nro_frame)*tam_pagina) + (dir_fisica->desplazamiento);
-        //     char* leido;
-        //     memcpy(leido, (void*)memoria + inicio_espacio_de_mem, tam_pag-(dir_fisica->desplazamiento));
-        //     break;
-        // }
+        case IO_STDIN_READ:{
+            instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
+            parametros_io = recibir_io_stdin(client_socket);
+            //GUARDAR TEXTO EN REGISTRO_DIRECCION
+            free(parametros_io);
+            break;
+        }
+        case IO_STDOUT_WRITE: {
+            instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
+            parametros_io = recibir_io_stdout(client_socket);
+            //BUSCAR EN REGISTRO_DIRECCION Y LEER EL REGISTRO_TAMAÑO
+            //MANDAR RESULTADO A IO
+            free(parametros_io);
+            break;
+        }
+        case ACCESO_TABLA:
+        {
+            char* pidpag = recibir_mensaje(client_socket, logger);
+            usleep(retardo);
+            char** split = string_split(pidpag, "$");
+            uint32_t pid = split[0];
+            int pag = atoi(split[1]);
+            t_tabla* tabla_pid = buscar_por_pid_return(pid);
+            if(pag<list_size(tabla_pid->tabla)){
+            int frame = list_get(tabla_pid->tabla, pag);
+            enviar_mensaje(int_to_char(frame), client_socket); //ver funcion de enviar(crearla)
+            log_info(logger,"PID: %u - Pagina: %d - Marco: %d",pid, pag, frame);
+            }
+            else{
+                log_error(logger, "No se pudo acceder a la pagina <%d> de la Tabla del Pid <%u>",pag, pid);
+            }
+            break;
+        }
+        case CPU_RESIZE:
+        {   
+            uint32_t pid= (uint32_t) recibir_pedido_resize(client_socket, logger);
+            int tamanio = recibir_pedido_resize(client_socket, logger);
+           
+            usleep(retardo);
+  
+            t_tabla* tabla_pid = buscar_por_pid_return(pid);
+            int cant_pags = list_size(tabla_pid->tabla);
+            int tamanio_pid = cant_pags * tam_pagina;
+            if(tamanio > tamanio_pid){
+            //AMPLIAR PROCESO
+                int bytes_a_ampliar = tamanio - tamanio_pid;
+                int cantframes_a_ocupar=  bytes_a_ampliar/tam_pagina;
+                size_t count = 0;
+                for (size_t i = 0; i < bitarray->size; i++) {
+                    if (bitarray_test_bit(bitarray, i) == 0) {
+                        count++;
+                    }
+                }
+                if(count>=cantframes_a_ocupar){
+                    int frames_ocupados=0;
+                    for (int i = 0; i < bitarray->size; i++) {
+                         if (bitarray_test_bit(bitarray, i) == 0) {
+                            bitarray_set_bit(bitarray, i);
+                            list_add(tabla_pid->tabla, i);
+                            frames_ocupados++;
+                        }
+                         if (frames_ocupados == cantframes_a_ocupar) {
+                            break;
+                       }
+                    }
+                log_info(logger, "PID: <%u> - Tamaño Actual: <%d> - Tamaño a Ampliar: <%d>", pid, tamanio_pid, tamanio); 
+                }
+                else{
+                    log_error(logger, "Out Of Memory");
+                    // mandarle mensaje al cpu en el case de resize para que envie el contexto al kernel
+                    //INTERRUPCION OUT OF MEMORY
+                } 
+            }     
+            else{
+                //REDUCIR PROCESO
+                int bytes_a_reducir = tamanio - tamanio_pid;
+                int cantframes_a_reducir=  bytes_a_reducir/tam_pagina;
+                int cant_pags_nueva = cant_pags - cantframes_a_reducir;
+                                
+                for(int i=(cant_pags-1); i>cant_pags_nueva; i--){
+                    int frame = list_get(tabla_pid->tabla, i);
+                    list_remove(tabla_pid->tabla, i);
+                    bitarray_clean_bit(bitarray,frame);
+                }
+                log_info(logger,"PID: <%d> - Tamaño Actual: <%d> - Tamaño a Reducir: <%d>", pid,tamanio_pid, tamanio);
+            }
+            break;
+        }
+        case PED_LECTURA:
+        {
+            t_dir_fisica* dir_fisica = recibir_pedido_lectura(client_socket, logger); 
+            usleep(retardo);
+            void* inicio_espacio_de_mem = (char*)memoria + ((dir_fisica->nro_frame) * tam_pagina) + (dir_fisica->desplazamiento);
+    
+            char* leido = malloc(tam_pagina - (dir_fisica->desplazamiento));
+            if (leido == NULL) {
+            fprintf(stderr, "Failed to allocate memory for leido.\n");
+            break;
+            }
+    
+            memcpy(leido, inicio_espacio_de_mem, tam_pagina - (dir_fisica->desplazamiento));
+            enviar_mensaje(leido, client_socket);
+    
+            free(leido);   
+            break;
+        }
+        /*
         case PED_ESCRITURA:{
-            char* a_escribir=recibir_mensaje(client_socket, logger);//hacer funcion especifica(paquete)
-            t_dir_fisica* dir_fisica = recibir_mensaje(client_socket, logger);//idem
-            void* inicio_espacio_de_mem = memoria + ((dir_fisica->nro_frame)*tam_pagina) + (dir_fisica->desplazamiento);    
-            //escribir_a_mem(a_escribir,,);
+            t_dir_fisica* dir_fisica = recibir_pedido_escritura(client_socket, logger); 
+            uint8_t valor = recibir_valor_escritura(client_scoket, logger);
+            usleep(retardo);
+            void* inicio_espacio_de_mem = (char*)memoria + ((dir_fisica->nro_frame) * tam_pagina) + (dir_fisica->desplazamiento);    
+            //escribir_a_mem(a_escribir, donde);
+            break;
+        }*/
+        
+        case CPY_STRING:{
+            char* a_escribir = recibir_cpy_string(client_socket, logger);
+            //escribir_a_mem(a_escribir, void* donde);
             break;
         }
         case FINALIZACION:
@@ -166,15 +204,16 @@ void atender_cliente(void *void_args)
             char* pidc = recibir_mensaje(client_socket, logger);
             uint32_t pid = atoi(pidc);
 
-            t_tabla* tabla = list_remove(tabla_pags, buscar_por_pid_return(pid));
-            for(int i = 0; i<list_size(tabla->tabla); i++){
-                int frame = list_get(tabla->tabla, i);
+            t_tabla* tabla_pid = list_remove(tabla_pags, buscar_por_pid_return(pid));
+            for(int i=0; i<list_size(tabla_pid->tabla); i++){
+                int frame = list_get(tabla_pid->tabla, i);
                 bitarray_clean_bit(bitarray, frame);
             }
 
             log_info(logger, "PID: <%u> - Tamaño: <%d>", pid, list_size(tabla->tabla));
 
-            free(tabla);
+            free(tabla_pid);
+
             break;
         }
         default:
@@ -191,6 +230,7 @@ void atender_cliente(void *void_args)
     return;
 }
 
+
 int server_escuchar(void* arg)
 {   
     t_atender_cliente_args*args = (t_atender_cliente_args*)arg;
@@ -200,7 +240,7 @@ int server_escuchar(void* arg)
     while (1){
         
         int client_socket = esperar_cliente(server_socket, logger);
-
+        
         if (client_socket != -1) // != error
         {
             pthread_t hilo;
@@ -215,8 +255,11 @@ int server_escuchar(void* arg)
     return 0;
 }
 
+
+
 void eliminar_linea_n(char* linea){
     if(linea[strlen(linea)-1] == '\n'){
         linea[strlen(linea)-1]='\0';
     }
 }
+

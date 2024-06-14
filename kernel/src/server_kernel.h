@@ -17,7 +17,7 @@
 #include <utils/funcionesUtiles.h>
 
 extern t_list* interfaces;
-extern sem_t sem_contador;
+extern sem_t sem_contador_int;
 extern int logica_int;
 
 typedef struct
