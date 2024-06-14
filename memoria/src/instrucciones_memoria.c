@@ -6,7 +6,14 @@ t_list* abrir_pseudocodigo(char* path){
     char* path_instrucciones = config_get_string_value(memoria_config ,"PATH_INSTRUCCIONES");
     size_t total_length = strlen(path_instrucciones) + strlen(path) + 2; // 1 para el '/' y 1 para el '\0'
     char* path_completo = malloc(total_length);
-    snprintf(path_completo, total_length, "%s/%s", path_instrucciones, path);
+    snprintf(path_completo, total_length, "%s%s", path_instrucciones, path);
+    //snprintf(path_completo, total_length, "%s/%s", path_instrucciones, path);
+   /* if (path_instrucciones[strlen(path_instrucciones) - 1] == '/') {
+        snprintf(path_completo, total_length, "%s%s", path_instrucciones, path);
+    } else {
+        snprintf(path_completo, total_length, "%s/%s", path_instrucciones, path);
+    }*/
+    log_info(memoria_log, path_completo);
     FILE* arch_pseudocodigo = fopen(path_completo, "r");
         if(arch_pseudocodigo == NULL){
             log_error(memoria_log, "No se pudo abrir el archivo.\n");

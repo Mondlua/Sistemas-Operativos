@@ -10,8 +10,9 @@ t_queue* colaBlocked;
 t_queue* colaExit;
 
 t_list* interfaces;
-sem_t sem_contador;
-sem_t grado_actual;
+sem_t sem_contador_int;
+sem_t grado_planificiacion;
+sem_t cola_ready; //ESTE ES PARA VER SI HAY COSAS EN READY PARA EJECUTAR
 int quantum;
 
 
@@ -74,7 +75,8 @@ int main(void)
 
     //algoritmo=config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
     int grado_multiprog = config_get_int_value(kernel_config, "GRADO_MULTIPROGRAMACION");
-    sem_init(&grado_actual, 0, grado_multiprog);
+    sem_init(&grado_planificiacion, 0, grado_multiprog);
+    sem_init(&cola_ready, 0, 0);
     /* KERNEL - Servidor */
 
     // Extraer configs
@@ -93,7 +95,8 @@ int main(void)
     
     pthread_t hilo;
     pthread_create(&hilo, NULL, (void *)server_escuchar, args);
-    sem_init(&sem_contador, 0, 0); //semaforo para lista de interfaces
+ //semaforo para lista de interfaces
+    sem_init(&sem_contador_int, 0, 0); //semaforo para lista de interfaces
 
     //Ver Consola
     
@@ -112,7 +115,7 @@ int main(void)
     free(colaReady);
     free(colaBlocked);
     free(colaExec);
-    sem_destroy(&sem_contador);
+    sem_destroy(&sem_contador_int);
     
     return 0;
 }
