@@ -132,13 +132,14 @@ void iniciar_proceso(char* path){
 void finalizar_proceso(uint32_t pid){
 
     borrar_pcb(pid);
+
     char* pid_char= int_to_char(pid); 
     //enviar_mensaje_finalizacion(pid_char,conexion_memoria);  NO ESTA LA FUNCION, HACER O BUSCAR
 
     log_info(kernel_log, ">> Se finaliza proceso %u <<", pid);
 }
 
-//bool tabla_pid
+// bool tabla_pid;
 
 void iniciar_planificacion(){
     char* algoritmo=config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");

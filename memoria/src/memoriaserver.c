@@ -20,6 +20,8 @@ void atender_cliente(void *void_args)
     while (client_socket != -1)
     {   
         op_code cop = recibir_operacion(client_socket);
+        // usleep(retardo*1000);
+
         if (cop == -1)
         {
             log_info(logger, "DISCONNECT!");
@@ -49,7 +51,8 @@ void atender_cliente(void *void_args)
             tabla->pid = pid;
             tabla->tabla = list_create();
             list_add(tabla_pags, tabla);
-            log_info(memoria_log, "PID: <%u> - Tamaño: <0>", pid);
+            log_info(memoria_log, "PID: <%d> - Tamaño: <%d>", pid, list_size(tabla->tabla));
+
             break;
         }
         case PID:{
@@ -60,11 +63,12 @@ void atender_cliente(void *void_args)
         }
         case PC:
         {
+            usleep(retardo*1000);
             char * pc_recibido = recibir_pc(client_socket);
             uint32_t pc = atoi(pc_recibido);
             sem_wait(&semaforo_mem);
             t_instruccion* instruccion = (t_instruccion*)list_get(lista_arch,pc);
-            log_info(logger, "Mando la INSTRUCCION %s", instruccion->buffer->stream);
+            log_debug(logger, "Mando la instruccion: %s", instruccion->buffer->stream);
             
             char* ins  = instruccion->buffer->stream;
             eliminar_linea_n(ins);
@@ -74,7 +78,6 @@ void atender_cliente(void *void_args)
            
             break;
         }
-
         case IO_STDIN_READ:{
             instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
             parametros_io = recibir_io_stdin(client_socket);
@@ -90,7 +93,6 @@ void atender_cliente(void *void_args)
             free(parametros_io);
             break;
         }
-
         case ACCESO_TABLA:
         {
             char* pidpag = recibir_mensaje(client_socket, logger);
@@ -195,13 +197,11 @@ void atender_cliente(void *void_args)
         case CPY_STRING:{
             char* a_escribir = recibir_cpy_string(client_socket, logger);
             //escribir_a_mem(a_escribir, void* donde);
-
             break;
         }
         case FINALIZACION:
         {
             char* pidc = recibir_mensaje(client_socket, logger);
-            usleep(retardo);
             uint32_t pid = atoi(pidc);
 
             t_tabla* tabla_pid = list_remove(tabla_pags, buscar_por_pid_return(pid));
@@ -210,7 +210,7 @@ void atender_cliente(void *void_args)
                 bitarray_clean_bit(bitarray, frame);
             }
 
-            log_info(logger, "PID: <%u> - Tamaño: <%d>", pid, list_size(tabla_pid->tabla));
+            log_info(logger, "PID: <%u> - Tamaño: <%d>", pid, list_size(tabla->tabla));
 
             free(tabla_pid);
 
