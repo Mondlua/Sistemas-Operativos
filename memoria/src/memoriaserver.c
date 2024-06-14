@@ -210,7 +210,7 @@ void atender_cliente(void *void_args)
                 bitarray_clean_bit(bitarray, frame);
             }
 
-            log_info(logger, "PID: <%u> - Tamaño: <%d>", pid, list_size(tabla->tabla));
+            log_info(logger, "PID: <%u> - Tamaño: <%d>", pid, list_size(tabla_pid->tabla));
 
             free(tabla_pid);
 
