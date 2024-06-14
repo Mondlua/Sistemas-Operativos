@@ -34,11 +34,12 @@ void atender_cliente(void *void_args)
         {
            t_pcb* pcb;
         
-           
-            pcb = recibir_pcb(kernel_socket);
-			log_info(logger, "Llego a CPU el <PID> es <%u>", pcb->pid);
-            realizar_ciclo_inst(conexion_memoria_cpu, pcb);
-            log_info(logger, "Complete ciclo");
+            pcb = recibir_pcb(kernel_socket);            
+			log_debug(logger, "Llego a CPU el <PID> es <%u>", pcb->pid);
+          
+            realizar_ciclo_inst(conexion_memoria_cpu, pcb, logger);
+            log_debug(logger, "Complete ciclo");
+          
             enviar_pcb(pcb, kernel_socket);
 			break;
         }

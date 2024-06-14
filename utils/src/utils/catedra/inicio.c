@@ -4,7 +4,7 @@ t_log* iniciar_logger(char* ruta, char* emisor)
 {
     t_log* nuevo_logger;
 
-    nuevo_logger = log_create(ruta, emisor, true, LOG_LEVEL_INFO);
+    nuevo_logger = log_create(ruta, emisor, true, LOG_LEVEL_DEBUG);
     if (nuevo_logger == NULL) {
         printf("No se pudo crear el logger");
 
