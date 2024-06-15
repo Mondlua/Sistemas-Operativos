@@ -24,19 +24,16 @@ void atender_cliente(void *void_args)
 
         switch (cop) 
         {
-        case MENSAJE:
+        case PCB:
         {
-            recibir_mensaje(client_socket, logger);
-
+            t_pcb *pcb_desalojado = recibir_pcb(client_socket);
+            // bool necesario_planificar = planificador_recepcion_pcb(pcb_desalojado);
+            // if(necesario_planificar)
+            // {
+            //     planificador_planificar();
+            // }
             break;
         }
-        case PAQUETE:
-        {/*
-            pcb = recibir_pcb(client_socket);
-			log_info(logger, "Me llego el pcb cuyo pid es %u", pcb->pid);
-			break;*/
-        }
-
         case INTERFAZ:
         {   
             interfaz* new_client = malloc(sizeof(interfaz));
@@ -91,7 +88,7 @@ void atender_cliente(void *void_args)
                 log_error(logger, "No se encontró la interfaz %s en la lista", interfaz_recibida);
                 free(interfaz_recibida); 
                 */
-            }
+        }
         default:
             log_error(logger, "Algo anduvo mal en el server de %s", server_name);
             log_info(logger, "Cop: %d", cop);
