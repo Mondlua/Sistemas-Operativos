@@ -108,7 +108,7 @@ void enviar_pedido_resize(int socket_cliente, int tampid)
 	paquete->buffer = malloc(sizeof(t_buffer));
 	paquete->buffer->size = sizeof(int);
 	paquete->buffer->stream = malloc(paquete->buffer->size);
-	memcpy(paquete->buffer->stream, tampid, paquete->buffer->size);
+	memcpy(paquete->buffer->stream, &tampid, paquete->buffer->size);
 
 	int bytes = paquete->buffer->size + 2*sizeof(int);
 
@@ -123,14 +123,16 @@ void enviar_pedido_resize(int socket_cliente, int tampid)
     free(a_enviar);
     eliminar_paquete(paquete);
 }
-void enviar_pedido_lectura(int socket_cliente,  t_dir_fisica* dir_fisica){
+void enviar_pedido_lectura(int socket_cliente,  t_dir_fisica* dir_fisica, int tamanio){
     t_paquete* paquete = malloc(sizeof(t_paquete));
 
 	paquete->codigo_operacion =  PED_LECTURA;
 	paquete->buffer = malloc(sizeof(t_buffer));
-	paquete->buffer->size = sizeof(dir_fisica);
+	paquete->buffer->size = sizeof(dir_fisica) + sizeof(int);
 	paquete->buffer->stream = malloc(paquete->buffer->size);
-	memcpy(paquete->buffer->stream, dir_fisica, paquete->buffer->size);
+
+    agregar_a_paquete(paquete, dir_fisica, sizeof(dir_fisica));
+    agregar_a_paquete(paquete, tamanio, sizeof(int));
 
 	int bytes = paquete->buffer->size + 2*sizeof(int);
 
@@ -175,7 +177,7 @@ void enviar_cpy_string(int socket_cliente, char* valor){
 	paquete->buffer = malloc(sizeof(t_buffer));
 	paquete->buffer->size = strlen(valor)+1;
 	paquete->buffer->stream = malloc(paquete->buffer->size);
-	memcpy(paquete->buffer->stream, valor, paquete->buffer->size);
+	memcpy(paquete->buffer->stream, &valor, paquete->buffer->size);
 
 	int bytes = paquete->buffer->size + 2*sizeof(int);
 
@@ -232,7 +234,7 @@ void enviar_valor_escritura(int socket_cliente,  uint8_t valor){
 	paquete->buffer = malloc(sizeof(t_buffer));
 	paquete->buffer->size = sizeof(uint8_t);
 	paquete->buffer->stream = malloc(paquete->buffer->size);
-	memcpy(paquete->buffer->stream, valor, paquete->buffer->size);
+	memcpy(paquete->buffer->stream, &valor, paquete->buffer->size);
 
 	int bytes = paquete->buffer->size + 2*sizeof(int);
 
@@ -248,10 +250,10 @@ void enviar_valor_escritura(int socket_cliente,  uint8_t valor){
     eliminar_paquete(paquete);
 }
 
-t_dir_fisica* recibir_pedido_lectura(int socket_cliente, t_log* logger)
+t_list* recibir_pedido_lectura(int socket_cliente, t_log* logger)
 {
     int size;
-    t_dir_fisica* buffer = recibir_buffer(&size, socket_cliente);
+    t_list* buffer = recibir_paquete(socket_cliente);
     log_info(logger, "Me llego el Pedido de Lectura");
     return buffer;
 }

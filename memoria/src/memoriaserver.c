@@ -72,8 +72,7 @@ void atender_cliente(void *void_args)
             
             char* ins  = instruccion->buffer->stream;
             eliminar_linea_n(ins);
-            cargar_a_mem(ins, pid);
-
+            
             enviar_instruccion_mem(client_socket,instruccion);
            
             break;
@@ -117,9 +116,11 @@ void atender_cliente(void *void_args)
             int tamanio = recibir_pedido_resize(client_socket, logger);
            
             usleep(retardo);
-  
+
             t_tabla* tabla_pid = buscar_por_pid_return(pid);
-            int cant_pags = list_size(tabla_pid->tabla);
+            int cant_pags;
+            if(tabla_pid->tabla != NULL){
+            cant_pags = list_size(tabla_pid->tabla);
             int tamanio_pid = cant_pags * tam_pagina;
             if(tamanio > tamanio_pid){
             //AMPLIAR PROCESO
@@ -163,36 +164,52 @@ void atender_cliente(void *void_args)
                     bitarray_clean_bit(bitarray,frame);
                 }
                 log_info(logger,"PID: <%d> - Tamaño Actual: <%d> - Tamaño a Reducir: <%d>", pid,tamanio_pid, tamanio);
+            }}
+            else{
+                int cantframes_a_ocupar=  tamanio/tam_pagina;
+                size_t count = 0;
+                for (size_t i = 0; i < bitarray->size; i++) {
+                    if (bitarray_test_bit(bitarray, i) == 0) {
+                        count++;
+                    }
+                }
+                if(count>=cantframes_a_ocupar){
+                    int frames_ocupados=0;
+                    for (int i = 0; i < bitarray->size; i++) {
+                         if (bitarray_test_bit(bitarray, i) == 0) {
+                            bitarray_set_bit(bitarray, i);
+                            list_add(tabla_pid->tabla, i);
+                            frames_ocupados++;
+                        }
+                         if (frames_ocupados == cantframes_a_ocupar) {
+                            break;
+                       }
+                    }
+                log_info(logger, "PID: <%u> - Tamaño Actual: <%d> - Tamaño a Ampliar: <%d>", pid, 0, tamanio); 
+            }
             }
             break;
         }
         case PED_LECTURA:
         {
-            t_dir_fisica* dir_fisica = recibir_pedido_lectura(client_socket, logger); 
+            t_list* buffer = recibir_pedido_lectura(client_socket, logger); 
+            t_dir_fisica* dir_fisica = list_get(buffer,0);
+            // RECIBIR TAMANIO A LEER
+            int tamanio = list_get(buffer,1);;
             usleep(retardo);
-            void* inicio_espacio_de_mem = (char*)memoria + ((dir_fisica->nro_frame) * tam_pagina) + (dir_fisica->desplazamiento);
-    
-            char* leido = malloc(tam_pagina - (dir_fisica->desplazamiento));
-            if (leido == NULL) {
-            fprintf(stderr, "Failed to allocate memory for leido.\n");
-            break;
-            }
-    
-            memcpy(leido, inicio_espacio_de_mem, tam_pagina - (dir_fisica->desplazamiento));
+            char* leido = leer_en_mem(tamanio, dir_fisica);
             enviar_mensaje(leido, client_socket);
-    
             free(leido);   
             break;
         }
-        /*
         case PED_ESCRITURA:{
             t_dir_fisica* dir_fisica = recibir_pedido_escritura(client_socket, logger); 
-            uint8_t valor = recibir_valor_escritura(client_scoket, logger);
-            usleep(retardo);
-            void* inicio_espacio_de_mem = (char*)memoria + ((dir_fisica->nro_frame) * tam_pagina) + (dir_fisica->desplazamiento);    
-            //escribir_a_mem(a_escribir, donde);
+            uint8_t valor = recibir_valor_escritura(client_socket, logger);
+            usleep(retardo);    
+            escribir_en_mem(int_to_char(valor), dir_fisica);
+
             break;
-        }*/
+        }
         
         case CPY_STRING:{
             char* a_escribir = recibir_cpy_string(client_socket, logger);
