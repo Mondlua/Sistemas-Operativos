@@ -258,7 +258,8 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             char* registro_direccion = list_get(decode->registroCpu,1);
             uint8_t dir_logica = (uint8_t) obtener_valor_registro(pcb->registros, registro_direccion);
             t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
-            enviar_pedido_lectura(conexion_memoria_cpu, dir_fisica);
+            int tamanio = sizeof(registro_datos);
+            enviar_pedido_lectura(conexion_memoria_cpu, dir_fisica, tamanio);
             char* leido = recibir_mensaje(conexion_memoria_cpu, cpu_log);
             asignar_registro(pcb->registros, registro_datos, leido);
             break;
@@ -270,9 +271,14 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
 
             uint8_t valor = (uint8_t) obtener_valor_registro(pcb->registros, registro_datos);
-
+            char* aescribir = int_to_char(valor);
+            int size_aescribir = sizeof(aescribir);
+            int cant_pags = size_aescribir/tam_pag;
+            if(cant_pags <=1){
             enviar_pedido_escritura(conexion_memoria_cpu, dir_fisica);
-            enviar_valor_escritura(conexion_memoria_cpu, valor);       
+            enviar_valor_escritura(conexion_memoria_cpu, valor); 
+            }
+      
             break; 
         }
         case SUM:{
