@@ -12,11 +12,21 @@
 
 extern sem_t grado_planificiacion;
 extern sem_t cola_ready;
+
+typedef struct {
+    char *identificador;
+    t_queue *block_queue;
+    int cantidad_instancias;
+    int socket_interfaz;
+
+} t_queue_block;
+
 typedef struct {
     t_queue *new;
     t_queue *ready;
     t_queue *exec;
-    t_queue *block;
+    t_dictionary *lista_block;
+    int cantidad_procesos_block;
     t_queue *exit;
     t_queue *prioridad;
 } t_planificador_colas;
@@ -53,6 +63,13 @@ typedef enum {
 
 void* hilo_planificador(void *args);
 
+void fifo(t_planificacion *kernel_argumentos);
+void round_robin(t_planificacion *kernel_argumentos);
+void virtual_round_robin(t_planificacion *kernel_argumentos);
+
+void iniciar_timer(t_timer_planificador timer, int milisegundos);
+int frenar_timer(t_timer_planificador timer);
+
 void planificador_planificar();
 bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_argumentos);
 
@@ -62,9 +79,13 @@ void planificador_largo_plazo(t_planificacion *kernel_argumentos);
 
 t_planificacion *inicializar_t_planificacion(int socket_cpu_dispatch, int socket_cpu_interrupt);
 t_tipo_planificacion obtener_algoritmo_planificador(char* algoritmo);
+void inicializar_lista_recursos(t_planificacion *planificador);
 
 t_pcb *planificador_ready_a_exec(t_planificacion *kernel_argumentos);
 t_pcb *planificador_prioridad_a_exec(t_planificacion *kernel_argumentos);
 
+bool administrador_recursos_wait(t_pcb *pcb_solicitante, char* nombre_recurso, t_planificacion *kernel_argumentos);
+bool administrador_recursos_signal(t_pcb *pcb_desalojado, char* recurso_solicitado, t_planificacion *kernel_argumentos);
+void procesar_desbloqueo_factible(char* recurso_solicitado, t_planificacion *kernel_argumentos);
 
 #endif
