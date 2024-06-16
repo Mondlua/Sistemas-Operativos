@@ -97,7 +97,6 @@ void iniciar_proceso(char* path){
 
     pcb = crear_nuevo_pcb(&pid_contador);
     queue_push(colaNew, pcb);
-    printf("Pusheado\n");
     //int grado_multiprog = config_get_int_value(kernel_config, "GRADO_MULTIPROGRAMACION");
 
     /*if(nivel_multiprog<grado_actual){
@@ -109,7 +108,6 @@ void iniciar_proceso(char* path){
 
     
     pcb = queue_pop(colaNew);
-    printf("Poppeado\n");
     //sem_wait(&grado_planificiacion);
     queue_push(colaReady, pcb);
     sem_post(&cola_ready);
