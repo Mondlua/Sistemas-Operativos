@@ -13,7 +13,6 @@ void* hilo_planificador(void *args)
     {
         // Espero a que me soliciten planificar
         sem_wait(&kernel_argumentos->planificar);
-        printf("Pase el semaforo\n");
 
         // Si se ejecuto DETENER_PLANIFICACION, no planifico por mas que me soliciten hacerlo
         if(kernel_argumentos->detener_planificacion)
@@ -253,8 +252,11 @@ void inicializar_lista_recursos(t_planificacion *planificador)
         block_queue->identificador = string_duplicate(array_nombre_recursos[i]);
         block_queue->cantidad_instancias = atoi(array_instancias_recursos[i]);
         block_queue->socket_interfaz = 0;
+        printf("Recurso agregado\n");
 
         dictionary_put(planificador->colas.lista_block, block_queue->identificador, block_queue);
+        free(block_queue); // Este free capaz no tenga que estar aca, sino al final de la ejecucion
+        i++;
     }
 
     free(array_nombre_recursos);
