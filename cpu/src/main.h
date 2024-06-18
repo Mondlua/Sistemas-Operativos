@@ -11,9 +11,9 @@
 #include <commons/collections/queue.h>
 #include <commons/collections/list.h>
 #include <utils/funcionesUtiles.h>
+#include "funciones_tlb.h"
 
-extern int cant_entradas_tlb;
-extern char algoritmo; 
+
 extern int conexion_memoria_cpu;
 extern t_log* cpu_log;
 #endif

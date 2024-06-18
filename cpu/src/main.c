@@ -4,8 +4,7 @@ int conexion_memoria_cpu;
 int hay_interrupcion;
 t_log* cpu_log;
 int cant_entradas_tlb;
-//TLB* tlb;
-char algoritmo; 
+char* algoritmo; 
 
 
 int main(void){
@@ -34,7 +33,8 @@ int main(void){
 	ip_memoria = config_get_string_value(cpu_config,"IP_MEMORIA");
 	puerto_memoria = config_get_string_value(cpu_config, "PUERTO_MEMORIA");
     algoritmo = config_get_string_value(cpu_config,"ALGORITMO_TLB");
-    cant_entradas_tlb = config_get_int_value(cpu_config, "CANTIDAD_ENTRADAS_TLB");
+    cant_entradas_tlb = config_get_int_value(cpu_config, "CANTIDAD_ENTRADAS_TLB"); 
+    iniciar_tlb();
 	
     // Establecer conexiones
     

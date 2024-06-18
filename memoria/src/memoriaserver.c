@@ -88,7 +88,7 @@ void atender_cliente(void *void_args)
             //BUSCAR EN REGISTRO_DIRECCION Y LEER EL REGISTRO_TAMAÑO
             //MANDAR RESULTADO A IO
             free(parametros_io);
-
+        }
         case ACCESO_TABLA:
         {
             char* pidpag = recibir_mensaje(client_socket, logger);
