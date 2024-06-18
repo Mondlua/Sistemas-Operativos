@@ -369,20 +369,3 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb){
     //cambiar_a_cola(pcb, BLOCKED);
    //}
 }
-
-t_dir_fisica* mmu(int dir_logica, uint32_t pid){
-
-   //t_list* tabla_pags; // HACER TLB NECESARIO
-   int numero_pagina = floor(dir_logica / tam_pag);
-   int desplazamiento = dir_logica - numero_pagina * tam_pag;
-
-   //t_tabla* tabla=buscar_por_pid_return(pid); //VER
-   t_tabla* tabla;
-   int frame= list_get(tabla->tabla, numero_pagina);
-
-   t_dir_fisica* direccionFisica = malloc(sizeof(t_dir_fisica));
-   direccionFisica->nro_frame = frame;
-   direccionFisica->desplazamiento = desplazamiento;
-
-   return direccionFisica;
-}
