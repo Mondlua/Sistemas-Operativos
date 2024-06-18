@@ -29,7 +29,6 @@ t_decode* decode(t_instruccion* ins);
 void execute(t_decode* deacodeado, t_pcb* pcb);
 instrucciones obtener_instruccion(char *nombre);
 void realizar_ciclo_inst(int conexion, t_pcb* pcb);
-t_dir_fisica* mmu(int dir_logica, uint32_t pid);
 //t_tabla* buscar_por_pid_return(uint32_t pid); 
 
 #endif
