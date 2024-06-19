@@ -5,7 +5,6 @@ t_instruccion* fetch(int conexion, t_pcb* pcb){
     t_instruccion* instruccion;
     enviar_pid(int_to_char(pcb->pid), conexion);
     enviar_pc(int_to_char(pcb->registros->PC),conexion);
-    
     instruccion = recibir_instruccion_cpu(conexion);
     
     pcb->registros->PC++;
@@ -20,75 +19,98 @@ void eliminar_linea_n(char* linea){
 }
 
 instrucciones obtener_instruccion(char *nombre) {
-    if (strcmp(nombre, "SET") == 0) {
+    if (strcmp(nombre, "SET") == 0) 
+    {
         return SET;
-    } else if (strcmp(nombre, "MOV_IN") == 0) {
-        return MOV_IN;
-    } else if (strcmp(nombre, "MOV_OUT") == 0) {
-        return MOV_OUT;
-    } else if (strcmp(nombre, "SUM") == 0) {
-        return SUM;
-    } else if (strcmp(nombre, "SUB") == 0) {
-        return SUB;
-    } else if (strcmp(nombre, "JNZ") == 0) {
-        return JNZ;
-    } else if (strcmp(nombre, "RESIZE") == 0) {
-        return RESIZE;
-    } else if (strcmp(nombre, "COPY_STRING") == 0) {
-        return COPY_STRING;
-    } else if (strcmp(nombre, "WAIT") == 0) {
-        return WAIT;
-    } else if (strcmp(nombre, "SIGNAL") == 0) {
-        return SIGNAL;
-    } else if (strcmp(nombre, "IO_GEN_SLEEP") == 0) {
-        return IO_GEN_SLEEP;
-    } else if (strcmp(nombre, "IO_STDIN_READ") == 0) {
-        return IO_STDIN_READ;
-    } else if (strcmp(nombre, "IO_STDOUT_WRITE") == 0) {
-        return IO_STDOUT_WRITE;
-    } else if (strcmp(nombre, "IO_FS_CREATE") == 0) {
-        return IO_FS_CREATE;
-    } else if (strcmp(nombre, "IO_FS_DELETE") == 0) {
-        return IO_FS_DELETE;
-    } else if (strcmp(nombre, "IO_FS_TRUNCATE") == 0) {
-        return IO_FS_TRUNCATE;
-    } else if (strcmp(nombre, "IO_FS_WRITE") == 0) {
-        return IO_FS_WRITE;
-    } else if (strcmp(nombre, "IO_FS_READ") == 0) {
-        return IO_FS_READ;
-    } else if (strcmp(nombre, "EXIIT") == 0) {
-        return EXIIT;
-    } else {
-        return -1;
     }
+    if (strcmp(nombre, "MOV_IN") == 0) 
+    {
+        return MOV_IN;
+    }
+    if (strcmp(nombre, "MOV_OUT") == 0) 
+    {
+        return MOV_OUT;
+    } 
+    if (strcmp(nombre, "SUM") == 0) {
+        return SUM;
+    } 
+    if (strcmp(nombre, "SUB") == 0) {
+        return SUB;
+    } 
+    if (strcmp(nombre, "JNZ") == 0) {
+        return JNZ;
+    } 
+    if (strcmp(nombre, "RESIZE") == 0) {
+        return RESIZE;
+    } 
+    if (strcmp(nombre, "COPY_STRING") == 0) {
+        return COPY_STRING;
+    } 
+    if (strcmp(nombre, "WAIT") == 0) {
+        return WAIT;
+    } 
+    if (strcmp(nombre, "SIGNAL") == 0) {
+        return SIGNAL;
+    } 
+    if (strcmp(nombre, "IO_GEN_SLEEP") == 0) {
+        return IO_GEN_SLEEP;
+    } 
+    if (strcmp(nombre, "IO_STDIN_READ") == 0) {
+        return IO_STDIN_READ;
+    } 
+    if (strcmp(nombre, "IO_STDOUT_WRITE") == 0) {
+        return IO_STDOUT_WRITE;
+    } 
+    if (strcmp(nombre, "IO_FS_CREATE") == 0) {
+        return IO_FS_CREATE;
+    } 
+    if (strcmp(nombre, "IO_FS_DELETE") == 0) {
+        return IO_FS_DELETE;
+    } 
+    if (strcmp(nombre, "IO_FS_TRUNCATE") == 0) {
+        return IO_FS_TRUNCATE;
+    } 
+    if (strcmp(nombre, "IO_FS_WRITE") == 0) {
+        return IO_FS_WRITE;
+    } 
+    if (strcmp(nombre, "IO_FS_READ") == 0) {
+        return IO_FS_READ;
+    } 
+    if (strcmp(nombre, "EXIT") == 0) {
+        return EXIIT;
+    } 
+    
+    return EXIIT;
 }
 
 t_decode* decode(t_instruccion* instruccion){
 
     char* buffer = (char*) instruccion->buffer->stream;
     eliminar_linea_n(buffer);
-    char** arrayIns = string_split(buffer," ");    
-    instrucciones ins= obtener_instruccion(arrayIns[0]);
+    char** arrayIns = string_split(buffer," ");
+    printf("Instruccion: %s.\n", arrayIns[0]);
+
+    instrucciones ins = obtener_instruccion(arrayIns[0]);
     t_decode* decode = malloc(sizeof(t_decode));
     decode->op_code = ins;
     decode->registroCpu = list_create();
     
     switch(ins){
-        case 0:{
+        case SET:{
         char* registro = strdup(arrayIns[1]);
         list_add(decode->registroCpu, registro);
         int valor =atoi(strdup(arrayIns[2]));
         decode->valor = valor;     
         break;     
         }
-        case 1:{
+        case MOV_IN:{
         char* registroDatos = strdup(arrayIns[1]);
         list_add(decode->registroCpu,registroDatos);
         char* registroDireccion = strdup(arrayIns[2]);
         list_add(decode->registroCpu,registroDireccion);     
         break;
         }
-        case 2:{
+        case MOV_OUT:{
         char* registroDireccion = strdup(arrayIns[1]);
         list_add(decode->registroCpu,registroDireccion);
         char* registroDatos = strdup(arrayIns[2]);
@@ -96,56 +118,56 @@ t_decode* decode(t_instruccion* instruccion){
         decode->logicaAFisica= true;  
         break;
         }
-        case 3:{
+        case SUM:{
         char* registroDestino = strdup(arrayIns[1]);
         list_add(decode->registroCpu,registroDestino);
         char* registroOrigen= strdup(arrayIns[2]);
         list_add(decode->registroCpu,registroOrigen);     
         break;
         }
-        case 4:{
+        case SUB:{
         char* registroDestino = strdup(arrayIns[1]);
         list_add(decode->registroCpu,registroDestino);
         char* registroOrigen= strdup(arrayIns[2]);
         list_add(decode->registroCpu,registroOrigen);
         break;
         }
-        case 5:{
+        case JNZ:{
         char* registro=strdup(arrayIns[1]);
         list_add(decode->registroCpu,registro);
         instrucciones ins = atoi(strdup(arrayIns[2]));
         decode->instrucciones= ins;
         break;
         }
-        case 6:{
+        case RESIZE:{
         int tamanio = atoi(strdup(arrayIns[1]));
         decode->valor= tamanio;
         break;
         }   
-        case 7:{
+        case COPY_STRING:{
         int tamanio = atoi(strdup(arrayIns[1]));
         decode->valor= tamanio;
         break;
         }
-        case 8:{
+        case WAIT:{
         char *rec;
         rec= strdup(arrayIns[1]);
         decode->recurso = rec;
         break;
         }
-        case 9:{
+        case SIGNAL:{
         char* recu = strdup(arrayIns[1]);
         decode->recurso=recu;
         break;
         }
-        case 10:{
+        case IO_GEN_SLEEP:{
         char* interfaz = strdup(arrayIns[1]);
         decode->interfaz = interfaz;
         int unidadesTrabajo = atoi(strdup(arrayIns[2]));
         decode->valor = unidadesTrabajo;
         break;
         }
-        case 11:{
+        case IO_STDIN_READ:{
         char* interfaz = strdup(arrayIns[1]);
         decode->interfaz = interfaz;
         char* registro_direccion = arrayIns[2];
@@ -154,7 +176,7 @@ t_decode* decode(t_instruccion* instruccion){
         list_add(decode->registroCpu, registro_tamaño);  
         break;
         }
-        case 12:{
+        case IO_STDOUT_WRITE:{
         char* interfaz = strdup(arrayIns[1]);
         decode->interfaz = interfaz;
         char* registro_direccion = arrayIns[2];
@@ -163,30 +185,30 @@ t_decode* decode(t_instruccion* instruccion){
         list_add(decode->registroCpu, registro_tamaño);  
         break;
         }
-        case 13:{
+        case IO_FS_CREATE:{
             break;
         }
-        case 14:{
+        case IO_FS_DELETE:{
             break;
         }
-        case 15:{
+        case IO_FS_TRUNCATE:{
             break;
         }
-        case 16:{
+        case IO_FS_WRITE:{
             break;
         }
-        case 17:{
+        case IO_FS_READ:{
             break;
         }
-        case 18:{
+        case EXIIT:{
             break;
         }
+
     }
     for (int i = 0; arrayIns[i] != NULL; i++) {
     free(arrayIns[i]);
     }
     free(arrayIns);
-    list_destroy(decode->registroCpu);
     return decode;
 }
 
@@ -219,38 +241,47 @@ void* obtener_valor_registro(cpu_registros* regs, char* nombre_registro) {
     else {return NULL;}
 }
 
-void execute(t_decode* decode, t_pcb* pcb){
+t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
     
     instrucciones ins = decode->op_code;
     switch(ins){
     
-        case 0:{
+        case SET:{
             int valor = decode->valor;
-            char* registro_adepositar = list_get(decode->registroCpu,0);        
+            char* registro_adepositar = list_get(decode->registroCpu,0);
+            log_info(logger, "PID: %d - Ejecutando: SET %s %d", pcb->pid, registro_adepositar, valor);        
             asignar_registro(pcb->registros, registro_adepositar, valor);    
             break;
          }
-        case 1:{
+        case MOV_IN:{
             char* registro_datos = list_get(decode->registroCpu,0);
             char* registro_direccion = list_get(decode->registroCpu,1);
             uint8_t dir_logica = (uint8_t) obtener_valor_registro(pcb->registros, registro_direccion);
             t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
-            enviar_pedido_lectura(conexion_memoria_cpu, dir_fisica);
+            int tamanio = sizeof(registro_datos);
+            enviar_pedido_lectura(conexion_memoria_cpu, dir_fisica, tamanio);
             char* leido = recibir_mensaje(conexion_memoria_cpu, cpu_log);
             asignar_registro(pcb->registros, registro_datos, leido);
+            break;
         }
-        case 2:{
+        case MOV_OUT:{
             char* registro_datos = list_get(decode->registroCpu,1);
             char* registro_direccion = list_get(decode->registroCpu,0);
             uint8_t dir_logica = (uint8_t) obtener_valor_registro(pcb->registros, registro_direccion);
             t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
 
             uint8_t valor = (uint8_t) obtener_valor_registro(pcb->registros, registro_datos);
-
+            char* aescribir = int_to_char(valor);
+            int size_aescribir = sizeof(aescribir);
+            int cant_pags = size_aescribir/tam_pag;
+            if(cant_pags <=1){
             enviar_pedido_escritura(conexion_memoria_cpu, dir_fisica);
-            enviar_valor_escritura(conexion_memoria_cpu, valor);        
+            enviar_valor_escritura(conexion_memoria_cpu, valor); 
+            }
+      
+            break; 
         }
-        case 3:{
+        case SUM:{
             char* registroDestino = (char*)list_get(decode->registroCpu,0);
             char* registroOrigen = (char*)list_get(decode->registroCpu,1);
             uint8_t valor2 = (uint8_t) obtener_valor_registro(pcb->registros, registroDestino);
@@ -275,13 +306,16 @@ void execute(t_decode* decode, t_pcb* pcb){
                 instrucciones ins= decode->instrucciones;
                 //pcb->p_counter=ins;
             }
-        break;
+            break;
         }
+        //resize
         case 6:{
             int tamanio_resize = decode->valor;
-            enviar_pedido_resize(conexion_memoria_cpu, pcb->pid);
-            enviar_pedido_resize(conexion_memoria_cpu, tamanio_resize);
-
+            char* tamanio = int_to_char(tamanio_resize);
+            char* pid_char = int_to_char(pcb->pid);
+            char* mensaje1 = strcat(pid_char,"/");
+            char* mensaje = strcat(mensaje1,tamanio);
+            enviar_pedido_resize_tampid(conexion_memoria_cpu, mensaje);
             break;
         }
         case 7:{
@@ -348,24 +382,48 @@ void execute(t_decode* decode, t_pcb* pcb){
         case 15:{}
         case 16:{}
         case 17:{}
-        case 18:{
-            enviar_motivo(INS_EXIT,kernel_socket);
-            break;
+        case EXIIT:{
+            log_info(logger, "PID: %d - Ejecutando: EXIT", pcb->pid);        
+            return EXIT_BLOCK;
         }
     }
 
-    return pcb;
-    
+    free(decode);
+    return NO_BLOCK;
 }
 
-void realizar_ciclo_inst(int conexion, t_pcb* pcb){
-   t_instruccion* ins = fetch(conexion,pcb);
-   t_decode* decodeado = decode(ins);
-   execute(decodeado,pcb);
-    //enviar_pcb(pcb, kernel_socket);
+void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger){
+   
+   t_cpu_blockeo blockeo = NO_BLOCK;
+    while(blockeo == NO_BLOCK && !hay_interrupcion)
+    {
+        printf("hola estoy en fecth\n");
+        t_instruccion* ins = fetch(conexion,pcb);
+        log_info(logger, "PID: %d - FETCH - Program counter: <%d>", pcb->pid, pcb->registros->PC);
+
+        t_decode* decodeado = decode(ins);
     
-   //if(hay_interrupcion){
-    //VER
-    //cambiar_a_cola(pcb, BLOCKED);
-   //}
+        log_debug(logger, "Numero instruccion: %d", decodeado->op_code);
+
+        blockeo = execute(decodeado,pcb, logger);
+        loggear_registros(pcb, logger);
+    }
+
+    // Atender interrupt
+}
+
+void loggear_registros(t_pcb* pcb, t_log* logger)
+{
+    log_debug(logger, "Estado del proceso PID <%d>:", pcb->pid);
+    log_debug(logger, "AX: %d", pcb->registros->AX);
+    log_debug(logger, "BX: %d", pcb->registros->BX);
+    log_debug(logger, "CX: %d", pcb->registros->CX);
+    log_debug(logger, "DX: %d", pcb->registros->DX);
+    log_debug(logger, "EAX: %d", pcb->registros->EAX);
+    log_debug(logger, "EBX: %d", pcb->registros->EBX);
+    log_debug(logger, "ECX: %d", pcb->registros->ECX);
+    log_debug(logger, "EDX: %d", pcb->registros->EDX);
+    log_debug(logger, "SI: %d", pcb->registros->SI);
+    log_debug(logger, "DI: %d", pcb->registros->DI);
+    log_debug(logger, "PC: %d", pcb->registros->PC);
 }

@@ -20,6 +20,8 @@ void atender_cliente(void *void_args)
     while (client_socket != -1)
     {   
         op_code cop = recibir_operacion(client_socket);
+        // usleep(retardo*1000);
+
         if (cop == -1)
         {
             log_info(logger, "DISCONNECT!");
@@ -49,7 +51,8 @@ void atender_cliente(void *void_args)
             tabla->pid = pid;
             tabla->tabla = list_create();
             list_add(tabla_pags, tabla);
-            log_info(memoria_log, "PID: <%u> - Tamaño: <0>", pid);
+            log_info(memoria_log, "PID: <%d> - Tamaño: <%d>", pid, list_size(tabla->tabla));
+
             break;
         }
         case PID:{
@@ -60,21 +63,20 @@ void atender_cliente(void *void_args)
         }
         case PC:
         {
+            usleep(retardo*1000);
             char * pc_recibido = recibir_pc(client_socket);
             uint32_t pc = atoi(pc_recibido);
             sem_wait(&semaforo_mem);
             t_instruccion* instruccion = (t_instruccion*)list_get(lista_arch,pc);
-            log_info(logger, "Mando la INSTRUCCION %s", instruccion->buffer->stream);
+            log_debug(logger, "Mando la instruccion: %s", instruccion->buffer->stream);
             
             char* ins  = instruccion->buffer->stream;
             eliminar_linea_n(ins);
-            cargar_a_mem(ins, pid);
-
+            
             enviar_instruccion_mem(client_socket,instruccion);
            
             break;
         }
-
         case IO_STDIN_READ:{
             instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
             parametros_io = recibir_io_stdin(client_socket);
@@ -88,6 +90,8 @@ void atender_cliente(void *void_args)
             //BUSCAR EN REGISTRO_DIRECCION Y LEER EL REGISTRO_TAMAÑO
             //MANDAR RESULTADO A IO
             free(parametros_io);
+            break;
+
         }
         case ACCESO_TABLA:
         {
@@ -109,13 +113,16 @@ void atender_cliente(void *void_args)
         }
         case CPU_RESIZE:
         {   
-            uint32_t pid= (uint32_t) recibir_pedido_resize(client_socket, logger);
-            int tamanio = recibir_pedido_resize(client_socket, logger);
-           
+           char* mensaje = recibir_pedido_resize_tampid(client_socket, logger);
+           char** split = string_split(mensaje, "/");
+           uint32_t pid= atoi(split[0]);
+           int tamanio = atoi(split[1]);
             usleep(retardo);
-  
+
             t_tabla* tabla_pid = buscar_por_pid_return(pid);
-            int cant_pags = list_size(tabla_pid->tabla);
+            int cant_pags;
+            if(tabla_pid != NULL){
+            cant_pags = list_size(tabla_pid->tabla);
             int tamanio_pid = cant_pags * tam_pagina;
             if(tamanio > tamanio_pid){
             //AMPLIAR PROCESO
@@ -149,6 +156,7 @@ void atender_cliente(void *void_args)
             }     
             else{
                 //REDUCIR PROCESO
+               
                 int bytes_a_reducir = tamanio - tamanio_pid;
                 int cantframes_a_reducir=  bytes_a_reducir/tam_pagina;
                 int cant_pags_nueva = cant_pags - cantframes_a_reducir;
@@ -160,46 +168,39 @@ void atender_cliente(void *void_args)
                 }
                 log_info(logger,"PID: <%d> - Tamaño Actual: <%d> - Tamaño a Reducir: <%d>", pid,tamanio_pid, tamanio);
             }
+            }
+           
             break;
         }
         case PED_LECTURA:
         {
-            t_dir_fisica* dir_fisica = recibir_pedido_lectura(client_socket, logger); 
+            t_list* buffer = recibir_pedido_lectura(client_socket, logger); 
+            t_dir_fisica* dir_fisica = list_get(buffer,0);
+            // RECIBIR TAMANIO A LEER
+            int tamanio = list_get(buffer,1);;
             usleep(retardo);
-            void* inicio_espacio_de_mem = (char*)memoria + ((dir_fisica->nro_frame) * tam_pagina) + (dir_fisica->desplazamiento);
-    
-            char* leido = malloc(tam_pagina - (dir_fisica->desplazamiento));
-            if (leido == NULL) {
-            fprintf(stderr, "Failed to allocate memory for leido.\n");
-            break;
-            }
-    
-            memcpy(leido, inicio_espacio_de_mem, tam_pagina - (dir_fisica->desplazamiento));
+            char* leido = leer_en_mem(tamanio, dir_fisica);
             enviar_mensaje(leido, client_socket);
-    
             free(leido);   
             break;
         }
-        /*
         case PED_ESCRITURA:{
             t_dir_fisica* dir_fisica = recibir_pedido_escritura(client_socket, logger); 
-            uint8_t valor = recibir_valor_escritura(client_scoket, logger);
-            usleep(retardo);
-            void* inicio_espacio_de_mem = (char*)memoria + ((dir_fisica->nro_frame) * tam_pagina) + (dir_fisica->desplazamiento);    
-            //escribir_a_mem(a_escribir, donde);
+            uint8_t valor = recibir_valor_escritura(client_socket, logger);
+            usleep(retardo);    
+            escribir_en_mem(int_to_char(valor), dir_fisica);
+
             break;
-        }*/
+        }
         
         case CPY_STRING:{
             char* a_escribir = recibir_cpy_string(client_socket, logger);
             //escribir_a_mem(a_escribir, void* donde);
-
             break;
         }
         case FINALIZACION:
         {
             char* pidc = recibir_mensaje(client_socket, logger);
-            usleep(retardo);
             uint32_t pid = atoi(pidc);
 
             t_tabla* tabla_pid = list_remove(tabla_pags, buscar_por_pid_return(pid));
@@ -227,6 +228,7 @@ void atender_cliente(void *void_args)
     log_warning(logger, "El cliente se desconecto de %s server", server_name);
     return;
 }
+
 
 int server_escuchar(void* arg)
 {   
