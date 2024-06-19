@@ -28,7 +28,7 @@ typedef struct
             int unidades_trabajo;
         } io_gen_sleep_params;
         struct {
-            cpu_registros* registro_direccion;
+            t_dir_fisica* registro_direccion;
             cpu_registros* registro_tamaño;
         } io_stdin_stdout;
          struct {

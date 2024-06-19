@@ -26,6 +26,8 @@ extern TLB* tlb;
 extern int cant_entradas_tlb;
 extern char* algoritmo; 
 extern int tam_pag;
+extern int conexion_memoria_cpu;
+extern t_log* cpu_log;
 
 void iniciar_tlb();
 int buscar_tlb(uint32_t pid, int num_pag);

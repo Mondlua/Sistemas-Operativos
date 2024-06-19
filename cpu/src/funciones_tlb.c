@@ -22,17 +22,18 @@ int buscar_tlb(uint32_t pid, int num_pag){
     return -1;  //MISS
 }
 
-t_dir_fisica* posible_mmu(int dir_logica, uint32_t pid){
+t_dir_fisica* mmu(int dir_logica, uint32_t pid){
 
     int numero_pagina = floor(dir_logica / tam_pag);
     int desplazamiento = dir_logica - numero_pagina * tam_pag;
     int frame = buscar_tlb(pid, numero_pagina);
    if (frame != -1) {  // HIT
-        printf("TLB Hit! Página: %d, Frame: %d\n", numero_pagina, frame);
+        log_info(cpu_log, "TLB Hit: “PID: <%i> - TLB HIT - Pagina: <%i>", pid, numero_pagina);
     } else {  // MISS
-        printf("TLB Miss!\n");
-        // obtener la tabla de páginas correspondiente al pid
-        // Obtener el frame desde la tabla de páginas
+        log_info(cpu_log, "TLB Miss: “PID: <%i> - TLB MISS - Pagina: <%i>", pid, numero_pagina);
+        enviar_pedido_frame(conexion_memoria_cpu, pid, numero_pagina);
+        frame = recibir_frame(conexion_memoria_cpu);
+        log_info(cpu_log, "Obtener Marco: “PID: <%i> - OBTENER MARCO - Página: <%i> - Marco: <%i>", pid, numero_pagina, frame);
         if (string_equals_ignore_case(algoritmo, "FIFO")) {
             remplazo_fifo(pid, numero_pagina, frame);
         } else if (string_equals_ignore_case(algoritmo, "LRU")) {

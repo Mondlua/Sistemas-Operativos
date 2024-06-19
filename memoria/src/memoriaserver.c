@@ -30,9 +30,20 @@ void atender_cliente(void *void_args)
 
         switch (cop) 
         {
+        case FRAME:{
+            
+            char* pidpag = recibir_pedido_frame(client_socket, logger);
+            char** split = string_split(pidpag, "/");
+            uint32_t pid = atoi(split[0]);
+            int pag = atoi(split[1]);
+            t_tabla* tabla = buscar_por_pid_return(pid);
+            int frame = list_get(tabla->tabla, pag);
+            enviar_tamanio_pag_frame(client_socket, frame);
+            break;
+        }
         case TAM_PAG: {
             recibir_ped_tamanio_pag(client_socket, logger);
-            enviar_tamanio_pag(client_socket, tam_pagina);
+            enviar_tamanio_pag_frame(client_socket, tam_pagina);
            break;  
         }
         case MENSAJE:
