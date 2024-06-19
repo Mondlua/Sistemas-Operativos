@@ -112,14 +112,15 @@ void atender_cliente(void *void_args)
         }
         case CPU_RESIZE:
         {   
-            uint32_t pid= (uint32_t) recibir_pedido_resize(client_socket, logger);
-            int tamanio = recibir_pedido_resize(client_socket, logger);
-           
+           char* mensaje = recibir_pedido_resize_tampid(client_socket, logger);
+           char** split = string_split(mensaje, "/");
+           uint32_t pid= atoi(split[0]);
+           int tamanio = atoi(split[1]);
             usleep(retardo);
 
             t_tabla* tabla_pid = buscar_por_pid_return(pid);
             int cant_pags;
-            if(tabla_pid->tabla != NULL){
+            if(tabla_pid != NULL){
             cant_pags = list_size(tabla_pid->tabla);
             int tamanio_pid = cant_pags * tam_pagina;
             if(tamanio > tamanio_pid){
@@ -154,6 +155,7 @@ void atender_cliente(void *void_args)
             }     
             else{
                 //REDUCIR PROCESO
+               
                 int bytes_a_reducir = tamanio - tamanio_pid;
                 int cantframes_a_reducir=  bytes_a_reducir/tam_pagina;
                 int cant_pags_nueva = cant_pags - cantframes_a_reducir;
@@ -164,30 +166,9 @@ void atender_cliente(void *void_args)
                     bitarray_clean_bit(bitarray,frame);
                 }
                 log_info(logger,"PID: <%d> - Tamaño Actual: <%d> - Tamaño a Reducir: <%d>", pid,tamanio_pid, tamanio);
-            }}
-            else{
-                int cantframes_a_ocupar=  tamanio/tam_pagina;
-                size_t count = 0;
-                for (size_t i = 0; i < bitarray->size; i++) {
-                    if (bitarray_test_bit(bitarray, i) == 0) {
-                        count++;
-                    }
-                }
-                if(count>=cantframes_a_ocupar){
-                    int frames_ocupados=0;
-                    for (int i = 0; i < bitarray->size; i++) {
-                         if (bitarray_test_bit(bitarray, i) == 0) {
-                            bitarray_set_bit(bitarray, i);
-                            list_add(tabla_pid->tabla, i);
-                            frames_ocupados++;
-                        }
-                         if (frames_ocupados == cantframes_a_ocupar) {
-                            break;
-                       }
-                    }
-                log_info(logger, "PID: <%u> - Tamaño Actual: <%d> - Tamaño a Ampliar: <%d>", pid, 0, tamanio); 
             }
             }
+           
             break;
         }
         case PED_LECTURA:
