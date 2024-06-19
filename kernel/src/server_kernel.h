@@ -15,6 +15,7 @@
 #include <utils/io_operation.h>
 #include <commons/collections/queue.h>
 #include <utils/funcionesUtiles.h>
+//#include "alg_planificacion.h"
 
 extern t_list* interfaces;
 extern sem_t sem_contador_int;

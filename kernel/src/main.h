@@ -9,6 +9,7 @@
 #include <utils/catedra/inicio.h>
 #include "io.h"
 #include <utils/funcionesUtiles.h>
+#include "alg_planificacion.h"
 
 extern t_log* kernel_log;
 extern t_config* kernel_config;

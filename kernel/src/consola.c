@@ -48,7 +48,7 @@ void funciones(char* leido) {
 
 
 void ejecutar_script(char* path){
-    char* complemento = "/home/utnso"; 
+    char* complemento = getcwd(NULL, 0); 
     size_t len_path = strlen(path);
     size_t len_complemento = strlen(complemento);
     size_t len_total = len_path + len_complemento + 2;
@@ -108,7 +108,7 @@ void iniciar_proceso(char* path){
 
     
     pcb = queue_pop(colaNew);
-    sem_wait(&grado_planificiacion);
+    //sem_wait(&grado_planificiacion);
     queue_push(colaReady, pcb);
     sem_post(&cola_ready);
     //ver si se puede pasar a ready (nivel multiprog)
@@ -132,27 +132,17 @@ void iniciar_proceso(char* path){
 void finalizar_proceso(uint32_t pid){
 
     borrar_pcb(pid);
+
     char* pid_char= int_to_char(pid); 
     //enviar_mensaje_finalizacion(pid_char,conexion_memoria);  NO ESTA LA FUNCION, HACER O BUSCAR
 
     log_info(kernel_log, ">> Se finaliza proceso %u <<", pid);
 }
 
-//bool tabla_pid
+// bool tabla_pid;
 
 void iniciar_planificacion(){
-    char* algoritmo=config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
-    log_info(kernel_log, "El algoritmo configurado es: %s", algoritmo);
-    if(strcmp(algoritmo, "FIFO") == 0){
-        pthread_t alg_planificacion;
-        pthread_create(&alg_planificacion, NULL, (void*) fifo,  conexion_cpu_dispatch);
-        pthread_detach(alg_planificacion);
-
-    } else if(strcmp(algoritmo, "RR") == 0){
-        /*pthread_t alg_planificacion;
-        pthread_create(&alg_planificacion, NULL, (void*) rr, conexion_cpu_dispatch);
-        pthread_detach(alg_planificacion);*/
-    }
+    planificador_planificar();
     log_info(kernel_log, ">> Se inicio la planificacion");
 }
 void detener_planificacion(){

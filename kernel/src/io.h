@@ -10,7 +10,7 @@
 
 
 void validar_peticion(instruccion_params* parametros, t_pcb* pcb, int codigo_op);
-void enviar_instruccion_a_interfaz(interfaz* interfaz_destino, instruccion_params* parametros);
+void enviar_instruccion_a_interfaz(interfaz* interfaz_destino, instruccion_params* parametros, int cod_op);
 interfaz* buscar_interfaz_por_nombre(char* nombre_interfaz);
 
 void recibir_solicitud_cpu(int socket_servidor, t_pcb* pcb);
