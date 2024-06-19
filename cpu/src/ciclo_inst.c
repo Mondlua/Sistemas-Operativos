@@ -258,7 +258,7 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             char* registro_direccion = list_get(decode->registroCpu,1);
             uint8_t dir_logica = (uint8_t) obtener_valor_registro(pcb->registros, registro_direccion);
             t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
-            int tamanio = sizeof(registro_datos);
+            uint32_t tamanio = sizeof(registro_datos);
             enviar_pedido_lectura(conexion_memoria_cpu, dir_fisica, tamanio);
             char* leido = recibir_mensaje(conexion_memoria_cpu, cpu_log);
             asignar_registro(pcb->registros, registro_datos, leido);
@@ -268,15 +268,22 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             char* registro_datos = list_get(decode->registroCpu,1);
             char* registro_direccion = list_get(decode->registroCpu,0);
             uint8_t dir_logica = (uint8_t) obtener_valor_registro(pcb->registros, registro_direccion);
-            t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
 
             uint8_t valor = (uint8_t) obtener_valor_registro(pcb->registros, registro_datos);
             char* aescribir = int_to_char(valor);
             int size_aescribir = sizeof(aescribir);
             int cant_pags = size_aescribir/tam_pag;
-            if(cant_pags <=1){
-            enviar_pedido_escritura(conexion_memoria_cpu, dir_fisica);
-            enviar_valor_escritura(conexion_memoria_cpu, valor); 
+            if(cant_pags <=1){        
+                t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
+                enviar_pedido_escritura(conexion_memoria_cpu, dir_fisica);
+                enviar_valor_escritura(conexion_memoria_cpu, valor); 
+            }
+            else{
+                // HACER QUE ESCRIBA SI NO ENTRA EN UNA PAG
+               
+               //dl/tamPag=nroPag
+               int cant_bytes= strlen(aescribir);
+                uint8_t dir_logica_final = dir_logica + cant_bytes;
             }
       
             break; 
@@ -351,7 +358,9 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             parametros->interfaz = strdup(decode->interfaz);
             char* registro_direccion = (char*)list_get(decode->registroCpu, 0);
             char* registro_tamaño = (char*)list_get(decode->registroCpu, 1);
-            parametros->params.io_stdin_stdout.registro_direccion = (cpu_registros*)obtener_valor_registro(pcb->registros, registro_direccion);
+            int dir_logica =(int)obtener_valor_registro(pcb->registros, registro_direccion);
+            t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
+            parametros->params.io_stdin_stdout.registro_direccion = dir_fisica;
             parametros->params.io_stdin_stdout.registro_tamaño = (cpu_registros*)obtener_valor_registro(pcb->registros, registro_tamaño);
             t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion));
             paquete->codigo_operacion = IO_STDIN_READ;
@@ -367,6 +376,9 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             parametros->interfaz = strdup(decode->interfaz);
             char* registro_direccion = (char*)list_get(decode->registroCpu, 0);
             char* registro_tamaño = (char*)list_get(decode->registroCpu, 1);
+            int dir_logica =(int)obtener_valor_registro(pcb->registros, registro_direccion);
+            t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
+            parametros->params.io_stdin_stdout.registro_direccion = dir_fisica;
             parametros->params.io_stdin_stdout.registro_direccion = (cpu_registros*)obtener_valor_registro(pcb->registros, registro_direccion);
             parametros->params.io_stdin_stdout.registro_tamaño = (cpu_registros*)obtener_valor_registro(pcb->registros, registro_tamaño);
             t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion));
@@ -397,7 +409,6 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger){
    t_cpu_blockeo blockeo = NO_BLOCK;
     while(blockeo == NO_BLOCK && !hay_interrupcion)
     {
-        printf("hola estoy en fecth\n");
         t_instruccion* ins = fetch(conexion,pcb);
         log_info(logger, "PID: %d - FETCH - Program counter: <%d>", pcb->pid, pcb->registros->PC);
 

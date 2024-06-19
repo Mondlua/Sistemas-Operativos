@@ -100,8 +100,34 @@ void enviar_mensaje(char* mensaje, int socket_cliente)
     free(a_enviar);
     eliminar_paquete(paquete);
 }
+void enviar_pedido_frame(int conexion_memoria_cpu, uint32_t pid, int numero_pagina)
+    {
+    char* nro_pag = int_to_char(numero_pagina);
+    char* pid_char = int_to_char(pid);
+    char* mensaje1 = strcat(pid_char,"/");
+    char* mensaje = strcat(mensaje1,nro_pag);
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+	paquete->codigo_operacion = FRAME;
+	paquete->buffer = malloc(sizeof(t_buffer));
+	paquete->buffer->size = strlen(mensaje) + 1;
+	paquete->buffer->stream = malloc(paquete->buffer->size);
+	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
+
+	int bytes = paquete->buffer->size + 2*sizeof(int);
+
+	void* a_enviar = serializar_paquete(paquete, bytes);
+
+    int resultado_send = send(conexion_memoria_cpu, a_enviar, bytes, MSG_NOSIGNAL);  // Evita la generación de SIGPIPE
+
+    if (resultado_send == -1) {
+        fprintf(stderr, "Error al enviar el mensaje: socket cerrado.\n");
+    }
+
+    free(a_enviar);
+    eliminar_paquete(paquete);
+}
 void enviar_pedido_resize_tampid(int socket_cliente, char* mensaje)
-{
+{   
 	t_paquete* paquete = malloc(sizeof(t_paquete));
 	paquete->codigo_operacion = CPU_RESIZE;
 	paquete->buffer = malloc(sizeof(t_buffer));
@@ -118,18 +144,19 @@ void enviar_pedido_resize_tampid(int socket_cliente, char* mensaje)
     if (resultado_send == -1) {
         fprintf(stderr, "Error al enviar el Pedido de Resize: socket cerrado.\n");
     }
-
+    free(a_enviar);
+    eliminar_paquete(paquete);
 }
-void enviar_pedido_lectura(int socket_cliente,  t_dir_fisica* dir_fisica, int tamanio){
+void enviar_pedido_lectura(int socket_cliente,  t_dir_fisica* dir_fisica, uint32_t tamanio){
     t_paquete* paquete = malloc(sizeof(t_paquete));
 
 	paquete->codigo_operacion =  PED_LECTURA;
 	paquete->buffer = malloc(sizeof(t_buffer));
-	paquete->buffer->size = sizeof(dir_fisica) + sizeof(int);
+	paquete->buffer->size = sizeof(t_dir_fisica) + sizeof(uint32_t);
 	paquete->buffer->stream = malloc(paquete->buffer->size);
 
-    agregar_a_paquete(paquete, dir_fisica, sizeof(dir_fisica));
-    agregar_a_paquete(paquete, tamanio, sizeof(int));
+    agregar_a_paquete(paquete, dir_fisica, sizeof(t_dir_fisica));
+    agregar_a_paquete(paquete, tamanio, sizeof(uint32_t));
 
 	int bytes = paquete->buffer->size + 2*sizeof(int);
 
@@ -190,7 +217,7 @@ void enviar_cpy_string(int socket_cliente, char* valor){
     eliminar_paquete(paquete);
 }
 
-void enviar_tamanio_pag(int client_socket, int tamanio){
+void enviar_tamanio_pag_frame(int client_socket, int tamanio){
         // Convierte el entero a un formato de red (network byte order)
     int numero_network_order = htonl(tamanio);
 
@@ -287,7 +314,13 @@ char* recibir_pedido_resize_tampid(int socket_cliente, t_log* logger)
     log_info(logger, "Me llego el  Pedido de Resize", buffer);
     return buffer;
 }
-
+char* recibir_pedido_frame(int socket_cliente, t_log* logger)
+{
+    int size;
+    char* buffer = recibir_buffer(&size, socket_cliente);
+    log_info(logger, "Me llego el Pedido de FRAME");
+    return buffer;
+}
 void recibir_ped_tamanio_pag(int socket_cliente, t_log* logger)
 {
     int size;
@@ -308,6 +341,17 @@ void recibir_tamanio_pag(int socket_cliente, t_log* logger, int* numero)
     *numero = ntohl(numero_network_order);
 }
 
+int recibir_frame(int socket_cliente){
+    int frame;
+    int numero_network_order;
+    int resultado_recv = recv(socket_cliente, &numero_network_order, sizeof(numero_network_order), 0);
+    if (resultado_recv == -1) {
+        printf("ERROR AL RECIBIR EL FRAME");
+        exit(EXIT_FAILURE);
+    }
+    frame = ntohl(numero_network_order);
+    return frame;
+}
 
 void crear_buffer(t_paquete* paquete)
 {

@@ -24,6 +24,7 @@ typedef enum
     PED_ESCRITURA,
     CPY_STRING,
     FINALIZACION,
+    FRAME,
     TAM_PAG,
     AVISO_DESCONEXION,
     AVISO_OPERACION_INVALIDA,
@@ -76,11 +77,14 @@ t_dir_fisica* recibir_pedido_escritura(int socket_cliente, t_log* logger);
 void enviar_pedido_resize_tampid(int socket_cliente, char* tampid);
 
 char* recibir_pedido_resize_tampid(int socket_cliente, t_log* logger);
+void enviar_pedido_frame(int conexion_memoria_cpu, uint32_t pid, int numero_pagina);
 
 void enviar_cpy_string(int socket_cliente, char* valor);
 char* recibir_cpy_string(int socket_cliente, t_log* logger);
 void enviar_pedido_tam_mem(int socket_cliente);
-void enviar_tamanio_pag(int client_socket, int tam_pagina);
+void enviar_tamanio_pag_frame(int client_socket, int tam_pagina);
 void recibir_tamanio_pag(int socket_cliente, t_log* logger, int* numero);
 void recibir_ped_tamanio_pag(int socket_cliente, t_log* logger);
+int recibir_frame(int socket_cliente);
+char* recibir_pedido_frame(int socket_cliente, t_log* logger);
 #endif
