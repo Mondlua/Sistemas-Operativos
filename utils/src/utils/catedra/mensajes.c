@@ -100,16 +100,15 @@ void enviar_mensaje(char* mensaje, int socket_cliente)
     free(a_enviar);
     eliminar_paquete(paquete);
 }
-void enviar_pedido_resize(int socket_cliente, int tampid)
+void enviar_pedido_resize_tampid(int socket_cliente, char* mensaje)
 {
 	t_paquete* paquete = malloc(sizeof(t_paquete));
-
 	paquete->codigo_operacion = CPU_RESIZE;
 	paquete->buffer = malloc(sizeof(t_buffer));
-	paquete->buffer->size = sizeof(int);
+	paquete->buffer->size = strlen(mensaje) + 1;;
 	paquete->buffer->stream = malloc(paquete->buffer->size);
-	memcpy(paquete->buffer->stream, &tampid, paquete->buffer->size);
-
+	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
+    printf("el pid es %s", mensaje);
 	int bytes = paquete->buffer->size + 2*sizeof(int);
 
 	void* a_enviar = serializar_paquete(paquete, bytes);
@@ -120,8 +119,6 @@ void enviar_pedido_resize(int socket_cliente, int tampid)
         fprintf(stderr, "Error al enviar el Pedido de Resize: socket cerrado.\n");
     }
 
-    free(a_enviar);
-    eliminar_paquete(paquete);
 }
 void enviar_pedido_lectura(int socket_cliente,  t_dir_fisica* dir_fisica, int tamanio){
     t_paquete* paquete = malloc(sizeof(t_paquete));
@@ -283,11 +280,11 @@ char* recibir_cpy_string(int socket_cliente, t_log* logger)
 }
 
 
-int recibir_pedido_resize(int socket_cliente, t_log* logger)
+char* recibir_pedido_resize_tampid(int socket_cliente, t_log* logger)
 {
     int size;
-    int buffer = recibir_buffer(&size, socket_cliente);
-    log_info(logger, "Me llego el Pedido de Resize");
+    char* buffer = recibir_buffer(&size, socket_cliente);
+    log_info(logger, "Me llego el  Pedido de Resize", buffer);
     return buffer;
 }
 

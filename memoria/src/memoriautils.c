@@ -31,6 +31,8 @@ char* leer_en_mem(int tamanio, t_dir_fisica* dir_fisica){
 }
 
 t_tabla* buscar_por_pid_return(uint32_t pid) {
+
+    if(tabla_pags != NULL){
     t_link_element* current = tabla_pags->head;
     while (current != NULL) {
         t_tabla* current_tabla = (t_tabla*)current->data;
@@ -38,6 +40,7 @@ t_tabla* buscar_por_pid_return(uint32_t pid) {
             return current_tabla; 
         }
         current = current->next;
+    }
     }
     return NULL; 
 }
