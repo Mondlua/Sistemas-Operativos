@@ -12,6 +12,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <utils/catedra/inicio.h>
+#include <utils/funcionesUtiles.h>
 
 typedef enum
 {
@@ -72,8 +73,10 @@ void enviar_pedido_escritura(int socket_cliente,  t_dir_fisica* dir_fisica);
 void enviar_valor_escritura(int socket_cliente,  uint8_t valor);
 uint8_t recibir_valor_escritura(int socket_cliente, t_log* logger);
 t_dir_fisica* recibir_pedido_escritura(int socket_cliente, t_log* logger);
-void enviar_pedido_resize(int socket_cliente, int tampid);
-int recibir_pedido_resize(int socket_cliente, t_log* logger);
+void enviar_pedido_resize_tampid(int socket_cliente, char* tampid);
+
+char* recibir_pedido_resize_tampid(int socket_cliente, t_log* logger);
+
 void enviar_cpy_string(int socket_cliente, char* valor);
 char* recibir_cpy_string(int socket_cliente, t_log* logger);
 void enviar_pedido_tam_mem(int socket_cliente);

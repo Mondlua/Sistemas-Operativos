@@ -308,11 +308,14 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             }
             break;
         }
+        //resize
         case 6:{
             int tamanio_resize = decode->valor;
-            enviar_pedido_resize(conexion_memoria_cpu, pcb->pid);
-            enviar_pedido_resize(conexion_memoria_cpu, tamanio_resize);
-
+            char* tamanio = int_to_char(tamanio_resize);
+            char* pid_char = int_to_char(pcb->pid);
+            char* mensaje1 = strcat(pid_char,"/");
+            char* mensaje = strcat(mensaje1,tamanio);
+            enviar_pedido_resize_tampid(conexion_memoria_cpu, mensaje);
             break;
         }
         case 7:{
@@ -394,6 +397,7 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger){
    t_cpu_blockeo blockeo = NO_BLOCK;
     while(blockeo == NO_BLOCK && !hay_interrupcion)
     {
+        printf("hola estoy en fecth\n");
         t_instruccion* ins = fetch(conexion,pcb);
         log_info(logger, "PID: %d - FETCH - Program counter: <%d>", pcb->pid, pcb->registros->PC);
 
@@ -430,8 +434,7 @@ t_dir_fisica* mmu(int dir_logica, uint32_t pid){
    int numero_pagina = floor(dir_logica / tam_pag);
    int desplazamiento = dir_logica - numero_pagina * tam_pag;
 
-   //t_tabla* tabla=buscar_por_pid_return(pid); //VER
-   t_tabla* tabla;
+   t_tabla* tabla=buscar_por_pid_return(pid); 
    int frame= list_get(tabla->tabla, numero_pagina);
 
    t_dir_fisica* direccionFisica = malloc(sizeof(t_dir_fisica));
