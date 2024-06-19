@@ -47,6 +47,12 @@ typedef struct t_dir_fisica{
     int nro_frame;
     int desplazamiento;
 }t_dir_fisica;
+
+typedef struct t_dir_logica{
+    int nro_pag;
+    int desplazamiento;
+}t_dir_logica;
+
 typedef struct t_tabla{
     uint32_t pid;
     t_list* tabla;
