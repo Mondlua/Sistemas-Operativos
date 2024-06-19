@@ -427,20 +427,3 @@ void loggear_registros(t_pcb* pcb, t_log* logger)
     log_debug(logger, "DI: %d", pcb->registros->DI);
     log_debug(logger, "PC: %d", pcb->registros->PC);
 }
-
-t_dir_fisica* mmu(int dir_logica, uint32_t pid){
-
-   //t_list* tabla_pags; // HACER TLB NECESARIO
-   int numero_pagina = floor(dir_logica / tam_pag);
-   int desplazamiento = dir_logica - numero_pagina * tam_pag;
-
-   t_tabla* tabla=buscar_por_pid_return(pid); 
-   int frame= list_get(tabla->tabla, numero_pagina);
-
-   t_dir_fisica* direccionFisica = malloc(sizeof(t_dir_fisica));
-   direccionFisica->nro_frame = frame;
-   direccionFisica->desplazamiento = desplazamiento;
-
-   return direccionFisica;
-
-}

@@ -91,6 +91,7 @@ void atender_cliente(void *void_args)
             //MANDAR RESULTADO A IO
             free(parametros_io);
             break;
+
         }
         case ACCESO_TABLA:
         {
