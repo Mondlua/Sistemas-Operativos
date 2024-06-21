@@ -8,8 +8,8 @@ instruccion_params* recibir_io_stdin(int client_socket){
     recv(client_socket, instruccion->buffer->stream, instruccion->buffer->size, MSG_WAITALL);
     instruccion_params* parametros = malloc(sizeof(instruccion_params));
     void* stream = instruccion->buffer->stream;
-    memcpy(&(parametros->params.io_stdin_stdout.registro_direccion), stream, sizeof(cpu_registros));
-    stream += sizeof(cpu_registros);
+    memcpy(&(parametros->params.io_stdin_stdout.registro_direccion), stream, sizeof(t_dir_fisica));
+    stream += sizeof(t_dir_fisica);
     memcpy(&(parametros->params.io_stdin_stdout.registro_tamaño), stream, sizeof(cpu_registros));
     stream += sizeof(cpu_registros);
     size_t tamaño_texto = sizeof(parametros->params.io_stdin_stdout.registro_tamaño);
@@ -25,8 +25,8 @@ instruccion_params* recibir_io_stdout(int client_socket){
     recv(client_socket, instruccion->buffer->stream, instruccion->buffer->size, MSG_WAITALL);
     instruccion_params* parametros = malloc(sizeof(instruccion_params));
     void* stream = instruccion->buffer->stream;
-    memcpy(&(parametros->params.io_stdin_stdout.registro_direccion), stream, sizeof(cpu_registros));
-    stream += sizeof(cpu_registros);
+    memcpy(&(parametros->params.io_stdin_stdout.registro_direccion), stream, sizeof(t_dir_fisica));
+    stream += sizeof(t_dir_fisica);
     memcpy(&(parametros->params.io_stdin_stdout.registro_tamaño), stream, sizeof(cpu_registros));
     return parametros;
 }

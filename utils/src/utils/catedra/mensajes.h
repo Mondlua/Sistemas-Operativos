@@ -67,7 +67,7 @@ t_list* recibir_paquete(int);
 
 bool send_handshake(int conexion, t_log* logger, const char* conexion_name);
 bool rcv_handshake(int fd_conexion);
-void enviar_pedido_lectura(int socket_cliente,  t_dir_fisica* dir_fisica, int tam);
+void enviar_pedido_lectura(int socket_cliente,  t_dir_fisica* dir_fisica, uint32_t tam);
 
 t_list* recibir_pedido_lectura(int socket_cliente, t_log* logger);
 void enviar_pedido_escritura(int socket_cliente,  t_dir_fisica* dir_fisica);

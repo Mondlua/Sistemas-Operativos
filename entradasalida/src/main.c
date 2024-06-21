@@ -4,10 +4,9 @@ char* nombre_interfaz;
 int conexion_kernel;
 int conexion_memoria;
 int tiempo_unidad_trabajo;
+t_log* entradasalida_log;
 
 int main(void) {
-
-    t_log* entradasalida_log;
 	t_config* entradasalida_config;   
 
     char* ip_memoria;
@@ -18,13 +17,15 @@ int main(void) {
     
     char* interfaz;
 
-    char ruta[100];
+    char ruta[200];
+    nombre_interfaz = malloc(sizeof(char));
 
     entradasalida_log = iniciar_logger("entradasalida.log","entradasalida");
     printf("Ingrese el nombre de la interfaz: ");
     scanf("%s", nombre_interfaz); 
     printf("Ingrese el path del archivo de configuracion: ");
     scanf("%s", ruta);
+    
     entradasalida_config = iniciar_config(ruta);
     
 
