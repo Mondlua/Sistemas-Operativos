@@ -39,6 +39,7 @@ void atender_cliente(void *void_args)
             interfaz* new_client = malloc(sizeof(interfaz));
             new_client->nombre_interfaz = recibir_interfaz(client_socket, logger);
             new_client->socket_interfaz = client_socket;
+            sem_init(&new_client->semaforo_interfaz, 0, 1);
             new_client->cola_block = queue_create();
             list_add(interfaces, new_client);
             sem_post(&sem_contador_int);
@@ -53,6 +54,7 @@ void atender_cliente(void *void_args)
                 free(interfaz_recibida); 
                 if (interfaz_desconectada != NULL) {
                     queue_destroy(interfaz_desconectada->cola_block);
+                    sem_destroy(&interfaz_desconectada->semaforo_interfaz);
                     free(interfaz_desconectada);
                 }
             } else {
@@ -64,30 +66,28 @@ void atender_cliente(void *void_args)
         case AVISO_OPERACION_INVALIDA:
         {
             logica_int = recibir_error_oi(client_socket);
+            sem_post(&habilitacion_io);
             break;
         }
         case AVISO_OPERACION_VALIDADA:
         {
             logica_int = recibir_op_validada(client_socket);
-
+            sem_post(&habilitacion_io);
             break;
         }
         case AVISO_OPERACION_FINALIZADA:
         {
-            //CAMBIAR PCB A ESTADO READY O EXIT
-          /*  
-            char* interfaz_recibida = recibir_op_finalizada(client_socket, logger);
+            char* interfaz_recibida = recibir_op_finalizada(client_socket);
             int posicion_interfaz = buscar_posicion_interfaz_por_nombre(interfaz_recibida);
             if (posicion_interfaz != -1) {
                 interfaz* interfaz_encontrada = (interfaz*)list_get(interfaces, posicion_interfaz);
-                //interfaz_encontrada->cola_block = queue_pop(pcb);
-                pcb = queue_pop(interfaz_encontrada->cola_block);
+                t_pcb* pcb=(t_pcb*)queue_pop(interfaz_encontrada->cola_block);
                 cambiar_a_cola(pcb, READY);
-                //DAR SIGNAL DE SEMAFORO PARA MANDAR LA INSTRUCCION
+                sem_post(&interfaz_encontrada->semaforo_interfaz);
             } else {
                 log_error(logger, "No se encontró la interfaz %s en la lista", interfaz_recibida);
                 free(interfaz_recibida); 
-                */
+            }
         }
         default:
             log_error(logger, "Algo anduvo mal en el server de %s", server_name);

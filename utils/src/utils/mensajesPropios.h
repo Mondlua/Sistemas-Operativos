@@ -23,6 +23,7 @@ void aviso_segun_cod_op(char* , int, int);
 char* recibir_interfaz(int socket_cliente, t_log* logger);
 char* recibir_desconexion(int socket_cliente, t_log* logger);
 int recibir_op_validada(int socket);
+char* recibir_op_finalizada(int socket_cliente);
 int recibir_error_oi(int socket);
 
 void* serializar_paquete(t_paquete* paquete, int bytes);

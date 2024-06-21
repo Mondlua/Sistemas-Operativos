@@ -18,6 +18,7 @@
 //#include "alg_planificacion.h"
 
 extern t_list* interfaces;
+extern sem_t habilitacion_io;
 extern sem_t sem_contador_int;
 extern int logica_int;
 
@@ -31,7 +32,8 @@ typedef struct
 
 typedef struct {
     char* nombre_interfaz;
-    int socket_interfaz;  
+    int socket_interfaz;
+    sem_t semaforo_interfaz;  
     t_queue* cola_block;
 } interfaz;
 
