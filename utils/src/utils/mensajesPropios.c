@@ -48,6 +48,12 @@ char* recibir_desconexion(int socket_cliente, t_log* logger)
     log_info(logger, "Interfaz desconectada: %s", buffer);
     return buffer;
 }
+char* recibir_op_finalizada(int socket_cliente)
+{
+    int size;
+    char* buffer = recibir_buffer(&size, socket_cliente);
+    return buffer;
+}
 
 //////////////////////////////* INSTRUCCIONES MEMORIA *//////////////////////////////////////
 

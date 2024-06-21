@@ -12,7 +12,7 @@
 #include <pthread.h>
 #include <utils/mensajesPropios.h>
 #include <semaphore.h>
-#include <utils/io_operation.h>
+#include "gestion_io.h"
 #include "memoriautils.h"
 #include <commons/string.h>
 

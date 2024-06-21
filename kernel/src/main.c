@@ -13,6 +13,7 @@ t_list* interfaces;
 sem_t sem_contador_int;
 sem_t grado_planificiacion;
 sem_t cola_ready; //ESTE ES PARA VER SI HAY COSAS EN READY PARA EJECUTAR
+sem_t habilitacion_io;
 int quantum;
 
 
@@ -85,6 +86,7 @@ int main(void)
     pthread_t hilo;
     pthread_create(&hilo, NULL, (void *)server_escuchar, args);
     sem_init(&sem_contador_int, 0, 0); //semaforo para lista de interfaces
+    sem_init(&habilitacion_io, 0, 0);
 
     // Consola
     consola_interactiva();

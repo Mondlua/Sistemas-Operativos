@@ -74,16 +74,14 @@ void atender_cliente(void *void_args)
         }
         case PC:
         {
-            usleep(retardo*1000);
             char * pc_recibido = recibir_pc(client_socket);
+            usleep(retardo*1000);
             uint32_t pc = atoi(pc_recibido);
             sem_wait(&semaforo_mem);
             t_instruccion* instruccion = (t_instruccion*)list_get(lista_arch,pc);
-            log_debug(logger, "Mando la instruccion: %s", instruccion->buffer->stream);
-            
             char* ins  = instruccion->buffer->stream;
             eliminar_linea_n(ins);
-            
+            log_debug(logger, "Mando la instruccion: %s", instruccion->buffer->stream);
             enviar_instruccion_mem(client_socket,instruccion);
            
             break;
@@ -92,6 +90,7 @@ void atender_cliente(void *void_args)
             instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
             parametros_io = recibir_io_stdin(client_socket);
             //GUARDAR TEXTO EN REGISTRO_DIRECCION
+            escribir_en_mem(parametros_io->texto, parametros_io->params.io_stdin_stdout.registro_direccion);
             free(parametros_io);
             break;
         }
@@ -99,7 +98,9 @@ void atender_cliente(void *void_args)
             instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
             parametros_io = recibir_io_stdout(client_socket);
             //BUSCAR EN REGISTRO_DIRECCION Y LEER EL REGISTRO_TAMAÑO
+            char* mensaje = leer_en_mem(parametros_io->params.io_stdin_stdout.registro_tamaño, parametros_io->params.io_stdin_stdout.registro_direccion);
             //MANDAR RESULTADO A IO
+            enviar_mensaje(mensaje, client_socket);
             free(parametros_io);
             break;
 
@@ -107,7 +108,7 @@ void atender_cliente(void *void_args)
         case ACCESO_TABLA:
         {
             char* pidpag = recibir_mensaje(client_socket, logger);
-            usleep(retardo);
+            usleep(retardo*1000);
             char** split = string_split(pidpag, "$");
             uint32_t pid = split[0];
             int pag = atoi(split[1]);
@@ -125,6 +126,7 @@ void atender_cliente(void *void_args)
         case CPU_RESIZE:
         {   
            char* mensaje = recibir_pedido_resize_tampid(client_socket, logger);
+           usleep(retardo*1000);
            char** split = string_split(mensaje, "/");
            uint32_t pid= atoi(split[0]);
            int tamanio = atoi(split[1]);
@@ -186,6 +188,7 @@ void atender_cliente(void *void_args)
         case PED_LECTURA:
         {
             t_list* buffer = recibir_pedido_lectura(client_socket, logger); 
+            usleep(retardo*1000);
             t_dir_fisica* dir_fisica = list_get(buffer,0);
             // RECIBIR TAMANIO A LEER
             int tamanio = list_get(buffer,1);;
@@ -197,6 +200,7 @@ void atender_cliente(void *void_args)
         }
         case PED_ESCRITURA:{
             t_dir_fisica* dir_fisica = recibir_pedido_escritura(client_socket, logger); 
+            usleep(retardo*1000);
             uint8_t valor = recibir_valor_escritura(client_socket, logger);
             usleep(retardo);    
             escribir_en_mem(int_to_char(valor), dir_fisica);
@@ -206,12 +210,14 @@ void atender_cliente(void *void_args)
         
         case CPY_STRING:{
             char* a_escribir = recibir_cpy_string(client_socket, logger);
+            usleep(retardo*1000);
             //escribir_a_mem(a_escribir, void* donde);
             break;
         }
         case FINALIZACION:
         {
             char* pidc = recibir_mensaje(client_socket, logger);
+            usleep(retardo*1000);
             uint32_t pid = atoi(pidc);
 
             t_tabla* tabla_pid = list_remove(tabla_pags, buscar_por_pid_return(pid));
