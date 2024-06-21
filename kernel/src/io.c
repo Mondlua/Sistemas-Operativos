@@ -10,8 +10,9 @@ void validar_peticion(instruccion_params* parametros, t_pcb* pcb, int codigo_op)
     if (tamanio_lista > 0) {
         interfaz* interfaz_encontrada = buscar_interfaz_por_nombre(parametros->interfaz);
         if (interfaz_encontrada != NULL) {
+            sem_wait(&interfaz_encontrada->semaforo_interfaz);
             enviar_instruccion_a_interfaz(interfaz_encontrada, parametros, codigo_op);
-            sleep(10); //CAMBIAR A SEMAFORO
+            wait(&habilitacion_io);
             if(logica_int){
                 queue_push(interfaz_encontrada->cola_block, pcb);
                 pcb->estado = BLOCKED;
@@ -26,6 +27,7 @@ void validar_peticion(instruccion_params* parametros, t_pcb* pcb, int codigo_op)
     } else {
         printf("La lista de interfaces está vacía.\n");
     }
+    sem_post(&sem_contador_int);
 }
 
 interfaz* buscar_interfaz_por_nombre(char* nombre_interfaz) {
@@ -85,8 +87,8 @@ instruccion_params* deserializar_io_stdin_stdout_con_interfaz(t_buffer_ins* buff
     parametros->interfaz = malloc(interfaz_len);
     memcpy(parametros->interfaz, buffer->stream + offset, interfaz_len);
     offset += interfaz_len;
-    memcpy(&(parametros->params.io_stdin_stdout.registro_direccion), buffer->stream + offset, sizeof(cpu_registros));
-    offset += sizeof(cpu_registros);
+    memcpy(&(parametros->params.io_stdin_stdout.registro_direccion), buffer->stream + offset, sizeof(t_dir_fisica));
+    offset += sizeof(t_dir_fisica);
     memcpy(&(parametros->params.io_stdin_stdout.registro_tamaño), buffer->stream + offset, sizeof(cpu_registros));
     return parametros;
 }

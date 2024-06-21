@@ -11,8 +11,8 @@ instruccion_params* deserializar_io_gen_sleep(t_buffer_ins* buffer)
 instruccion_params* deserializar_io_stdin_stdout(t_buffer_ins* buffer){
     instruccion_params* parametros = malloc(sizeof(instruccion_params));
     void* stream = buffer->stream;
-    memcpy(&(parametros->params.io_stdin_stdout.registro_direccion), stream, sizeof(cpu_registros));
-    stream += sizeof(cpu_registros);
+    memcpy(&(parametros->params.io_stdin_stdout.registro_direccion), stream, sizeof(t_dir_fisica));
+    stream += sizeof(t_dir_fisica);
     memcpy(&(parametros->params.io_stdin_stdout.registro_tamaño), stream, sizeof(cpu_registros));
     return parametros;
 }
@@ -53,7 +53,6 @@ void recibir_instruccion(char* tipo_interfaz)
             printf("Tipo de operación no válido.\n");
             free(instruccion->buffer);
             free(instruccion);
-            return NULL;
     }
     }
     else{
@@ -72,14 +71,14 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code){
     {
     case IO_GEN_SLEEP:{
         int result = 0;
-        int unidades_trabajo_recibidas = instruccion_recibir->params.io_gen_sleep_params.unidades_trabajo;
+        int unidades_trabajo_recibidas = parametros->params.io_gen_sleep_params.unidades_trabajo;
         result = unidades_trabajo_recibidas * tiempo_unidad_trabajo; 
         sleep(result);
         break;
     }
     case IO_STDIN_READ:{
         cpu_registros* tamaño = parametros->params.io_stdin_stdout.registro_tamaño;
-        char* texto = (char*)malloc(tamaño)
+        char* texto = (char*)malloc(sizeof(tamaño));
         printf("Ingrese el texto: ");
         fgets(texto, tamaño, stdin);
         t_paquete_instruccion* instruccion_enviar = malloc(sizeof(t_paquete_instruccion));
@@ -94,8 +93,7 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code){
         instruccion_enviar->codigo_operacion = IO_STDOUT_WRITE;
         enviar_instruccion_IO_Mem(instruccion_enviar,parametros,conexion_memoria);
         free(instruccion_enviar);
-        sleep(tiempo_unidad_trabajo);
-      
+        recibir_mensaje(conexion_memoria, entradasalida_log);
         break;
     }
     default:

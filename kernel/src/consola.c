@@ -48,7 +48,7 @@ void funciones(char* leido) {
 
 
 void ejecutar_script(char* path){
-    char* complemento = getcwd(NULL, 0); 
+    char* complemento = "/home/utnso"; 
     size_t len_path = strlen(path);
     size_t len_complemento = strlen(complemento);
     size_t len_total = len_path + len_complemento + 2;
