@@ -351,7 +351,6 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             free(paquete);
             break;
         }
-
         case 11:{
             enviar_motivo(BLOCK_IO, kernel_socket);
             instruccion_params* parametros =  malloc(sizeof(instruccion_params));
@@ -420,6 +419,11 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger){
         loggear_registros(pcb, logger);
     }
 
+    if(blockeo == EXIT_BLOCK)
+    {
+        pcb->motivo_desalojo = 0;
+        log_debug(cpu_log, "Envio PCB terminado.");
+    }
     // Atender interrupt
 }
 

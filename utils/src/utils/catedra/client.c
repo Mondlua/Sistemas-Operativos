@@ -14,6 +14,13 @@ int crear_conexion(char *ip, char* puerto)
 
 	int socket_cliente = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
 
+	const int enable = 1;
+	if (setsockopt(socket_cliente, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+	{
+		perror("Error al iniciar con el SO_REUSEADDR.");
+		return EXIT_FAILURE;
+	}
+
 	connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen);
 
 	freeaddrinfo(server_info);

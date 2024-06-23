@@ -12,12 +12,14 @@ void atender_cliente(void *void_args)
     char *server_name = args->server_name;
 
     
-    free(args);
+    //free(args);
 
     //MEMORIA a CPU
     while (kernel_socket != -1)
     {   
-        op_code cop = recibir_operacion(kernel_socket);
+        log_debug(cpu_log, "Esperando paquete.");
+        op_code cop = recibir_operacion(args->c_socket);
+        log_debug(cpu_log, "[%s] Paquete recibido con opcode %d en: %d", server_name, cop, args->c_socket);
 
         if (cop == -1)
         {
@@ -34,13 +36,13 @@ void atender_cliente(void *void_args)
         {
            t_pcb* pcb;
         
-            pcb = recibir_pcb(kernel_socket);            
+            pcb = recibir_pcb(args->c_socket);            
 			log_debug(logger, "Llego a CPU el <PID> es <%u>", pcb->pid);
           
             realizar_ciclo_inst(conexion_memoria_cpu, pcb, logger);
             log_debug(logger, "Complete ciclo");
           
-            enviar_pcb(pcb, kernel_socket);
+            enviar_pcb(pcb, args->c_socket);
 			break;
         }
         case FIN_QUANTUM:{
@@ -58,6 +60,7 @@ void atender_cliente(void *void_args)
     }
 
     log_warning(logger, "El cliente se desconecto de %s server", server_name);
+    free(args);
     return;
 }
 

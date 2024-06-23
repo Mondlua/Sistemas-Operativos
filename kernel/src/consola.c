@@ -1,53 +1,54 @@
 #include "consola.h"
 
-void consola_interactiva(){
+void consola_interactiva(t_planificacion *kernel_argumentos){
    pthread_t consola;
    
-    int resultado_creacion = pthread_create(&consola, NULL, leer_consola, NULL);
+    int resultado_creacion = pthread_create(&consola, NULL, leer_consola, (void*)kernel_argumentos);
     if (resultado_creacion != 0) {
         fprintf(stderr, "Error: No se pudo crear el hilo. Código de error: %d\n", resultado_creacion);
     }
     pthread_detach(consola);
 }
 
-void* leer_consola() 
+void* leer_consola(void* args) 
 {
+    t_planificacion *kernel_arguementos = (t_planificacion*) args;
     char* leido;
     while (1) {  
         leido = readline("> ");
     if (string_is_empty(leido)) {
         break; 
         }
-    funciones(leido);
+    funciones(leido, kernel_arguementos);
     free(leido);
     }
     pthread_exit(NULL);
 }
 
-void funciones(char* leido) {
+void funciones(char* leido, t_planificacion *kernel_argumentos) {
     char** funcion;
     funcion = string_split(leido, " ");
     if (string_equals_ignore_case(funcion[0], "EJECUTAR_SCRIPT") && string_array_size(funcion) == 2){
-        ejecutar_script(funcion[1]);
+        ejecutar_script(funcion[1], kernel_argumentos);
     } else if (string_equals_ignore_case(funcion[0], "INICIAR_PROCESO") && string_array_size(funcion) == 2) {
-        iniciar_proceso(funcion[1]);
+        iniciar_proceso(funcion[1], kernel_argumentos);
     } else if (string_equals_ignore_case(funcion[0], "FINALIZAR_PROCESO") && string_array_size(funcion) == 2) {
-        finalizar_proceso(atoi(funcion[1]));
+        finalizar_proceso(atoi(funcion[1]), kernel_argumentos);
     } else if (string_equals_ignore_case(funcion[0], "INICIAR_PLANIFICACION")) {
-        iniciar_planificacion();
+        iniciar_planificacion(kernel_argumentos);
     } else if (string_equals_ignore_case(funcion[0], "DETENER_PLANIFICACION")) {
-        detener_planificacion();
+        detener_planificacion(kernel_argumentos);
     } else if (string_equals_ignore_case(funcion[0], "MULTIPROGRAMACION") && string_array_size(funcion) == 2) {
-        multiprogramacion(funcion[1]);
+        multiprogramacion(funcion[1], kernel_argumentos);
     } else if (string_equals_ignore_case(funcion[0], "PROCESO_ESTADO")) {
-        proceso_estado();
+        proceso_estado(kernel_argumentos);
     } else if (!string_is_empty(leido)){
         log_error(kernel_log, ">> COMANDO ERRONEO!");
     }
 }
 
 
-void ejecutar_script(char* path){
+void ejecutar_script(char* path, t_planificacion *kernel_argumentos){
     char* complemento = "/home/utnso"; 
     size_t len_path = strlen(path);
     size_t len_complemento = strlen(complemento);
@@ -81,7 +82,7 @@ void ejecutar_script(char* path){
         }*/
 
         log_info(kernel_log, ">> Ejecutando comando: %s", linea);
-        funciones(linea);
+        funciones(linea, kernel_argumentos);
     }
 
     free(linea);
@@ -89,34 +90,17 @@ void ejecutar_script(char* path){
     log_info(kernel_log, ">> Finalizó la ejecución del script %s", path);
 }
 
-void iniciar_proceso(char* path){
+void iniciar_proceso(char* path, t_planificacion *kernel_argumentos){
 
     t_pcb *pcb;
 
     static uint32_t pid_contador = 0;
 
     pcb = crear_nuevo_pcb(&pid_contador);
-    queue_push(colaNew, pcb);
-    //int grado_multiprog = config_get_int_value(kernel_config, "GRADO_MULTIPROGRAMACION");
+    queue_push(kernel_argumentos->colas.new, pcb);
 
-    /*if(nivel_multiprog<grado_actual){
-        queue_pop(colaNew);
-        queue_push(colaReady, pcb);
-        pcb->estado=READY;
-        log_info(kernel_log,"Proceso con PID %u pasado a la cola READY",pcb->pid);
-    }*/
+    log_debug(kernel_log, ">> Se crea el proceso %s en NEW", path);
 
-    
-    pcb = queue_pop(colaNew);
-    //sem_wait(&grado_planificiacion);
-    queue_push(colaReady, pcb);
-    sem_post(&cola_ready);
-    //ver si se puede pasar a ready (nivel multiprog)
-    pcb->estado=READY;
-    log_info(kernel_log,"Proceso con PID %u pasado a la cola READY",pcb->pid);
-    log_info(kernel_log, ">> Se crea el proceso %s en NEW", path);
-
-   // char* pathpid = path+"$"+int_to_char(pcb->pid); ACA DA ERROR DE OPERANDOS INVALIDOS
     char *pid_str = int_to_char(pcb->pid);
     size_t len = strlen(path) + strlen(pid_str) + 2;
     char *pathpid = malloc(len);
@@ -129,7 +113,7 @@ void iniciar_proceso(char* path){
 
 }
 
-void finalizar_proceso(uint32_t pid){
+void finalizar_proceso(uint32_t pid, t_planificacion *kernel_argumentos){
 
     borrar_pcb(pid);
 
@@ -141,15 +125,17 @@ void finalizar_proceso(uint32_t pid){
 
 // bool tabla_pid;
 
-void iniciar_planificacion(){
-    planificador_planificar();
+void iniciar_planificacion(t_planificacion *kernel_argumentos){
+    kernel_argumentos->detener_planificacion = 0;
+    planificador_planificar(kernel_argumentos);
     log_info(kernel_log, ">> Se inicio la planificacion");
 }
-void detener_planificacion(){
+void detener_planificacion(t_planificacion *kernel_argumentos){
+    kernel_argumentos->detener_planificacion = 1;
     log_info(kernel_log, ">> Se detiene la planificacion");
 }
 
-void multiprogramacion(char* valor){
+void multiprogramacion(char* valor, t_planificacion *kernel_argumentos){
     
 
     config_set_value(kernel_config, "GRADO_MULTIPROGRAMACION", valor);
@@ -169,7 +155,7 @@ void multiprogramacion(char* valor){
     log_info(kernel_log, ">> Se cambio el grado de multiprogamacion a %s", valor);
 }
 
-void proceso_estado(){
+void proceso_estado(t_planificacion *kernel_argumentos){
 
     log_info(kernel_log, ">> Listado de procesos por estado ...");
     for (t_proceso_estado estado = NEW; estado <= EXIT; estado++)

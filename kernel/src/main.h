@@ -28,4 +28,7 @@ extern int conexion_cpu_interrupt;
 
 extern int quantum;
 
+void* conectar_dispatch(void* args);
+void* conectar_interrupt(void* args);
+
 #endif

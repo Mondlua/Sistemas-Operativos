@@ -174,8 +174,10 @@ void enviar_pcb(t_pcb* pcb, int socket_cliente){
     agregar_a_paquete(paquete, &(pcb->quantum), sizeof(int));
     agregar_a_paquete(paquete, pcb->registros, sizeof(cpu_registros));
     agregar_a_paquete(paquete, &(pcb->estado), sizeof(t_proceso_estado));
+    agregar_a_paquete(paquete, &(pcb->motivo_desalojo), sizeof(int));
     enviar_paquete(paquete, socket_cliente);
     eliminar_paquete(paquete);
+    printf("Paquete enviado a socket: %d\n", socket_cliente);
 }
 
 t_pcb* recibir_pcb(int socket_cliente) {
@@ -186,6 +188,7 @@ t_pcb* recibir_pcb(int socket_cliente) {
     pcb->quantum = *((int*)list_get(valores_paquete, 1));
     pcb->registros = (cpu_registros*)list_get(valores_paquete, 2);
     pcb->estado = *((t_proceso_estado*)list_get(valores_paquete, 3));
+    pcb->motivo_desalojo = *((int*)list_get(valores_paquete, 4));
     list_destroy(valores_paquete);
     return pcb;
 }
