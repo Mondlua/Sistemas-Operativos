@@ -15,7 +15,7 @@
 #include <utils/io_operation.h>
 #include <commons/collections/queue.h>
 #include <utils/funcionesUtiles.h>
-//#include "alg_planificacion.h"
+#include "alg_planificacion.h"
 
 extern t_list* interfaces;
 extern sem_t habilitacion_io;
@@ -27,6 +27,7 @@ typedef struct
     t_log *log;
     int c_socket;
     char *server_name;
+    t_planificacion *planificador;
 
 } t_atender_cliente_args;
 
@@ -37,6 +38,7 @@ typedef struct {
     t_queue* cola_block;
 } interfaz;
 
+void atender_cliente(void* void_args);
 int server_escuchar(void *arg);
 int buscar_posicion_interfaz_por_nombre(char* nombre_interfaz);
 //t_pcb* recibir_pcb(int socket_cliente);

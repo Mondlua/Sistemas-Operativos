@@ -45,8 +45,6 @@ int main(void)
 
     kernel_config = iniciar_config("kernel.config");
 
-    /* KERNEL - Cliente */
-
     // Extraer configs
     ip_memoria = config_get_string_value(kernel_config,"IP_MEMORIA");
     puerto_memoria = config_get_string_value(kernel_config, "PUERTO_MEMORIA");
@@ -54,26 +52,49 @@ int main(void)
     ip_cpu = config_get_string_value(kernel_config, "IP_CPU");
     puerto_cpu_dispatch = config_get_string_value(kernel_config, "PUERTO_CPU_DISPATCH");
     puerto_cpu_interrupt = config_get_string_value(kernel_config, "PUERTO_CPU_INTERRUPT");
-    
-    // Establecer conexiones
+
+    quantum = config_get_int_value(kernel_config, "QUANTUM");
+    algoritmo = config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
+    grado_multiprog = config_get_int_value(kernel_config, "GRADO_MULTIPROGRAMACION");
+
+    puerto_escucha = config_get_string_value(kernel_config, "PUERTO_ESCUCHA");
+
+    // Inicializo la estructura del planificador
+    t_planificacion *planificador = inicializar_t_planificacion(kernel_config, kernel_log);
+
+
+    // ------- Establecer conexiones --------
+    // ---- Memoria ----
     conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
     log_info(kernel_log, "KERNEL se conectó a MEMORIA");
     send_handshake(conexion_memoria, kernel_log, "KERNEL / MEMORIA");
 
-    conexion_cpu_dispatch = crear_conexion(ip_cpu, puerto_cpu_dispatch);
-    log_info(kernel_log, "KERNEL se conectó a CPU DISPATCH");
-    send_handshake(conexion_cpu_dispatch, kernel_log, "KERNEL / CPU DISPATCH");
+    planificador->socket_memoria = conexion_memoria;
 
-    /*conexion_cpu_interrupt = crear_conexion(ip_cpu, puerto_cpu_interrupt);
-    log_info(kernel_log, "KERNEL se conectó a CPU INTERRUPT");
-    send_handshake(conexion_cpu_interrupt, kernel_log, "KERNEL / CPU INTERRUPT");*/
+    // ---- CPU dispatch ----
+    pthread_t hilo_conexion_dispatch;
+    pthread_create(&hilo_conexion_dispatch, NULL, conectar_dispatch, (void*)planificador);
+    pthread_join(hilo_conexion_dispatch, NULL);
 
+    // ---- Hilo escucha dispatch-kernel ----
+    t_atender_cliente_args *args_dispatch = malloc(sizeof(t_atender_cliente_args));
+    args_dispatch->c_socket = planificador->socket_cpu_dispatch;
+    args_dispatch->log = kernel_log;
+    args_dispatch->server_name = "Dispatch - Kernel";
+    args_dispatch->planificador = planificador;
 
-    /* KERNEL - Servidor */
-    // Extraer configs
-    
-    puerto_escucha = config_get_string_value(kernel_config, "PUERTO_ESCUCHA");
+    pthread_t hilo_escucha_dispatch_kernel;
+    pthread_create(&hilo_escucha_dispatch_kernel, NULL, (void*) atender_cliente, (void*) args_dispatch);
+    pthread_detach(hilo_escucha_dispatch_kernel);
 
+    usleep(30);
+
+    // ---- CPU interrupt ----
+    pthread_t hilo_conexion_interrupt;
+    pthread_create(&hilo_conexion_interrupt, NULL, conectar_interrupt, (void*)planificador);
+    pthread_join(hilo_conexion_dispatch, NULL);
+
+    /* KERNEL - Servidor */  
     // Inicio server
     kernel_server = iniciar_servidor(puerto_escucha, kernel_log);
     log_info(kernel_log, "KERNEL listo para recibir clientes");
@@ -82,6 +103,7 @@ int main(void)
     args->log = kernel_log;
     args->c_socket = kernel_server;
     args->server_name = "Kernel"; 
+    args->planificador = planificador;
     
     pthread_t hilo;
     pthread_create(&hilo, NULL, (void *)server_escuchar, args);
@@ -89,21 +111,13 @@ int main(void)
     sem_init(&habilitacion_io, 0, 0);
 
     // Consola
-    consola_interactiva();
-
-    // nivel_multiprog = queue_size(colaReady)+queue_size(colaBlocked)+queue_size(colaExec); 
+    consola_interactiva(planificador);
 
     // Planificador
-    inicializar_colas_estados();
-
-    quantum = config_get_int_value(kernel_config, "QUANTUM");
-    algoritmo = config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
-    grado_multiprog = config_get_int_value(kernel_config, "GRADO_MULTIPROGRAMACION");
-
-    t_planificacion *planificador = inicializar_t_planificacion(conexion_cpu_dispatch, conexion_cpu_interrupt);
+    // inicializar_colas_estados();
 
     pthread_t hilo_planificacion;
-    pthread_create(&hilo_planificacion, NULL, hilo_planificador, planificador);
+    pthread_create(&hilo_planificacion, NULL, hilo_planificador, (void *)planificador);
     pthread_detach(hilo_planificacion);
 
     sem_init(&grado_planificiacion, 0, grado_multiprog);
@@ -115,15 +129,37 @@ int main(void)
 
     list_destroy(interfaces);
     free(args);
-    free(kernel_log);
-    free(kernel_config);
-    free(colaNew);
-    free(colaExit);
-    free(colaReady);
-    free(colaBlocked);
-    free(colaExec);
+    log_destroy(kernel_log);
+    config_destroy(kernel_config);
+    // free(colaNew);
+    // free(colaExit);
+    // free(colaReady);
+    // free(colaBlocked);
+    // free(colaExec);
     sem_destroy(&planificador->planificar);
     sem_destroy(&sem_contador_int);
     free(planificador);    
     return 0;
+}
+
+void* conectar_dispatch(void* args)
+{
+    t_planificacion *planificacion = (t_planificacion*) args;
+
+    planificacion->socket_cpu_dispatch = crear_conexion(planificacion->config.config_leida.ip_cpu, planificacion->config.config_leida.puerto_cpu_dispatch);
+    log_info(kernel_log, "KERNEL se conectó a CPU DISPATCH");
+    send_handshake(planificacion->socket_cpu_dispatch, kernel_log, "KERNEL / CPU DISPATCH");
+
+    log_debug(kernel_log, "Conectado a dispatch en: %d", planificacion->socket_cpu_dispatch);
+}
+
+void* conectar_interrupt(void* args)
+{
+    t_planificacion *planificacion = (t_planificacion*) args;
+
+    planificacion->socket_cpu_interrupt = crear_conexion(planificacion->config.config_leida.ip_cpu, planificacion->config.config_leida.puerto_cpu_interrupt);
+    log_info(kernel_log, "KERNEL se conectó a CPU INTERRUPT");
+    send_handshake(planificacion->socket_cpu_interrupt, kernel_log, "KERNEL / CPU INTERRUPT");
+
+    log_debug(kernel_log, "Conectado a interrupt en: %d", planificacion->socket_cpu_interrupt);
 }

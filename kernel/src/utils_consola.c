@@ -15,8 +15,9 @@ t_pcb *crear_nuevo_pcb(uint32_t *pid_contador)
     nuevo_pcb->pid = *pid_contador;
     nuevo_pcb->quantum = config_get_int_value(kernel_config, "QUANTUM");
     nuevo_pcb->estado = NEW;
+    nuevo_pcb->motivo_desalojo = 0;
 
-    log_info(kernel_log, "Se crea el proceso con PID = %u en NEW", nuevo_pcb->pid);
+    log_info(kernel_log, "Se crea el proceso con %d en NEW", nuevo_pcb->pid);
     (*pid_contador)++;
     
     return nuevo_pcb;
