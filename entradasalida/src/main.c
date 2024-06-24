@@ -18,7 +18,7 @@ int main(void) {
     char* interfaz;
 
     char ruta[200];
-    nombre_interfaz = malloc(sizeof(char));
+    nombre_interfaz = malloc(sizeof(256));
 
     entradasalida_log = iniciar_logger("entradasalida.log","entradasalida");
     printf("Ingrese el nombre de la interfaz: ");
@@ -31,26 +31,14 @@ int main(void) {
 
 	/* I/O - Cliente */
 
-    // Extraer configs
-
-	ip_memoria = config_get_string_value(entradasalida_config,"IP_MEMORIA");  
-    puerto_memoria = config_get_string_value(entradasalida_config, "PUERTO_MEMORIA");
-
+    interfaz = config_get_string_value(entradasalida_config, "TIPO_INTERFAZ");
     ip_kernel= config_get_string_value(entradasalida_config,"IP_KERNEL");
     puerto_kernel = config_get_string_value(entradasalida_config, "PUERTO_KERNEL");
-    // Establecer conexiones
-
-    conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
-    log_info(entradasalida_log, "I/O conectado a MEMORIA");
-    send_handshake(conexion_memoria, entradasalida_log, "I/O / MEMORIA");
-
+    extraer_segun_tipo_io(entradasalida_config, interfaz);
     conexion_kernel = crear_conexion(ip_kernel, puerto_kernel);
     log_info(entradasalida_log, "I/O conectado a KERNEL");
     send_handshake(conexion_kernel, entradasalida_log, "I/O / KERNEL");
 
-    // Interfaces
-    interfaz = config_get_string_value(entradasalida_config, "TIPO_INTERFAZ");
-    tiempo_unidad_trabajo = config_get_int_value(entradasalida_config, "TIEMPO_UNIDAD_TRABAJO");
     aviso_segun_cod_op(nombre_interfaz, conexion_kernel, INTERFAZ);
     recibir_instruccion(interfaz);
     terminar_io();
@@ -71,4 +59,32 @@ void terminar_io(){
             break;  // Sale del bucle
         }
     }
+}
+
+void extraer_segun_tipo_io(t_config* config, char* tipo_interfaz){
+    if(strcmp(tipo_interfaz, "GENERICA") == 0){
+        tiempo_unidad_trabajo = config_get_int_value(config, "TIEMPO_UNIDAD_TRABAJO");
+    }
+    else if(strcmp(tipo_interfaz, "STDIN") == 0){
+        conectar_con_memoria(config);
+    }
+    else if(strcmp(tipo_interfaz, "STDOUT") == 0 ){
+        conectar_con_memoria(config);
+    }
+    else if(strcmp(tipo_interfaz, "DIALFS") == 0 ){
+        tiempo_unidad_trabajo = config_get_int_value(config, "TIEMPO_UNIDAD_TRABAJO");
+        char* path_base_dialfs = config_get_string_value(config, "PATH_BASE_DIALFS");
+        int block_size = config_get_int_value(config, "BLOCK_SIZE");
+        int block_count = config_get_int_value(config, "BLOCK_COUNT");
+        int retraso_compactacion = config_get_int_value(config, "RETRASO_COMPACTACION");
+        conectar_con_memoria(config);
+    }
+}
+
+void conectar_con_memoria(t_config* config){
+    char* ip_memoria = config_get_string_value(config, "IP_MEMORIA");  
+    char* puerto_memoria = config_get_string_value(config, "PUERTO_MEMORIA");
+    conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+    log_info(entradasalida_log, "I/O conectado a MEMORIA");
+    send_handshake(conexion_memoria, entradasalida_log, "I/O / MEMORIA");
 }

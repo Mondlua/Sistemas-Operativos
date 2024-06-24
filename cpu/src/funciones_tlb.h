@@ -11,7 +11,7 @@ typedef struct {
     uint32_t pid;
     int pagina;
     int frame;
-    bool validez; //sería si está en uso o no esa entrada (ocupada)
+    int validez; //sería si está en uso o no esa entrada (ocupada)
     int ultimo_acceso;
 } Entrada;
 
