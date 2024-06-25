@@ -258,10 +258,20 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             char* registro_direccion = list_get(decode->registroCpu,1);
             uint8_t dir_logica = (uint8_t) obtener_valor_registro(pcb->registros, registro_direccion);
             t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
+
             uint32_t tamanio = sizeof(registro_datos);
-            enviar_pedido_lectura(conexion_memoria_cpu, dir_fisica, tamanio);
+            int num_frame = dir_fisica->nro_frame;
+            int desplazamiento = dir_fisica->desplazamiento;
+
+            char* tam = strcat(int_to_char(tamanio), "/");
+            char* tamframe = strcat(tam, int_to_char(num_frame));
+            char* tamframe1 = strcat(tamframe, "/");
+            char* enviar = strcat(tamframe1, int_to_char(desplazamiento));
+            enviar_pedido_lectura(conexion_memoria_cpu, enviar);
+            int i = recibir_operacion(conexion_memoria_cpu);
             char* leido = recibir_mensaje(conexion_memoria_cpu, cpu_log);
-            asignar_registro(pcb->registros, registro_datos, leido);
+            asignar_registro(pcb->registros, registro_datos, atoi(leido));
+            free(leido);
             break;
         }
         case MOV_OUT:{
@@ -270,17 +280,30 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             uint8_t dir_logica = (uint8_t) obtener_valor_registro(pcb->registros, registro_direccion);
 
             uint8_t valor = (uint8_t) obtener_valor_registro(pcb->registros, registro_datos);
+
             char* aescribir = int_to_char(valor);
             int size_aescribir = sizeof(aescribir);
             int cant_pags = size_aescribir/tam_pag;
+
             if(cant_pags <=1){        
                 t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
-                enviar_pedido_escritura(conexion_memoria_cpu, dir_fisica);
-                enviar_valor_escritura(conexion_memoria_cpu, valor); 
+
+                int num_frame = dir_fisica->nro_frame;
+                int desplazamiento = dir_fisica->desplazamiento;
+                
+
+                char* valorr= strcat(int_to_char(valor), "/");
+                char* tamframe = strcat(valorr, int_to_char(num_frame));
+                char* tamframe1 = strcat(tamframe, "/");
+                char* enviar = strcat(tamframe1, int_to_char(desplazamiento));
+
+
+                enviar_pedido_escritura(conexion_memoria_cpu, enviar);
+                printf("Entre al if de move out\n y el valor es %s, en num %d", int_to_char(valor), atoi(int_to_char(valor)));
             }
             else{
                 // HACER QUE ESCRIBA SI NO ENTRA EN UNA PAG
-               
+               printf("Entre al else de move out\n");
                //dl/tamPag=nroPag
                int cant_bytes= strlen(aescribir);
                 uint8_t dir_logica_final = dir_logica + cant_bytes;

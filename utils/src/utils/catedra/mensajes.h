@@ -67,13 +67,11 @@ t_list* recibir_paquete(int);
 
 bool send_handshake(int conexion, t_log* logger, const char* conexion_name);
 bool rcv_handshake(int fd_conexion);
-void enviar_pedido_lectura(int socket_cliente,  t_dir_fisica* dir_fisica, uint32_t tam);
 
-t_list* recibir_pedido_lectura(int socket_cliente, t_log* logger);
-void enviar_pedido_escritura(int socket_cliente,  t_dir_fisica* dir_fisica);
-void enviar_valor_escritura(int socket_cliente,  uint8_t valor);
-uint8_t recibir_valor_escritura(int socket_cliente, t_log* logger);
-t_dir_fisica* recibir_pedido_escritura(int socket_cliente, t_log* logger);
+void enviar_pedido_lectura(int socket_cliente, char* mensaje);
+char* recibir_pedido_lectura(int socket_cliente, t_log* logger);
+void enviar_pedido_escritura(int socket_cliente,  char* mensaje);
+char* recibir_pedido_escritura(int socket_cliente, t_log* logger);
 void enviar_pedido_resize_tampid(int socket_cliente, char* tampid);
 
 char* recibir_pedido_resize_tampid(int socket_cliente, t_log* logger);

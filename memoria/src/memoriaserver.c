@@ -187,24 +187,34 @@ void atender_cliente(void *void_args)
         }
         case PED_LECTURA:
         {
-            t_list* buffer = recibir_pedido_lectura(client_socket, logger); 
+            char* buffer = recibir_pedido_lectura(client_socket, logger); 
+            char** arrayIns = string_split(buffer,"/");
+            int tamanio = atoi(arrayIns[0]);
+            int frame= atoi(arrayIns[1]);
+            int desp=atoi(arrayIns[2]);
             usleep(retardo*1000);
-            t_dir_fisica* dir_fisica = list_get(buffer,0);
+            t_dir_fisica* dir_fisica = malloc(sizeof(t_dir_fisica*));
+            dir_fisica->nro_frame = frame;
+            dir_fisica->desplazamiento = desp;
             // RECIBIR TAMANIO A LEER
-            int tamanio = list_get(buffer,1);;
             usleep(retardo);
             char* leido = leer_en_mem(tamanio, dir_fisica);
-            enviar_mensaje(leido, client_socket);
-            free(leido);   
+            printf("lei %s\n", leido);
+            enviar_mensaje(leido, client_socket);   
             break;
         }
         case PED_ESCRITURA:{
-            t_dir_fisica* dir_fisica = recibir_pedido_escritura(client_socket, logger); 
-            usleep(retardo*1000);
-            uint8_t valor = recibir_valor_escritura(client_socket, logger);
-            usleep(retardo);    
+            char* buffer = recibir_pedido_escritura(client_socket, logger);  
+            char** arrayIns = string_split(buffer,"/");
+            uint8_t valor = (uint8_t) atoi(arrayIns[0]);
+            int frame= atoi(arrayIns[1]);
+            int desp=atoi(arrayIns[2]);
+            t_dir_fisica* dir_fisica = malloc(sizeof(t_dir_fisica*));
+            dir_fisica->nro_frame = frame;
+            dir_fisica->desplazamiento = desp;
+            usleep(retardo*1000);   
             escribir_en_mem(int_to_char(valor), dir_fisica);
-
+            log_info(logger, "Escribi en Memoria <%u>", valor);
             break;
         }
         
