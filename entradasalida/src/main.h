@@ -9,5 +9,7 @@
 #include <instrucciones.h>
 
 void terminar_io();
+void extraer_segun_tipo_io(t_config* config, char* tipo_interfaz);
+void conectar_con_memoria(t_config* config);
 
 #endif
