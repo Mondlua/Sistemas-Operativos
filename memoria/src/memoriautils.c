@@ -5,7 +5,7 @@ int tam_memoria;
 t_list* tabla_pags;
 void* memoria;
 t_bitarray* bitarray;
-
+t_bitarray* escrito;
 
 void escribir_en_mem(char* aescribir, t_dir_fisica* dir_fisica){
     //DIRECCION FISICA = FRAME Y DESPLAZAMIENTO

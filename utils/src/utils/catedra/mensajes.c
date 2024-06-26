@@ -45,7 +45,6 @@ t_list* recibir_paquete(int socket_cliente) {
         int tamanio;
         memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
         desplazamiento += sizeof(int);
-        printf("el tamanio es %d\n", tamanio);
         char* valor = malloc(tamanio);
         if (!valor) {
             fprintf(stderr, "Error al asignar memoria para valor\n");
