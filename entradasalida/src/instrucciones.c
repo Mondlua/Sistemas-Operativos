@@ -93,7 +93,8 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code){
         instruccion_enviar->codigo_operacion = IO_STDOUT_WRITE;
         enviar_instruccion_IO_Mem(instruccion_enviar,parametros,conexion_memoria);
         free(instruccion_enviar);
-        recibir_mensaje(conexion_memoria, entradasalida_log);
+        char* imprimir = recibir_mensaje(conexion_memoria, entradasalida_log);
+        free(imprimir);
         break;
     }
     default:
