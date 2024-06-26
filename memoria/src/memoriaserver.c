@@ -75,7 +75,7 @@ void atender_cliente(void *void_args)
         case PC:
         {
             char * pc_recibido = recibir_pc(client_socket);
-            usleep(retardo*1000);
+            //usleep(retardo*1000);
             uint32_t pc = atoi(pc_recibido);
             sem_wait(&semaforo_mem);
             t_instruccion* instruccion = (t_instruccion*)list_get(lista_arch,pc);
@@ -89,14 +89,17 @@ void atender_cliente(void *void_args)
         case IO_STDIN_READ:{
             instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
             parametros_io = recibir_io_stdin(client_socket);
+            usleep(retardo*1000);
             //GUARDAR TEXTO EN REGISTRO_DIRECCION
             escribir_en_mem(parametros_io->texto, parametros_io->params.io_stdin_stdout.registro_direccion);
+            enviar_mensaje("OK", client_socket);
             free(parametros_io);
             break;
         }
         case IO_STDOUT_WRITE: {
             instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
             parametros_io = recibir_io_stdout(client_socket);
+            usleep(retardo*1000);
             //BUSCAR EN REGISTRO_DIRECCION Y LEER EL REGISTRO_TAMAÑO
             char* mensaje = leer_en_mem(parametros_io->params.io_stdin_stdout.registro_tamaño, parametros_io->params.io_stdin_stdout.registro_direccion);
             //MANDAR RESULTADO A IO
@@ -130,7 +133,6 @@ void atender_cliente(void *void_args)
            char** split = string_split(mensaje, "/");
            uint32_t pid= atoi(split[0]);
            int tamanio = atoi(split[1]);
-            usleep(retardo);
 
             t_tabla* tabla_pid = buscar_por_pid_return(pid);
             int cant_pags;
@@ -191,8 +193,7 @@ void atender_cliente(void *void_args)
             usleep(retardo*1000);
             t_dir_fisica* dir_fisica = list_get(buffer,0);
             // RECIBIR TAMANIO A LEER
-            int tamanio = list_get(buffer,1);;
-            usleep(retardo);
+            int tamanio = list_get(buffer,1);
             char* leido = leer_en_mem(tamanio, dir_fisica);
             enviar_mensaje(leido, client_socket);
             free(leido);   
@@ -202,7 +203,6 @@ void atender_cliente(void *void_args)
             t_dir_fisica* dir_fisica = recibir_pedido_escritura(client_socket, logger); 
             usleep(retardo*1000);
             uint8_t valor = recibir_valor_escritura(client_socket, logger);
-            usleep(retardo);    
             escribir_en_mem(int_to_char(valor), dir_fisica);
 
             break;
