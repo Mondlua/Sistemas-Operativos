@@ -187,23 +187,64 @@ void atender_cliente(void *void_args)
         }
         case PED_LECTURA:
         {
-            t_list* buffer = recibir_pedido_lectura(client_socket, logger); 
+            char* buffer = recibir_pedido_lectura(client_socket, logger); 
+            char** arrayIns = string_split(buffer,"/");
+            int tamanio = atoi(arrayIns[0]);
+            int frame= atoi(arrayIns[1]);
+            int desp=atoi(arrayIns[2]);
+
             usleep(retardo*1000);
-            t_dir_fisica* dir_fisica = list_get(buffer,0);
+
+            t_dir_fisica* dir_fisica = malloc(sizeof(t_dir_fisica*));
+            dir_fisica->nro_frame = frame;
+            dir_fisica->desplazamiento = desp;
             // RECIBIR TAMANIO A LEER
-            int tamanio = list_get(buffer,1);;
             usleep(retardo);
             char* leido = leer_en_mem(tamanio, dir_fisica);
-            enviar_mensaje(leido, client_socket);
-            free(leido);   
+            printf("lei %s\n", leido);
+            enviar_mensaje(leido, client_socket);   
             break;
         }
         case PED_ESCRITURA:{
-            t_dir_fisica* dir_fisica = recibir_pedido_escritura(client_socket, logger); 
-            usleep(retardo*1000);
-            uint8_t valor = recibir_valor_escritura(client_socket, logger);
-            usleep(retardo);    
+            char* buffer = recibir_pedido_escritura(client_socket, logger);  
+            char** arrayIns = string_split(buffer,"/");
+            uint8_t valor = (uint8_t) atoi(arrayIns[0]);
+            int frame= atoi(arrayIns[1]);
+            int desp=atoi(arrayIns[2]);
+            uint32_t pid =atoi(arrayIns[3]);
+
+            t_dir_fisica* dir_fisica = malloc(sizeof(t_dir_fisica*));
+            dir_fisica->nro_frame = frame;
+            dir_fisica->desplazamiento = desp;
+            usleep(retardo*1000);   
             escribir_en_mem(int_to_char(valor), dir_fisica);
+            log_info(logger, "Escribi en Memoria <%u>", valor);
+            bitarray_set_bit(escrito, frame);
+
+            int frame_siguiente_disp;
+            t_tabla* tabla_pid = buscar_por_pid_return(pid);
+            bool encontrado = false;
+            for (int i = 0; i < bitarray->size; i++) {
+
+                if (bitarray_test_bit(bitarray, i) == 1 && bitarray_test_bit(escrito, i)==0) {
+
+                    for(int x = 0; x< list_size(tabla_pid->tabla); x++){
+                        if(list_get(tabla_pid->tabla,x) == i){
+                        frame_siguiente_disp = i;
+                        encontrado = true;
+                        printf("el frame es %d \n ", frame_siguiente_disp);
+                        break;
+                        }
+                            
+                    }
+                }
+                if (encontrado) {
+                     break;
+                }
+            }
+            
+            enviar_mensaje(int_to_char(frame_siguiente_disp), client_socket);
+            printf("envio mensaje frame siguiente %s \n", int_to_char(frame_siguiente_disp));
 
             break;
         }

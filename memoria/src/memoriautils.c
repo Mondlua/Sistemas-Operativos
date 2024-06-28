@@ -5,7 +5,7 @@ int tam_memoria;
 t_list* tabla_pags;
 void* memoria;
 t_bitarray* bitarray;
-
+t_bitarray* escrito;
 
 void escribir_en_mem(char* aescribir, t_dir_fisica* dir_fisica){
     //DIRECCION FISICA = FRAME Y DESPLAZAMIENTO
@@ -23,6 +23,8 @@ char* leer_en_mem(int tamanio, t_dir_fisica* dir_fisica){
 
     int nro_frame = dir_fisica->nro_frame;
     int desplazamiento = dir_fisica->desplazamiento;
+
+    printf("nro frame %d y desp %d", nro_frame, desplazamiento);
     void* espacio_de_mem = (char*)memoria + (nro_frame * tam_pagina) + desplazamiento;
 
     char* leido = malloc(tamanio);
