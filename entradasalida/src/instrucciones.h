@@ -9,12 +9,13 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdint.h>
+#include "DialFS.h"
 
 extern char* nombre_interfaz;
 extern t_log* entradasalida_log;
 extern int conexion_kernel;
 extern int conexion_memoria;
-extern int tiempo_unidad_trabajo;
+
 
 void recibir_instruccion(char*interfaz);
 instruccion_params* deserializar_io_gen_sleep(t_buffer_ins* buffer);

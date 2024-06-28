@@ -3,17 +3,20 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
 #include <sys/stat.h>
+#include <sys/mman.h>
 #include <commons/bitarray.h>
 #include <commons/config.h>
 
 extern int block_size;
 extern int block_count;
+extern int tiempo_unidad_trabajo;
+extern char* path_base_dialfs;
 
-void inicio_filesystem(char* ruta);
-
-
+void inicio_filesystem();
 
 #endif
