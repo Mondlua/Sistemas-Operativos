@@ -30,8 +30,16 @@ int main(void) {
     bitarray = bitarray_create_with_mode(bitarray_data, num_frames, LSB_FIRST);
     
     for(int i=0; i<num_frames; i++){
-        bitarray_clean_bit(bitarray, i); //0 esta libre
+        bitarray_clean_bit(bitarray, i); 
     }
+    //INICIALIZO BITARRAY ESCRITO//
+    char* escrito_data = malloc(num_frames); 
+    escrito = bitarray_create_with_mode(escrito_data, num_frames, LSB_FIRST);
+    
+    for(int i=0; i<num_frames; i++){
+        bitarray_clean_bit(escrito, i); 
+    }
+
     //TABLA//
     tabla_pags = list_create();
 

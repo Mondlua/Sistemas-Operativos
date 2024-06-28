@@ -6,7 +6,7 @@ void iniciar_tlb() {
     tlb = malloc(sizeof(TLB));
     tlb->entradas = (Entrada*)malloc(cant_entradas_tlb * sizeof(Entrada));
     for (int i = 0; i < cant_entradas_tlb; i++) {
-        tlb->entradas[i].validez = false;  
+        tlb->entradas[i].validez = 0;  
     }
     tlb->siguiente_fifo = 0;
     tlb->contador_lru = 0;
@@ -37,7 +37,7 @@ t_dir_fisica* mmu(int dir_logica, uint32_t pid){
         if (string_equals_ignore_case(algoritmo, "FIFO")) {
             remplazo_fifo(pid, numero_pagina, frame);
         } else if (string_equals_ignore_case(algoritmo, "LRU")) {
-           // remplazo_lru(pid, numero_pagina, frame);
+            remplazo_lru(pid, numero_pagina, frame);
         }
     }
    t_dir_fisica* direccionFisica = malloc(sizeof(t_dir_fisica));
@@ -50,11 +50,26 @@ void remplazo_fifo(uint32_t pid, int pagina, int frame){
     tlb->entradas[tlb->siguiente_fifo].pid = pid;
     tlb->entradas[tlb->siguiente_fifo].pagina = pagina;
     tlb->entradas[tlb->siguiente_fifo].frame = frame;
-    tlb->entradas[tlb->siguiente_fifo].ultimo_acceso = tlb->contador_lru++;
-    tlb->entradas[tlb->siguiente_fifo].validez = true; 
+    tlb->entradas[tlb->siguiente_fifo].validez = 1; 
     tlb->siguiente_fifo = (tlb->siguiente_fifo + 1) % cant_entradas_tlb;
 }
 
 void remplazo_lru(uint32_t pid, int pagina, int frame){
-
+    int posicion_tlb = -1;
+    int contador = tlb->contador_lru;
+    for(int i=0; i < cant_entradas_tlb; i++){
+        if(tlb->entradas[i].validez == 0){
+            posicion_tlb = i;
+            break;
+        }
+        if(tlb->entradas[i].ultimo_acceso < contador){
+            posicion_tlb = i;
+            contador = tlb->entradas[i].ultimo_acceso;
+        }
+    }
+    tlb->entradas[posicion_tlb].pid = pid;
+    tlb->entradas[posicion_tlb].pagina = pagina;
+    tlb->entradas[posicion_tlb].frame = frame;
+    tlb->entradas[posicion_tlb].ultimo_acceso = tlb->contador_lru++;
+    tlb->entradas[posicion_tlb].validez = 1;
 }
