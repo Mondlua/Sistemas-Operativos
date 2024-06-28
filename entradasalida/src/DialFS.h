@@ -5,12 +5,15 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include <commons/bitarray.h>
 #include <commons/config.h>
 
 extern int block_size;
 extern int block_count;
 
-void inicio_filesystem();
+void inicio_filesystem(char* ruta);
+
+
 
 #endif
