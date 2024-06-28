@@ -77,7 +77,7 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code){
         break;
     }
     case IO_STDIN_READ:{
-        int tamaño = (int)parametros->params.io_stdin_stdout.registro_tamaño;
+        cpu_registros tamaño = parametros->params.io_stdin_stdout.registro_tamaño;
         char* texto = (char*)malloc(sizeof(tamaño));
         printf("Ingrese el texto: ");
         fgets(texto, tamaño, stdin);

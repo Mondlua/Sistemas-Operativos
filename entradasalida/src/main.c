@@ -6,6 +6,7 @@ int conexion_memoria;
 int tiempo_unidad_trabajo;
 int block_size;
 int block_count;
+char* path_base_dialfs;
 t_log* entradasalida_log;
 
 int main(void) {
@@ -43,7 +44,7 @@ int main(void) {
 
     aviso_segun_cod_op(nombre_interfaz, conexion_kernel, INTERFAZ);
     recibir_instruccion(interfaz);*/
-    terminar_io();
+    //terminar_io();
 
     //aviso_segun_cod_op(nombre_interfaz, conexion_kernel, AVISO_DESCONEXION);
     return 0;
@@ -75,12 +76,12 @@ void extraer_segun_tipo_io(t_config* config, char* tipo_interfaz){
     }
     else if(strcmp(tipo_interfaz, "DIALFS") == 0 ){
         tiempo_unidad_trabajo = config_get_int_value(config, "TIEMPO_UNIDAD_TRABAJO");
-        char* path_base_dialfs = config_get_string_value(config, "PATH_BASE_DIALFS");
+        path_base_dialfs = config_get_string_value(config, "PATH_BASE_DIALFS");
         block_size = config_get_int_value(config, "BLOCK_SIZE");
         block_count = config_get_int_value(config, "BLOCK_COUNT");
         int retraso_compactacion = config_get_int_value(config, "RETRASO_COMPACTACION");
         //conectar_con_memoria(config);
-        inicio_filesystem(path_base_dialfs);
+        inicio_filesystem();
     }
 }
 
