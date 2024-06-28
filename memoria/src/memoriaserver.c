@@ -60,7 +60,7 @@ void atender_cliente(void *void_args)
 
             t_tabla* tabla = malloc(sizeof(t_tabla));
             tabla->pid = pid;
-            tabla->tabla = list_create();
+            tabla->tabla = lista_arch;
             list_add(tabla_pags, tabla);
             log_info(memoria_log, "PID: <%d> - Tamaño: <%d>", pid, list_size(tabla->tabla));
 
@@ -78,8 +78,12 @@ void atender_cliente(void *void_args)
             usleep(retardo*1000);
             uint32_t pc = atoi(pc_recibido);
             sem_wait(&semaforo_mem);
-            t_instruccion* instruccion = (t_instruccion*)list_get(lista_arch,pc);
-            char* ins  = instruccion->buffer->stream;
+            // t_instruccion* instruccion = (t_instruccion*)list_get(lista_arch,pc);
+            // char* ins  = instruccion->buffer->stream;
+            t_tabla* tabla_pc = list_get(tabla_pags, pid);
+            log_debug(logger, "PID obtenido: %d", tabla_pc->pid);
+            t_instruccion *instruccion = (t_instruccion*)list_get(tabla_pc->tabla, pc);
+            char* ins = instruccion->buffer->stream;
             eliminar_linea_n(ins);
             log_debug(logger, "Mando la instruccion: %s", instruccion->buffer->stream);
             enviar_instruccion_mem(client_socket,instruccion);
