@@ -7,16 +7,30 @@ void* memoria;
 t_bitarray* bitarray;
 t_bitarray* escrito;
 
-void escribir_en_mem(char* aescribir, t_dir_fisica* dir_fisica){
+void escribir_en_mem(char* aescribir, t_dir_fisica* dir_fisica, int tamanio){
     //DIRECCION FISICA = FRAME Y DESPLAZAMIENTO
-    int tam_bytes = sizeof(aescribir);
+    int tam_bytes = tamanio;
     int pag_necesarias = tam_bytes / tam_pagina;
 
     int nro_frame = dir_fisica->nro_frame;
     int desplazamiento = dir_fisica->desplazamiento;
 
     void* espacio_de_mem = (char*)memoria + (nro_frame * tam_pagina) + desplazamiento;
-    memcpy(espacio_de_mem , aescribir, tam_bytes); 
+
+    if (tamanio == 1){
+        uint8_t escribir = (uint8_t) atoi(aescribir);
+        memcpy(espacio_de_mem , &escribir, tam_bytes); 
+        printf("Escribi en Nro Frame <%d> y Desp <%d>: <%u>", nro_frame, desplazamiento, escribir);
+    }
+    if(tamanio ==4){
+        uint32_t escribir = (uint32_t)atoi(aescribir);
+        memcpy(espacio_de_mem , &escribir, tam_bytes);
+        printf("Escribi en Nro Frame <%d> y Desp <%d>: <%u>", nro_frame, desplazamiento, escribir);
+    }
+    if(tamanio== 8){
+        memcpy(espacio_de_mem , aescribir, tam_bytes);
+        printf("Escribi en Nro Frame <%d> y Desp <%d>: <%s>", nro_frame, desplazamiento, aescribir);
+    }
 }
 
 char* leer_en_mem(int tamanio, t_dir_fisica* dir_fisica){
@@ -24,11 +38,26 @@ char* leer_en_mem(int tamanio, t_dir_fisica* dir_fisica){
     int nro_frame = dir_fisica->nro_frame;
     int desplazamiento = dir_fisica->desplazamiento;
 
-    printf("nro frame %d y desp %d", nro_frame, desplazamiento);
     void* espacio_de_mem = (char*)memoria + (nro_frame * tam_pagina) + desplazamiento;
 
     char* leido = malloc(tamanio);
-    memcpy(leido, espacio_de_mem, tamanio);
+
+    if (tamanio == 1){
+        uint8_t leo;
+        memcpy(&leo, espacio_de_mem, tamanio);
+        leido = int_to_char(leo);
+    }
+    if(tamanio ==4){
+        uint32_t leo;
+        memcpy(&leo, espacio_de_mem, tamanio);
+        leido = int_to_char(leo);
+    }
+    if(tamanio== 8){
+        memcpy(leido, espacio_de_mem, tamanio);
+    }
+
+    printf("Leo en Nro Frame <%d> y Desp <%d>: <%s>", nro_frame, desplazamiento, leido);
+
     return leido;
 }
 
