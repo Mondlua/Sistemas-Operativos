@@ -90,7 +90,7 @@ void atender_cliente(void *void_args)
             instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
             parametros_io = recibir_io_stdin(client_socket);
             //GUARDAR TEXTO EN REGISTRO_DIRECCION
-            escribir_en_mem(parametros_io->texto, parametros_io->params.io_stdin_stdout.registro_direccion);
+            escribir_en_mem(parametros_io->texto, parametros_io->params.io_stdin_stdout.registro_direccion, sizeof(parametros_io->texto));
             free(parametros_io);
             break;
         }
@@ -198,27 +198,29 @@ void atender_cliente(void *void_args)
             t_dir_fisica* dir_fisica = malloc(sizeof(t_dir_fisica*));
             dir_fisica->nro_frame = frame;
             dir_fisica->desplazamiento = desp;
-            // RECIBIR TAMANIO A LEER
             usleep(retardo);
+
             char* leido = leer_en_mem(tamanio, dir_fisica);
-            printf("lei %s\n", leido);
-            enviar_mensaje(leido, client_socket);   
+            enviar_mensaje(leido, client_socket);  
+
             break;
         }
         case PED_ESCRITURA:{
+
             char* buffer = recibir_pedido_escritura(client_socket, logger);  
             char** arrayIns = string_split(buffer,"/");
-            uint8_t valor = (uint8_t) atoi(arrayIns[0]);
-            int frame= atoi(arrayIns[1]);
-            int desp=atoi(arrayIns[2]);
-            uint32_t pid =atoi(arrayIns[3]);
+            int tamanio = atoi(arrayIns[0]);
+            uint8_t valor = (uint8_t) atoi(arrayIns[1]);
+            int frame= atoi(arrayIns[2]);
+            int desp=atoi(arrayIns[3]);
+            uint32_t pid =atoi(arrayIns[4]);
 
             t_dir_fisica* dir_fisica = malloc(sizeof(t_dir_fisica*));
             dir_fisica->nro_frame = frame;
             dir_fisica->desplazamiento = desp;
             usleep(retardo*1000);   
-            escribir_en_mem(int_to_char(valor), dir_fisica);
-            log_info(logger, "Escribi en Memoria <%u>", valor);
+            escribir_en_mem(int_to_char(valor), dir_fisica, tamanio);
+            log_info(logger, "Escribi en Memoria <%u> \n", valor);
             bitarray_set_bit(escrito, frame);
 
             int frame_siguiente_disp;
@@ -232,7 +234,7 @@ void atender_cliente(void *void_args)
                         if(list_get(tabla_pid->tabla,x) == i){
                         frame_siguiente_disp = i;
                         encontrado = true;
-                        printf("el frame es %d \n ", frame_siguiente_disp);
+                        printf("el frame es %d y pid %u", frame_siguiente_disp, pid);
                         break;
                         }
                             
@@ -244,7 +246,7 @@ void atender_cliente(void *void_args)
             }
             
             enviar_mensaje(int_to_char(frame_siguiente_disp), client_socket);
-            printf("envio mensaje frame siguiente %s \n", int_to_char(frame_siguiente_disp));
+            printf("Envio mensaje frame siguiente %s \n", int_to_char(frame_siguiente_disp));
 
             break;
         }
