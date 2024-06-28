@@ -37,15 +37,15 @@ int main(void) {
     ip_kernel= config_get_string_value(entradasalida_config,"IP_KERNEL");
     puerto_kernel = config_get_string_value(entradasalida_config, "PUERTO_KERNEL");
     extraer_segun_tipo_io(entradasalida_config, interfaz);
-    conexion_kernel = crear_conexion(ip_kernel, puerto_kernel);
+    /*conexion_kernel = crear_conexion(ip_kernel, puerto_kernel);
     log_info(entradasalida_log, "I/O conectado a KERNEL");
-    send_handshake(conexion_kernel, entradasalida_log, "I/O / KERNEL");
+    send_handshake(conexion_kernel, entradasalida_log, "I/O / KERNEL");*
 
     aviso_segun_cod_op(nombre_interfaz, conexion_kernel, INTERFAZ);
-    recibir_instruccion(interfaz);
+    recibir_instruccion(interfaz);*/
     terminar_io();
 
-    aviso_segun_cod_op(nombre_interfaz, conexion_kernel, AVISO_DESCONEXION);
+    //aviso_segun_cod_op(nombre_interfaz, conexion_kernel, AVISO_DESCONEXION);
     return 0;
 }
 
@@ -79,8 +79,8 @@ void extraer_segun_tipo_io(t_config* config, char* tipo_interfaz){
         block_size = config_get_int_value(config, "BLOCK_SIZE");
         block_count = config_get_int_value(config, "BLOCK_COUNT");
         int retraso_compactacion = config_get_int_value(config, "RETRASO_COMPACTACION");
-        conectar_con_memoria(config);
-        inicio_filesystem();
+        //conectar_con_memoria(config);
+        inicio_filesystem(path_base_dialfs);
     }
 }
 
