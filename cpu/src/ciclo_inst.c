@@ -524,11 +524,27 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger){
         loggear_registros(pcb, logger);
     }
 
+    if(hay_interrupcion == 1) // Fin de quantum
+    {
+        pcb->motivo_desalojo = 1;
+        log_debug(cpu_log, "Envio PCB interrumpido por fin de quantum");
+        hay_interrupcion = 0;
+    }
     if(blockeo == EXIT_BLOCK)
     {
         pcb->motivo_desalojo = 0;
         log_debug(cpu_log, "Envio PCB terminado.");
     }
+    if(blockeo == IO_BLOCK)
+    {
+
+    }
+    if(blockeo == REC_BLOCK)
+    {
+
+    }
+
+
     // Atender interrupt
 }
 
