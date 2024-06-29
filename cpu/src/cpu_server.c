@@ -29,8 +29,7 @@ void atender_cliente(void *void_args)
 
         switch (cop) 
         {
-        case MENSAJE:{
-        }
+        case MENSAJE:{}
         case PAQUETE:{}
         case PCB:
         {
@@ -45,17 +44,22 @@ void atender_cliente(void *void_args)
             enviar_pcb(pcb, args->c_socket);
 			break;
         }
-        case FIN_QUANTUM:{
-            recibir_interrupcion_finq(kernel_socket);
+        case KERNEL_CPU_INTERRUPT:
+        {
+            uint32_t pid = recibir_int_a_interrupt(args->c_socket);
+
+            //if(pid == pcb)
+            log_debug(cpu_log, "Se recibe un pedido de interrucpcion para el PID: %d", pid);
             hay_interrupcion = 1;
-            enviar_motivo(FIN_QUANTUM, kernel_socket);
+            break;
         }
-        
         default:
+        {
             log_error(logger, "Algo anduvo mal en el server de %s", server_name);
             log_info(logger, "Cop: %d", cop);
             
             break;
+        }
         }
     }
 

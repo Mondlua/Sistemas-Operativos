@@ -543,9 +543,6 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger){
     {
 
     }
-
-
-    // Atender interrupt
 }
 
 void loggear_registros(t_pcb* pcb, t_log* logger)

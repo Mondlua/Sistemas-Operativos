@@ -91,8 +91,17 @@ int frenar_timer(t_timer_planificador* timer)
 void enviar_interrupcion(union sigval sv)
 {
     t_planificacion *kernel_argumentos = (t_planificacion*)sv.sival_ptr;
-    log_warning(kernel_argumentos->logger, "En este momento deberia mandar la interrupcion");
+
     // Enviar interrupcion a CPU Interrupt
+    if(!queue_is_empty(kernel_argumentos->colas.exec))
+    {
+        t_pcb* pcb_actual = queue_peek(kernel_argumentos->colas.exec);
+        enviar_int_a_interrupt(kernel_argumentos->socket_cpu_interrupt, pcb_actual->pid);
+        log_debug(kernel_argumentos->logger, "Interrupcion al PID: %d enviada.", pcb_actual->pid);
+        return;
+    }
+    
+    log_debug(kernel_argumentos->logger, "No se envia interrupcion dado que no hay ningun PCB en EXEC");
 }
 
 void planificador_planificar(t_planificacion *kernel_argumentos)
@@ -190,16 +199,16 @@ void planificador_largo_plazo(t_planificacion *kernel_argumentos)
 
     if(cantidad_procesos_actual < kernel_argumentos->config.grado_multiprogramacion)
     {
+        if(queue_is_empty(kernel_argumentos->colas.new))
+        {
+            return;
+        }
         while(cantidad_procesos_actual < kernel_argumentos->config.grado_multiprogramacion && !queue_is_empty(kernel_argumentos->colas.new))
         {
             t_pcb* pcb = queue_pop(kernel_argumentos->colas.new);
             queue_push(kernel_argumentos->colas.ready, pcb);
             log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: NEW - Estado actual: READY", pcb->pid);
             cantidad_procesos_actual++;
-        }
-        if(queue_is_empty(kernel_argumentos->colas.new))
-        {
-            //log_warning(kernel_argumentos->logger, "No hay mas argumentos en NEW para pasar a READY.");
         }
     }
 }
