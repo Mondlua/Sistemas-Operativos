@@ -213,3 +213,22 @@ char *estado_a_string(t_proceso_estado estado)
     }
 }
 
+void enviar_int_a_interrupt(int socket_cpu_interrupt, uint32_t pid)
+{
+    t_paquete* paquete = crear_paquete();
+    paquete->codigo_operacion= KERNEL_CPU_INTERRUPT;
+    agregar_a_paquete(paquete, &(pid), sizeof(uint32_t));
+    enviar_paquete(paquete, socket_cpu_interrupt);
+    eliminar_paquete(paquete);
+}
+
+uint32_t recibir_int_a_interrupt(int socket_cpu_interrupt)
+{
+    uint32_t ret;
+
+    t_list* valores_paquete = recibir_paquete(socket_cpu_interrupt);
+    ret = (uint32_t)list_get(valores_paquete, 0);
+    list_destroy(valores_paquete);
+
+    return ret;
+}
