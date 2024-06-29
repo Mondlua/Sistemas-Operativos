@@ -6,6 +6,7 @@ void* hilo_planificador(void *args)
 
     t_tipo_planificacion algoritmo_planificador = obtener_algoritmo_planificador(kernel_argumentos->config.algoritmo_planificador);
     log_debug(kernel_argumentos->logger, "Algoritmo planificador: %d", algoritmo_planificador);
+    kernel_argumentos->algo_planning = algoritmo_planificador;
     while(1)
     {
         // Espero a que me soliciten planificar
@@ -69,24 +70,29 @@ void virtual_round_robin(t_planificacion *kernel_argumentos)
     return;
 }
 
-void iniciar_timer(t_timer_planificador timer, int milisegundos)
+void iniciar_timer(t_timer_planificador* timer, int milisegundos)
 {
-    timer_create(CLOCK_REALTIME, &timer.sev, &timer.timer);
+    timer->its.it_value.tv_sec = milisegundos / 1000;
+    timer->its.it_value.tv_nsec = (milisegundos % 1000) * 1000000;
+    timer->its.it_interval.tv_nsec = 0;
+    timer->its.it_interval.tv_sec = 0;
 
-    timer.its.it_value.tv_nsec = milisegundos * 1000;
-    timer.its.it_value.tv_sec = 0;
-    timer.its.it_interval.tv_nsec = 0;
-    timer.its.it_interval.tv_sec = 0;
-
-    timer_settime(timer.timer, 0, &timer.its, NULL);
+    timer_settime(timer->timer, 0, &timer->its, NULL);
 }
 
-int frenar_timer(t_timer_planificador timer)
+int frenar_timer(t_timer_planificador* timer)
 {
     struct itimerspec remaining;
-    timer_gettime(timer.timer, &remaining);
-    timer_delete(timer.timer);
+    timer_gettime(timer->timer, &remaining);
+    //timer_delete(timer->timer);
     return remaining.it_value.tv_nsec * 1000;
+}
+
+void enviar_interrupcion(union sigval sv)
+{
+    t_planificacion *kernel_argumentos = (t_planificacion*)sv.sival_ptr;
+    log_warning(kernel_argumentos->logger, "En este momento deberia mandar la interrupcion");
+    // Enviar interrupcion a CPU Interrupt
 }
 
 void planificador_planificar(t_planificacion *kernel_argumentos)
@@ -110,9 +116,16 @@ bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_a
     // Meto el pcb a la cola correspondiente
     if(pcb_desalojado->motivo_desalojo == 0) // Desalojado por haber ejecutado EXIT
     {
+        // Mato al timer si corresponde
+        if(kernel_argumentos->algo_planning != FIFO)
+        {
+            frenar_timer(kernel_argumentos->timer_quantum);
+        }
+
         queue_push(kernel_argumentos->colas.exit, pcb_desalojado);
         // Enviar solicitud a memoria para desalojar el proceso
         log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: EXEC - Estado actual: EXIT", pcb_desalojado->pid);
+        log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: SUCCESS", pcb_desalojado->pid);
     }
     if(pcb_desalojado->motivo_desalojo == 1) // Desalojado por fin de quantum
     {
@@ -186,7 +199,7 @@ void planificador_largo_plazo(t_planificacion *kernel_argumentos)
         }
         if(queue_is_empty(kernel_argumentos->colas.new))
         {
-            log_warning(kernel_argumentos->logger, "No hay mas argumentos en NEW para pasar a READY.");
+            //log_warning(kernel_argumentos->logger, "No hay mas argumentos en NEW para pasar a READY.");
         }
     }
 }
@@ -212,8 +225,26 @@ t_planificacion *inicializar_t_planificacion(t_config *kernel_config, t_log *ker
     inicializar_lista_recursos(planificador, kernel_config);
 
     inicializar_config_kernel(planificador, kernel_config);
-    
+
+    planificador->timer_quantum = malloc(sizeof(t_timer_planificador));
+    planificador->timer_quantum->timer = inicializar_timer(planificador);
+
     return planificador;
+}
+
+timer_t inicializar_timer(t_planificacion *kernel_argumentos)
+{
+    struct sigevent sev;
+    timer_t ret;
+
+    sev.sigev_notify = SIGEV_THREAD;
+    sev.sigev_value.sival_ptr = kernel_argumentos;
+    sev.sigev_notify_function = enviar_interrupcion;
+    sev.sigev_notify_attributes = NULL;
+
+    timer_create(CLOCK_REALTIME, &sev, &ret);
+
+    return ret;
 }
 
 t_tipo_planificacion obtener_algoritmo_planificador(char* algoritmo)

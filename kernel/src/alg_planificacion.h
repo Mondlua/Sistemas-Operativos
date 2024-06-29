@@ -56,6 +56,11 @@ typedef struct {
     struct sigevent sev;
     struct itimerspec its;
 } t_timer_planificador;
+typedef enum {
+    FIFO,
+    RR,
+    VRR
+}t_tipo_planificacion;
 typedef struct
 {
     t_log *logger;
@@ -63,17 +68,12 @@ typedef struct
     t_planificador_config config;
     sem_t planificar;
     int detener_planificacion;
-    t_timer_planificador timer_quantum;
+    t_timer_planificador* timer_quantum;
     int socket_cpu_dispatch;
     int socket_cpu_interrupt;
     int socket_memoria;
+    t_tipo_planificacion algo_planning;
 } t_planificacion;
-
-typedef enum {
-    FIFO,
-    RR,
-    VRR
-}t_tipo_planificacion;
 
 void* hilo_planificador(void *args);
 
@@ -81,8 +81,10 @@ void fifo(t_planificacion *kernel_argumentos);
 void round_robin(t_planificacion *kernel_argumentos);
 void virtual_round_robin(t_planificacion *kernel_argumentos);
 
-void iniciar_timer(t_timer_planificador timer, int milisegundos);
-int frenar_timer(t_timer_planificador timer);
+void enviar_interrupcion(union sigval sv);
+void iniciar_timer(t_timer_planificador* timer, int milisegundos);
+int frenar_timer(t_timer_planificador* timer);
+timer_t inicializar_timer(t_planificacion *kernel_argumentos);
 
 void planificador_planificar(t_planificacion *kernel_argumentos);
 bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_argumentos);
