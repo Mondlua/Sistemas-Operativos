@@ -39,7 +39,7 @@ typedef struct t_pcb
     int quantum;
     cpu_registros* registros;
     t_proceso_estado estado; 
-
+    int motivo_desalojo;
 } t_pcb;
 
 

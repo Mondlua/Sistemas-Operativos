@@ -24,7 +24,9 @@ int main(void){
      
     cpu_log = iniciar_logger("cpu.log","cpu");
     cpu_config = iniciar_config("cpu.config");
-    
+
+    // Creo estructura para los hilos
+    t_config_cpu *cpu_argumentos = malloc(sizeof(t_config_cpu));
 
 	/* CPU - Cliente */
 
@@ -44,44 +46,67 @@ int main(void){
     enviar_pedido_tam_mem(conexion_memoria_cpu);
     recibir_tamanio_pag(conexion_memoria_cpu, cpu_log, &tam_pag);
 
-    
-    // Recibir PCB
-
-    //Ejecutar Ciclo de Instruccion
+    // TODO: Hace falta un hilo para atender a memoria... Sino tenemos espera activa
 
     /* CPU - Server */
     
     //Extraer configs
-
-    puerto_cpu_dispatch = config_get_string_value(cpu_config, "PUERTO_ESCUCHA_DISPATCH");
-	puerto_cpu_interrupt = config_get_string_value(cpu_config, "PUERTO_ESCUCHA_INTERRUPT");
+    cpu_argumentos->config_leida.puerto_cpu_dispatch = config_get_string_value(cpu_config, "PUERTO_ESCUCHA_DISPATCH");
+	cpu_argumentos->config_leida.puerto_cpu_interrupt = config_get_string_value(cpu_config, "PUERTO_ESCUCHA_INTERRUPT");
 
     // Inicio CPU DISPATCH server  
+    pthread_t hilo_conectar_dispatch;
+    pthread_create(&hilo_conectar_dispatch, NULL, conectar_dispatch, (void *) cpu_argumentos);
+    pthread_join(hilo_conectar_dispatch, NULL);
 
-    cpu_dispatch_server = iniciar_servidor(puerto_cpu_dispatch, cpu_log);
-    log_info(cpu_log, "CPU DISPATCH listo para recibir a KERNEL");
-    
-    t_atender_cliente_args* args = malloc(sizeof(t_atender_cliente_args));
-    args->log = cpu_log;
-    args->c_socket =cpu_dispatch_server;
-    args->server_name = "CPU DISPATCH";
-    server_escuchar(args);
-    free(args);
-
-    //preguntar a zoe si esto le ponemos el hilo extra como en memoria
     // Inicio CPU INTERRUPT server
-    /*
-    cpu_interrupt_server = iniciar_servidor(puerto_cpu_interrupt, cpu_log);
-    log_info(cpu_log, "CPU INTERRUPT listo para recibir a KERNEL");
-       
-    t_atender_cliente_args* arg = malloc(sizeof(t_atender_cliente_args));
-    arg->log = cpu_log;
-    arg->c_socket =cpu_interrupt_server;
-    arg->server_name = "CPU INTERRUPT";
-    server_escuchar(arg);
-    free(arg);
-    */
-//idem
+    pthread_t hilo_conectar_interrupt;
+    pthread_create(&hilo_conectar_interrupt, NULL, conectar_interrupt, (void *) cpu_argumentos);
+    pthread_join(hilo_conectar_interrupt, NULL);
+
+    // Creo hilo para atender DISPATCH
+    t_atender_cliente_args* args_dispatch = malloc(sizeof(t_atender_cliente_args));
+    args_dispatch->log = cpu_log;
+    args_dispatch->c_socket = cpu_argumentos->socket_dispatch;
+    args_dispatch->server_name = "CPU DISPATCH";
+    pthread_t hilo_atender_cpu_dispatch;
+    pthread_create(&hilo_atender_cpu_dispatch, NULL, (void *)atender_cliente, (void*) args_dispatch);
+    pthread_detach(hilo_atender_cpu_dispatch);
+
+    // Creo hilo para atender INTERUPT       
+    t_atender_cliente_args* args_interrupt = malloc(sizeof(t_atender_cliente_args));
+    args_interrupt->log = cpu_log;
+    args_interrupt->c_socket = cpu_argumentos->socket_interrupt;
+    args_interrupt->server_name = "CPU INTERRUPT";
+    pthread_t hilo_atender_cpu_interrupt;
+    pthread_create(&hilo_atender_cpu_interrupt, NULL, (void *) atender_cliente, (void*) args_interrupt);
+    pthread_join(hilo_atender_cpu_interrupt, NULL);
+
+    //free(args_dispatch);
+    //free(args_interrupt);
+    free(cpu_argumentos);
     return 0;
 }
 
+void* conectar_dispatch(void* void_args)
+{
+    t_config_cpu *cpu_argumentos = (t_config_cpu*) void_args;
+
+    int cpu_dispatch_server = iniciar_servidor(cpu_argumentos->config_leida.puerto_cpu_dispatch, cpu_log);
+    log_info(cpu_log, "CPU DISPATCH listo para recibir a KERNEL");
+
+    cpu_argumentos->socket_dispatch = esperar_cliente(cpu_dispatch_server, cpu_log);
+    log_debug(cpu_log, "Kernel conectado a Dispatch en socket: %d", cpu_argumentos->socket_dispatch);
+}
+
+void* conectar_interrupt(void* args)
+{
+   t_config_cpu *cpu_argumentos = (t_config_cpu*) args;
+
+    int cpu_interrupt_server = iniciar_servidor(cpu_argumentos->config_leida.puerto_cpu_interrupt, cpu_log);
+    log_info(cpu_log, "CPU INTERRUPT listo para recibir a KERNEL");
+
+    cpu_argumentos->socket_interrupt = esperar_cliente(cpu_interrupt_server, cpu_log);
+    log_debug(cpu_log, "Kernel conectado a Interrupt en socket: %d", cpu_argumentos->socket_interrupt);
+
+}
