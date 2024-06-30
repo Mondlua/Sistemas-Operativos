@@ -29,7 +29,7 @@ typedef struct
         } io_gen_sleep_params;
         struct {
             t_dir_fisica* registro_direccion;
-            cpu_registros* registro_tamaño;
+            uint32_t registro_tamaño;
         } io_stdin_stdout;
          struct {
             char* nombre_archivo;

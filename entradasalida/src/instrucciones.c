@@ -13,7 +13,7 @@ instruccion_params* deserializar_io_stdin_stdout(t_buffer_ins* buffer){
     void* stream = buffer->stream;
     memcpy(&(parametros->params.io_stdin_stdout.registro_direccion), stream, sizeof(t_dir_fisica));
     stream += sizeof(t_dir_fisica);
-    memcpy(&(parametros->params.io_stdin_stdout.registro_tamaño), stream, sizeof(cpu_registros));
+    memcpy(&(parametros->params.io_stdin_stdout.registro_tamaño), stream, sizeof(uint32_t));
     return parametros;
 }
 
@@ -77,7 +77,7 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code){
         break;
     }
     case IO_STDIN_READ:{
-        cpu_registros tamaño = parametros->params.io_stdin_stdout.registro_tamaño;
+        uint32_t tamaño = parametros->params.io_stdin_stdout.registro_tamaño;
         char* texto = (char*)malloc(sizeof(tamaño));
         printf("Ingrese el texto: ");
         fgets(texto, tamaño, stdin);
