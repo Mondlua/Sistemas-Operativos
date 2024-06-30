@@ -19,51 +19,56 @@ instruccion_params* deserializar_io_stdin_stdout(t_buffer_ins* buffer){
 
 void recibir_instruccion(char* tipo_interfaz)
 {
-    t_paquete_instruccion* instruccion = malloc(sizeof(t_paquete_instruccion));
-    instruccion->buffer = malloc(sizeof(t_buffer_ins));
-    recv(conexion_kernel, &(instruccion->codigo_operacion), sizeof(instrucciones), MSG_WAITALL);
-    recv(conexion_kernel, &(instruccion->buffer->size), sizeof(uint32_t), MSG_WAITALL);
-    instruccion->buffer->stream = malloc(instruccion->buffer->size);
-    recv(conexion_kernel, instruccion->buffer->stream, instruccion->buffer->size, MSG_WAITALL);
-    instruccion_params* param;
-    if(validar_operacion(tipo_interfaz, instruccion->codigo_operacion)){
-        switch (instruccion->codigo_operacion)
-    {
-        case IO_GEN_SLEEP:{
+    while (1){
+        t_paquete_instruccion* instruccion = malloc(sizeof(t_paquete_instruccion));
+        instruccion->buffer = malloc(sizeof(t_buffer_ins));
+        recv(conexion_kernel, &(instruccion->codigo_operacion), sizeof(instrucciones), MSG_WAITALL);
+        recv(conexion_kernel, &(instruccion->buffer->size), sizeof(uint32_t), MSG_WAITALL);
+        instruccion->buffer->stream = malloc(instruccion->buffer->size);
+        recv(conexion_kernel, instruccion->buffer->stream, instruccion->buffer->size, MSG_WAITALL);
+        instruccion_params* param;
+        if(validar_operacion(tipo_interfaz, instruccion->codigo_operacion)){
+            switch (instruccion->codigo_operacion)
+            {
+            case IO_GEN_SLEEP:{
             param = deserializar_io_gen_sleep(instruccion->buffer);
             char* logica = "1";
             aviso_segun_cod_op(logica, conexion_kernel, AVISO_OPERACION_VALIDADA);
             break;
-        }
-        case IO_STDIN_READ:{
+            }
+            case IO_STDIN_READ:{
             param = deserializar_io_stdin_stdout(instruccion->buffer);
             char* logica = "1";
             aviso_segun_cod_op(logica, conexion_kernel, AVISO_OPERACION_VALIDADA);
             break;
-        }
-        case IO_STDOUT_WRITE:{
+            }
+            case IO_STDOUT_WRITE:{
             param = deserializar_io_stdin_stdout(instruccion->buffer);
             char* logica = "1";
             aviso_segun_cod_op(logica, conexion_kernel, AVISO_OPERACION_VALIDADA);
             break;
-        }
+            }
 
         // OTRAS FUNCIONES
-        default:
+            default:
             printf("Tipo de operación no válido.\n");
             free(instruccion->buffer);
             free(instruccion);
+            continue;
+            }
+        }
+        else{
+            char* error = "0";
+            aviso_segun_cod_op(error, conexion_kernel, AVISO_OPERACION_INVALIDA);
+            param = NULL;
+        }
+        atender_cod_op(param, instruccion->codigo_operacion);
+        free(instruccion->buffer);
+        free(instruccion);
+        if (param != NULL) {
+            free(param);
+        }
     }
-    }
-    else{
-        char* error = "0";
-        aviso_segun_cod_op(error, conexion_kernel, AVISO_OPERACION_INVALIDA);
-        param = NULL;
-    }
-    atender_cod_op(param, instruccion->codigo_operacion);
-    free(instruccion->buffer);
-    free(instruccion);
-    free(param);
 }
 
 void atender_cod_op(instruccion_params* parametros, instrucciones op_code){
@@ -95,6 +100,14 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code){
         free(instruccion_enviar);
         char* imprimir = recibir_mensaje(conexion_memoria, entradasalida_log);
         free(imprimir);
+        break;
+    }
+    case IO_FS_CREATE:{
+        crear_archivo(parametros->params.io_fs_create_params.nombre_archivo);
+        break;
+    }
+    case IO_FS_DELETE:{
+        borrar_archivo(parametros->params.io_fs_create_params.nombre_archivo);
         break;
     }
     default:

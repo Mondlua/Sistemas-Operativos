@@ -79,18 +79,11 @@ void crear_archivo(char* nombre){
 
     char new_file_path[256];
     snprintf(new_file_path, sizeof(new_file_path), "%s/%s", path_base_dialfs, nombre);
-    int new_file = open(new_file_path, O_CREAT | O_RDWR, 0666);
-    if (new_file < 0) {
-        perror("Error al crear el archivo");
-        exit(EXIT_FAILURE);
-    }
-    ftruncate(new_file, 0);
 
     uint32_t bloque_libre = buscar_bloque_libre();
     if (bloque_libre == -1) {
         printf("No hay bloques libres disponibles.\n");
         munmap(bitmap->bitarray, bitmap_size);
-        close(new_file);
         exit(EXIT_FAILURE);
     }
     bitarray_set_bit(bitmap, bloque_libre);
@@ -105,7 +98,17 @@ void crear_archivo(char* nombre){
 }
 
 void borrar_archivo(char* nombre){
-    
+    usleep(tiempo_unidad_trabajo);
+
+    char new_file_path[256];
+    snprintf(new_file_path, sizeof(new_file_path), "%s/%s", path_base_dialfs, nombre);
+    int new_file = open(new_file_path, O_CREAT | O_RDWR, 0666);
+    if (new_file < 0) {
+        perror("Error al crear el archivo");
+        exit(EXIT_FAILURE);
+    }
+
+
 }
 
 

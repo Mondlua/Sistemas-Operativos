@@ -39,6 +39,7 @@ typedef struct {
 
 int server_escuchar(void *arg);
 int buscar_posicion_interfaz_por_nombre(char* nombre_interfaz);
+interfaz* buscar_posicion_interfaz_por_cliente(int cliente);
 //t_pcb* recibir_pcb(int socket_cliente);
 
 
