@@ -38,31 +38,16 @@ int main(void) {
     ip_kernel= config_get_string_value(entradasalida_config,"IP_KERNEL");
     puerto_kernel = config_get_string_value(entradasalida_config, "PUERTO_KERNEL");
     extraer_segun_tipo_io(entradasalida_config, interfaz);
-    crear_archivo("prueba.txt");
-    /*conexion_kernel = crear_conexion(ip_kernel, puerto_kernel);
+    conexion_kernel = crear_conexion(ip_kernel, puerto_kernel);
     log_info(entradasalida_log, "I/O conectado a KERNEL");
-    send_handshake(conexion_kernel, entradasalida_log, "I/O / KERNEL");*
+    send_handshake(conexion_kernel, entradasalida_log, "I/O / KERNEL");
 
     aviso_segun_cod_op(nombre_interfaz, conexion_kernel, INTERFAZ);
-    recibir_instruccion(interfaz);*/
-    //terminar_io();
 
-    //aviso_segun_cod_op(nombre_interfaz, conexion_kernel, AVISO_DESCONEXION);
+    pthread_t hilo;
+    pthread_create(&hilo, NULL, (void *)recibir_instruccion, interfaz);
+    pthread_join(hilo, NULL);
     return 0;
-}
-
-void terminar_io(){
-    char letra;
-    printf("Ingresa una letra para detener el programa: ");
-    
-    while (1) {  // Bucle infinito
-        scanf(" %c", &letra);  // Lee un carácter
-        
-        if (letra >= 'A' && letra <= 'Z') {  // Verifica si es una letra mayúscula
-            printf("Deteniendo el programa...\n");
-            break;  // Sale del bucle
-        }
-    }
 }
 
 void extraer_segun_tipo_io(t_config* config, char* tipo_interfaz){
