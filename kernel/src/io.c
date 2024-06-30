@@ -89,7 +89,7 @@ instruccion_params* deserializar_io_stdin_stdout_con_interfaz(t_buffer_ins* buff
     offset += interfaz_len;
     memcpy(&(parametros->params.io_stdin_stdout.registro_direccion), buffer->stream + offset, sizeof(t_dir_fisica));
     offset += sizeof(t_dir_fisica);
-    memcpy(&(parametros->params.io_stdin_stdout.registro_tamaño), buffer->stream + offset, sizeof(cpu_registros));
+    memcpy(&(parametros->params.io_stdin_stdout.registro_tamaño), buffer->stream + offset, sizeof(uint32_t));
     return parametros;
 }
 

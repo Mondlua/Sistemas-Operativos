@@ -38,6 +38,7 @@ int main(void) {
     ip_kernel= config_get_string_value(entradasalida_config,"IP_KERNEL");
     puerto_kernel = config_get_string_value(entradasalida_config, "PUERTO_KERNEL");
     extraer_segun_tipo_io(entradasalida_config, interfaz);
+    crear_archivo("prueba.txt");
     /*conexion_kernel = crear_conexion(ip_kernel, puerto_kernel);
     log_info(entradasalida_log, "I/O conectado a KERNEL");
     send_handshake(conexion_kernel, entradasalida_log, "I/O / KERNEL");*
