@@ -1,6 +1,6 @@
 #include "io_operation.h"
 
-void enviar_instruccion(t_paquete_instruccion* instruccion, instruccion_params* parametros ,int socket_cliente)
+void enviar_instruccion(t_paquete_instruccion* instruccion, instruccion_params* parametros ,int socket_cliente, uint32_t pid)
 {
     t_buffer_ins* buffer = NULL;
     switch (instruccion->codigo_operacion)
@@ -25,13 +25,15 @@ void enviar_instruccion(t_paquete_instruccion* instruccion, instruccion_params* 
     }
     instruccion->buffer = buffer;
     int offset = 0;
-    void* a_enviar = malloc(buffer->size + sizeof(instrucciones) + sizeof(uint32_t));
+    void* a_enviar = malloc(buffer->size + sizeof(instrucciones) + sizeof(uint32_t)*2);
     memcpy(a_enviar + offset, &(instruccion->codigo_operacion), sizeof(instrucciones));
     offset += sizeof(instrucciones);
+    memcpy(a_enviar + offset, &(pid), sizeof(uint32_t));
+    offset += sizeof(uint32_t);
     memcpy(a_enviar + offset, &(instruccion->buffer->size), sizeof(uint32_t));
     offset += sizeof(uint32_t);
     memcpy(a_enviar + offset, instruccion->buffer->stream, instruccion->buffer->size);
-    int resultado_send = send(socket_cliente, a_enviar, buffer->size + sizeof(instrucciones) + sizeof(uint32_t), MSG_NOSIGNAL);
+    int resultado_send = send(socket_cliente, a_enviar, buffer->size + sizeof(instrucciones) + sizeof(uint32_t)*2, MSG_NOSIGNAL);
     if (resultado_send == -1)
         {
             printf("Error al enviar la instrucción: socket cerrado.\n");

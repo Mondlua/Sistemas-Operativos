@@ -11,7 +11,7 @@ void validar_peticion(instruccion_params* parametros, t_pcb* pcb, int codigo_op)
         interfaz* interfaz_encontrada = buscar_interfaz_por_nombre(parametros->interfaz);
         if (interfaz_encontrada != NULL) {
             sem_wait(&interfaz_encontrada->semaforo_interfaz);
-            enviar_instruccion_a_interfaz(interfaz_encontrada, parametros, codigo_op);
+            enviar_instruccion_a_interfaz(interfaz_encontrada, parametros, codigo_op, pcb->pid);
             wait(&habilitacion_io);
             if(logica_int){
                 queue_push(interfaz_encontrada->cola_block, pcb);
@@ -44,11 +44,11 @@ interfaz* buscar_interfaz_por_nombre(char* nombre_interfaz) {
     return interfaz_encontrada;
 }
 
-void enviar_instruccion_a_interfaz(interfaz* interfaz_destino, instruccion_params* parametros, int codigo_op) {
+void enviar_instruccion_a_interfaz(interfaz* interfaz_destino, instruccion_params* parametros, int codigo_op, uint32_t pid) {
     t_paquete_instruccion* instruccion_enviar = malloc(sizeof(t_paquete_instruccion));
 
     instruccion_enviar->codigo_operacion = codigo_op;
-    enviar_instruccion(instruccion_enviar, parametros, interfaz_destino->socket_interfaz);
+    enviar_instruccion(instruccion_enviar, parametros, interfaz_destino->socket_interfaz, pid);
 
     free(parametros);
     free(instruccion_enviar);

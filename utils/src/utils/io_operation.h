@@ -34,12 +34,22 @@ typedef struct
          struct {
             char* nombre_archivo;
         } io_fs_create_params;
+        struct {
+            char* nombre_archivo;
+            uint32_t tamaño;
+        } io_fs_truncate_params;
+        struct {
+            char* nombre_archivo;
+            t_dir_fisica* registro_direccion;
+            uint32_t registro_tamaño;
+            void* registro_puntero_archivo;
+        } io_fs_read_write;
      }params;
 }instruccion_params;
 
 t_buffer_ins* serializar_io_gen_sleep(instruccion_params* param);
 t_buffer_ins* serializar_io_stdin_stdout(instruccion_params* param);
-void enviar_instruccion(t_paquete_instruccion* instruccion, instruccion_params* parametros ,int socket_cliente);
+void enviar_instruccion(t_paquete_instruccion* instruccion, instruccion_params* parametros ,int socket_cliente, uint32_t pid);
 
 
 
