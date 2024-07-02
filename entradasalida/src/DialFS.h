@@ -21,6 +21,7 @@ extern char* path_base_dialfs;
 void inicio_filesystem();
 void crear_archivo(char* nombre);
 void borrar_archivo(char* nombre);
+void truncar_archivo(char* nombre, uint32_t tamaño);
 uint32_t buscar_bloque_libre();
 uint8_t leer_de_bitmap(uint32_t nroBloque);
 

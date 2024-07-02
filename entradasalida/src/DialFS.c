@@ -2,6 +2,7 @@
 
 t_bitarray* bitmap;
 size_t bitmap_size;
+char bitmap_path[256];
 
 void inicio_filesystem() {
 
@@ -23,7 +24,6 @@ void inicio_filesystem() {
     close(blocks_file);
 
     /* Archivo de Bitmap */
-    char bitmap_path[256];
     snprintf(bitmap_path, sizeof(bitmap_path), "%s/bitmap.dat", path_base_dialfs);
     struct stat st;
     int bitmap_file;
@@ -79,7 +79,12 @@ void crear_archivo(char* nombre){
 
     char new_file_path[256];
     snprintf(new_file_path, sizeof(new_file_path), "%s/%s", path_base_dialfs, nombre);
-
+    open(new_file_path, O_CREAT | O_RDWR, 0666);
+    
+    t_config* new_file_config;
+    new_file_config = config_create(new_file_path);
+    config_set_value(new_file_config, "TAMANIO_ARCHIVO", "0");
+    
     uint32_t bloque_libre = buscar_bloque_libre();
     if (bloque_libre == -1) {
         printf("No hay bloques libres disponibles.\n");
@@ -88,10 +93,7 @@ void crear_archivo(char* nombre){
     }
     bitarray_set_bit(bitmap, bloque_libre);
     msync(bitmap->bitarray, bitmap_size, MS_SYNC); // Sincroniza los cambios del bitmap
-    
-    t_config* new_file_config;
-    new_file_config = config_create(new_file_path);
-    config_set_value(new_file_config, "TAMANIO_ARCHIVO", "0");
+
     config_set_value(new_file_config, "BLOQUE_INICIAL", int_to_char(bloque_libre));
     config_save(new_file_config);
     config_destroy(new_file_config);
@@ -100,14 +102,72 @@ void crear_archivo(char* nombre){
 void borrar_archivo(char* nombre){
     usleep(tiempo_unidad_trabajo);
 
-    char new_file_path[256];
-    snprintf(new_file_path, sizeof(new_file_path), "%s/%s", path_base_dialfs, nombre);
-    int new_file = open(new_file_path, O_CREAT | O_RDWR, 0666);
-    if (new_file < 0) {
-        perror("Error al crear el archivo");
-        exit(EXIT_FAILURE);
+    char file_path[256];
+    snprintf(file_path, sizeof(file_path), "%s/%s", path_base_dialfs, nombre);
+    
+    t_config* file_config = config_create(file_path);
+    
+    int bloque_inicial = config_get_int_value(file_config, "BLOQUE_INICIAL");
+    int tamaño_archivo = config_get_int_value(file_config, "TAMANIO_ARCHIVO");
+
+    int bloque_final = (tamaño_archivo + block_size - 1) / block_size; //Es para redondear hacia arriba
+
+    for (int contador_bloques = bloque_inicial; contador_bloques <= bloque_final; contador_bloques++) {
+        bitarray_clean_bit(bitmap, contador_bloques);
     }
 
+    config_destroy(file_config);
+    if (unlink(file_path) == 0) {
+        printf("Archivo eliminado exitosamente.\n");
+    } else {
+        perror("Error al eliminar el archivo");
+    }
+
+    int bitmap_file = open(bitmap_path, O_RDWR);
+    msync(bitmap->bitarray, bitmap_size, MS_SYNC);
+    close(bitmap_file);
+}
+
+void truncar_archivo(char* nombre, uint32_t tamaño){
+    usleep(tiempo_unidad_trabajo);
+
+    char file_path[256];
+    snprintf(file_path, sizeof(file_path), "%s/%s", path_base_dialfs, nombre);
+    
+    t_config* file_config = config_create(file_path);
+    
+    int bloque_inicial = config_get_int_value(file_config, "BLOQUE_INICIAL");
+    int cantidad_bloques = (tamaño + block_size - 1) / block_size; //Es para redondear hacia arriba
+    config_set_value(file_config, "TAMANIO_ARCHIVO", int_to_char(tamaño));
+    config_save(file_config);
+
+    int tamaño_anterior = config_get_int_value(file_config, "TAMANIO_ARCHIVO");
+    int bloques_ocupados_anteriormente = (tamaño_anterior + block_size - 1) / block_size;
+    
+
+    if (bloques_ocupados_anteriormente > cantidad_bloques) {
+        for (int i = bloque_inicial + cantidad_bloques; i <= bloques_ocupados_anteriormente; i++) {
+            bitarray_clean_bit(bitmap, bloque_inicial + i);
+        }
+    } else {
+        for (int i = bloque_inicial + 1; i < bloque_inicial + cantidad_bloques; i++) {
+            bitarray_set_bit(bitmap, i);
+        }
+    }
+
+
+
+    config_destroy(file_config);
+    int bitmap_file = open(bitmap_path, O_RDWR);
+    msync(bitmap->bitarray, bitmap_size, MS_SYNC);
+    close(bitmap_file);
+}
+
+void escribir_archivo(char* nombre){
+
+}
+
+void leer_archivo(char* nombre){
 
 }
 
