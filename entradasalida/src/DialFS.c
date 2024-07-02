@@ -112,7 +112,7 @@ void borrar_archivo(char* nombre){
 
     int bloque_final = (tamaño_archivo + block_size - 1) / block_size; //Es para redondear hacia arriba
 
-    for (int contador_bloques = bloque_inicial; contador_bloques <= bloque_final; contador_bloques++) {
+    for (int contador_bloques = bloque_inicial; contador_bloques <= bloque_inicial + bloque_final; contador_bloques++) {
         bitarray_clean_bit(bitmap, contador_bloques);
     }
 
