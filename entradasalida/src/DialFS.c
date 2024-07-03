@@ -138,24 +138,26 @@ void truncar_archivo(char* nombre, uint32_t tamaño){
     
     int bloque_inicial = config_get_int_value(file_config, "BLOQUE_INICIAL");
     int cantidad_bloques = (tamaño + block_size - 1) / block_size; //Es para redondear hacia arriba
-    config_set_value(file_config, "TAMANIO_ARCHIVO", int_to_char(tamaño));
-    config_save(file_config);
+    int bloque_final = bloque_inicial + cantidad_bloques;
 
     int tamaño_anterior = config_get_int_value(file_config, "TAMANIO_ARCHIVO");
     int bloques_ocupados_anteriormente = (tamaño_anterior + block_size - 1) / block_size;
-    
+    int bloque_final_anterior = bloque_inicial + bloques_ocupados_anteriormente ;
 
-    if (bloques_ocupados_anteriormente > cantidad_bloques) {
-        for (int i = bloque_inicial + cantidad_bloques; i <= bloques_ocupados_anteriormente; i++) {
-            bitarray_clean_bit(bitmap, bloque_inicial + i);
+
+    if (bloque_final_anterior > bloque_final) {
+        for (int i = bloque_final + 1; i < bloque_final_anterior; i++) {
+            bitarray_clean_bit(bitmap, i);
         }
-    } else {
-        for (int i = bloque_inicial + 1; i < bloque_inicial + cantidad_bloques; i++) {
+    }
+    else {
+        for (int i = bloque_inicial + 1; i < bloque_final; i++) {
             bitarray_set_bit(bitmap, i);
         }
     }
 
-
+    config_set_value(file_config, "TAMANIO_ARCHIVO", int_to_char(tamaño));
+    config_save(file_config);
 
     config_destroy(file_config);
     int bitmap_file = open(bitmap_path, O_RDWR);
