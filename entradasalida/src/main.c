@@ -47,9 +47,6 @@ int main(void) {
     pthread_t hilo;
     pthread_create(&hilo, NULL, (void *)recibir_instruccion, interfaz);
     pthread_join(hilo, NULL);*/
-    crear_archivo("t.txt");
-    truncar_archivo("t.txt", 100);
-
     return 0;
 }
 
