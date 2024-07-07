@@ -10,10 +10,9 @@ void atender_cliente(void *void_args)
     t_log *logger = args->log;
     kernel_socket = args->c_socket;
     char *server_name = args->server_name;
-
     
     //free(args);
-
+    uint32_t pid_actual;
     //MEMORIA a CPU
     while (kernel_socket != -1)
     {   
@@ -35,22 +34,24 @@ void atender_cliente(void *void_args)
         {
            t_pcb* pcb;
         
-            pcb = recibir_pcb(args->c_socket);            
+            pcb = recibir_pcb(args->c_socket);  
+            pid_actual = pcb->pid;          
 			log_debug(logger, "Llego a CPU el <PID> es <%u>", pcb->pid);
           
-            realizar_ciclo_inst(conexion_memoria_cpu, pcb, logger);
+            realizar_ciclo_inst(conexion_memoria_cpu, pcb, logger, args->c_socket, args->lock_interrupt);
             log_debug(logger, "Complete ciclo");
           
-            enviar_pcb(pcb, args->c_socket);
 			break;
         }
         case KERNEL_CPU_INTERRUPT:
         {
             uint32_t pid = recibir_int_a_interrupt(args->c_socket);
 
-            //if(pid == pcb)
+            pthread_mutex_lock(&args->lock_interrupt);
             log_debug(cpu_log, "Se recibe un pedido de interrucpcion para el PID: %d", pid);
             hay_interrupcion = 1;
+            pthread_mutex_unlock(&args->lock_interrupt);
+
             break;
         }
         default:

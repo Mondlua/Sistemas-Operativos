@@ -362,7 +362,7 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             asignar_registro(pcb->registros, registroDestino, suma);
             break;
         }
-        case 4:{
+        case SUB:{
             char* registroDestino=(char*)list_get(decode->registroCpu, 0);
             char* registroOrigen=(char*)list_get(decode->registroCpu, 1);
             uint8_t valor2 = (uint8_t) obtener_valor_registro(pcb->registros, registroDestino);
@@ -371,7 +371,7 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             asignar_registro(pcb->registros, registroDestino, resta);
             break;
         }
-        case 5:{
+        case JNZ:{
             char* registro = (char*)list_get(decode->registroCpu, 0);
             uint8_t valor=obtener_valor_registro(pcb->registros, registro);
             if(valor!=0){
@@ -380,8 +380,7 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             }
             break;
         }
-        //resize
-        case 6:{
+        case RESIZE:{
             int tamanio_resize = decode->valor;
             char* tamanio = int_to_char(tamanio_resize);
             char* pid_char = int_to_char(pcb->pid);
@@ -390,7 +389,7 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             enviar_pedido_resize_tampid(conexion_memoria_cpu, mensaje);
             break;
         }
-        case 7:{
+        case COPY_STRING:{
             int bytes = decode->valor;
             int cant_char = bytes / sizeof(char*);
             char* string =obtener_valor_registro(pcb->registros, "SI");
@@ -400,9 +399,9 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             enviar_cpy_string(conexion_memoria_cpu, string_cortado);
             break;
         }
-        case 8:{}
-        case 9:{}
-        case 10:{
+        case WAIT:{}
+        case SIGNAL:{}
+        case IO_GEN_SLEEP:{
             enviar_motivo(BLOCK_IO, kernel_socket);
             instruccion_params* parametros =  malloc(sizeof(instruccion_params));
             parametros->interfaz = strdup(decode->interfaz);
@@ -416,7 +415,7 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             free(paquete);
             break;
         }
-        case 11:{
+        case IO_STDIN_READ:{
             enviar_motivo(BLOCK_IO, kernel_socket);
             instruccion_params* parametros =  malloc(sizeof(instruccion_params));
             parametros->interfaz = strdup(decode->interfaz);
@@ -434,7 +433,7 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             free(paquete);
             break;
         }
-        case 12:{
+        case IO_STDOUT_WRITE:{
             enviar_motivo(BLOCK_IO, kernel_socket);
             instruccion_params* parametros =  malloc(sizeof(instruccion_params));
             parametros->interfaz = strdup(decode->interfaz);
@@ -453,11 +452,11 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             free(paquete);
             break;
         }
-        case 13:{}
-        case 14:{}
-        case 15:{}
-        case 16:{}
-        case 17:{}
+        case IO_FS_CREATE:{}
+        case IO_FS_DELETE:{}
+        case IO_FS_TRUNCATE:{}
+        case IO_FS_WRITE:{}
+        case IO_FS_READ:{}
         case EXIIT:{
             log_info(logger, "PID: %d - Ejecutando: EXIT", pcb->pid);        
             return EXIT_BLOCK;
@@ -508,7 +507,7 @@ char** split_por_bytes(const char* string, size_t bytes, int* cant_partes) {
     
 }
 
-void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger){
+void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger, int socket_cliente, pthread_mutex_t lock_interrupt){
    
    t_cpu_blockeo blockeo = NO_BLOCK;
     while(blockeo == NO_BLOCK && !hay_interrupcion)
@@ -524,25 +523,34 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger){
         loggear_registros(pcb, logger);
     }
 
+    pthread_mutex_lock(&lock_interrupt);
     if(hay_interrupcion == 1) // Fin de quantum
     {
+        hay_interrupcion = 0;
+        pthread_mutex_unlock(&lock_interrupt);
         pcb->motivo_desalojo = 1;
         log_debug(cpu_log, "Envio PCB interrumpido por fin de quantum");
-        hay_interrupcion = 0;
+        enviar_pcb(pcb, socket_cliente);
+        return;
     }
     if(blockeo == EXIT_BLOCK)
     {
+        hay_interrupcion = 0;
+        pthread_mutex_unlock(&lock_interrupt);
         pcb->motivo_desalojo = 0;
         log_debug(cpu_log, "Envio PCB terminado.");
+        enviar_pcb(pcb, socket_cliente);
+        return;
     }
     if(blockeo == IO_BLOCK)
     {
-
+        
     }
     if(blockeo == REC_BLOCK)
     {
 
     }
+    pthread_mutex_unlock(&lock_interrupt);
 }
 
 void loggear_registros(t_pcb* pcb, t_log* logger)

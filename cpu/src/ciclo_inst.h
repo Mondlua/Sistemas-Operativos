@@ -34,7 +34,7 @@ t_instruccion* fetch(int conexion, t_pcb* pcb);
 t_decode* decode(t_instruccion* ins);
 t_cpu_blockeo execute(t_decode* deacodeado, t_pcb* pcb, t_log *logger);
 instrucciones obtener_instruccion(char *nombre);
-void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log *logger);
+void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log *logger, int socket_cliente, pthread_mutex_t lock_interrupt);
 void loggear_registros(t_pcb* pcb, t_log* logger);
 char** split_por_bytes(const char* string, size_t bytes, int* cant_partes);
 //t_tabla* buscar_por_pid_return(uint32_t pid); 
