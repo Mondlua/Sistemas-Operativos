@@ -191,6 +191,8 @@ void enviar_pedido_escritura(int socket_cliente,  char* mensaje){
     free(a_enviar);
     eliminar_paquete(paquete);
 }
+
+
 void enviar_cpy_string(int socket_cliente, char* valor){
     t_paquete* paquete = malloc(sizeof(t_paquete));
 
@@ -258,8 +260,8 @@ char* recibir_pedido_lectura(int socket_cliente, t_log* logger)
 char* recibir_pedido_escritura(int socket_cliente, t_log* logger)
 {
     int size;
-    char* buffer = recibir_buffer(&size, socket_cliente);
-    log_info(logger, "Me llego el Pedido de Escritura");
+    char* buffer =recibir_buffer(&size, socket_cliente);
+    log_info(logger, "Me llego el Pedido de Escritura \n");
     return buffer;
 }
 
@@ -283,7 +285,7 @@ char* recibir_pedido_frame(int socket_cliente, t_log* logger)
 {
     int size;
     char* buffer = recibir_buffer(&size, socket_cliente);
-    log_info(logger, "Me llego el Pedido de FRAME");
+    log_info(logger, "Me llego el pedido de frame");
     return buffer;
 }
 void recibir_ped_tamanio_pag(int socket_cliente, t_log* logger)
@@ -291,6 +293,7 @@ void recibir_ped_tamanio_pag(int socket_cliente, t_log* logger)
     int size;
     char* buffer = recibir_buffer(&size, socket_cliente);
     log_info(logger, "Me llego el Pedido de TAM PAG");
+    free(buffer);
 }
 
 void recibir_tamanio_pag(int socket_cliente, t_log* logger, int* numero)

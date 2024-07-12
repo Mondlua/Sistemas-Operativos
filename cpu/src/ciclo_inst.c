@@ -2,7 +2,7 @@
 
 t_instruccion* fetch(int conexion, t_pcb* pcb){
     
-    t_instruccion* instruccion;
+    t_instruccion* instruccion = malloc(sizeof(t_instruccion*));
     enviar_pid(int_to_char(pcb->pid), conexion);
     enviar_pc(int_to_char(pcb->registros->PC),conexion);
     instruccion = recibir_instruccion_cpu(conexion);
@@ -79,7 +79,6 @@ instrucciones obtener_instruccion(char *nombre) {
     if (strcmp(nombre, "EXIT") == 0) {
         return EXIIT;
     } 
-    
     return EXIIT;
 }
 
@@ -88,10 +87,12 @@ t_decode* decode(t_instruccion* instruccion){
     char* buffer = (char*) instruccion->buffer->stream;
     eliminar_linea_n(buffer);
     char** arrayIns = string_split(buffer," ");
-    printf("Instruccion: %s.\n", arrayIns[0]);
+    char* instruc = malloc(sizeof(char*));
+    instruc = arrayIns[0];
+    printf("Instruccion: %s.\n", instruc);
 
-    instrucciones ins = obtener_instruccion(arrayIns[0]);
-    t_decode* decode = malloc(sizeof(t_decode));
+    instrucciones ins = obtener_instruccion(instruc);
+    t_decode* decode = malloc(sizeof(t_decode*));
     decode->op_code = ins;
     decode->registroCpu = list_create();
     
@@ -308,7 +309,8 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
                 tamanio = 4;
             }
 
-            char* aescribir = int_to_char(valor);
+            char* aescribir = malloc(sizeof(char*));
+            aescribir= int_to_char(valor);
 
             int cant_pags = tamanio/tam_pag;
 
@@ -319,6 +321,12 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
                 int desplazamiento = dir_fisica->desplazamiento;
                 
                 printf ("num frame %d\n", num_frame);
+
+                int tam_mensaje = sizeof(tamanio)+sizeof(aescribir)+sizeof(num_frame)+sizeof(desplazamiento)+sizeof(pcb->pid); 
+                char* mensaje = malloc(tam_mensaje);
+                sprintf(mensaje, "%d/%s/%d/%d/%d", tamanio,aescribir,num_frame,desplazamiento,pcb->pid);      //ver de implementar en demas    
+                
+                /*
                 char* valorr= strcat(int_to_char(tamanio), "/");
                 char* valorrr= strcat(valorr, aescribir);
                 char* valorrrr= strcat(valorrr, "/");
@@ -326,9 +334,9 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
                 char* tamframe1 = strcat(tamframe, "/");
                 char* enviar1 = strcat(tamframe1, int_to_char(desplazamiento));
                 char* enviar2 = strcat(enviar1, "/");
-                char* enviar = strcat(enviar2, int_to_char(pcb->pid));
+                char* enviar = strcat(enviar2, int_to_char(pcb->pid));*/
 
-                enviar_pedido_escritura(conexion_memoria_cpu, enviar);
+                enviar_pedido_escritura(conexion_memoria_cpu, mensaje);
                 int i = recibir_operacion(conexion_memoria_cpu);
                 char* frame_siguiente = recibir_mensaje(conexion_memoria_cpu,cpu_log);
                 printf("Entre al if de move out\n y el valor es %s, en num %d, y frame sig %s", int_to_char(valor), atoi(int_to_char(valor)), frame_siguiente);
@@ -390,13 +398,11 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             char* registro = (char*)list_get(decode->registroCpu, 0);
             uint8_t valor=obtener_valor_registro(pcb->registros, registro);
             if(valor!=0){
-                instrucciones ins= decode->instrucciones;
-                //pcb->p_counter=ins;
+                asignar_registro(pcb->registros, "PC", valor );
             }
             break;
         }
-        //resize
-        case 6:{
+        case RESIZE:{
             int tamanio_resize = decode->valor;
             char* tamanio = int_to_char(tamanio_resize);
             char* pid_char = int_to_char(pcb->pid);
@@ -408,11 +414,18 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
         case 7:{
             int bytes = decode->valor;
             int cant_char = bytes / sizeof(char*);
-            char* string =obtener_valor_registro(pcb->registros, "SI");
-            void* dir_apuntada =obtener_valor_registro(pcb->registros, "DI");
-        
-        	char* string_cortado= string_substring_until(string,cant_char);
-            enviar_cpy_string(conexion_memoria_cpu, string_cortado);
+            uint32_t string_apuntado =obtener_valor_registro(pcb->registros, "SI");
+            uint32_t dir_apunt=obtener_valor_registro(pcb->registros, "DI");
+            t_dir_fisica* dirstring= mmu(string_apuntado, pcb->pid);
+            t_dir_fisica* dir_apuntada = mmu(dir_apunt, pcb->pid);
+            int d1=dir_apuntada->nro_frame;
+            int d2=dir_apuntada->desplazamiento;
+            int d3=dirstring->nro_frame;
+            int d4=dirstring->desplazamiento;
+            char* mensaje = malloc(sizeof(d1)+sizeof(d2)+sizeof(d3)+sizeof(d4)+sizeof(cant_char));
+            sprintf(mensaje, "%d/%d/%d/%d/%d", d1,d2,d3,d4,cant_char);      //ver de implementar en demas    
+            enviar_cpy_string(conexion_memoria_cpu, mensaje);
+           
             break;
         }
         case 8:{}
@@ -483,45 +496,8 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
     return NO_BLOCK;
 }
 
+/*
 char** split_por_bytes(const char* string, size_t bytes, int* cant_partes) {
-   /*
-    size_t string_len = strlen(string);
-    *cant_partes = (string_len + bytes - 1) / bytes;
-    int resto = (string_len + bytes - 1) % bytes;
-
-    if(resto == 0){
-    printf("cant partes inicial %d \n", *cant_partes);
-    char** partes = (char**)malloc((*cant_partes) * sizeof(char*));
-
-    for (int i = 0; i < *cant_partes; i++) {
-        partes[i] = (char*)malloc((bytes + 1) * sizeof(char));
-        strncpy(partes[i], string + i * bytes, bytes);
-        partes[i][bytes] = '\0'; 
-    }
-
-    return partes;
-    }
-    else{
-    *cant_partes = *cant_partes + 1;
-    printf("cant partes %d \n  ", *cant_partes);
-    char** partes = (char**)malloc((*cant_partes) * sizeof(char*));
-    for (int i = 0; i < *cant_partes; i++) {
-        
-        if(i == (*cant_partes - 1)){
-            partes[i] = (char*)malloc((resto + 1) * sizeof(char));
-            strncpy(partes[i], string + ((i-1) * bytes) + 1, resto);
-            partes[i][resto] = '\0'; 
-            printf("restoo %d \n", resto);
-        }
-        else{   
-        partes[i] = (char*)malloc((bytes + 1) * sizeof(char));
-        strncpy(partes[i], string + i * bytes, bytes);
-        partes[i][bytes] = '\0'; 
-        }
-    }
-
-    }
-    */
     size_t string_len = strlen(string);
     *cant_partes = (string_len + bytes - 1) / bytes; // Calcula la cantidad de partes
     int resto = string_len % bytes; // Calcula el resto para la última parte
@@ -539,7 +515,7 @@ char** split_por_bytes(const char* string, size_t bytes, int* cant_partes) {
     }
 
     return partes; // Devolver el arreglo de partes
-}
+}*/
     
 
 
