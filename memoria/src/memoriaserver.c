@@ -11,7 +11,7 @@ void atender_cliente(void *void_args)
     int client_socket = args->c_socket;
     char *server_name = args->server_name;
     uint32_t pid;
-    free(args);
+    
 
     retardo = config_get_int_value(memoria_config, "RETARDO_RESPUESTA");
 
@@ -33,12 +33,16 @@ void atender_cliente(void *void_args)
         case FRAME:{
             
             char* pidpag = recibir_pedido_frame(client_socket, logger);
+
             char** split = string_split(pidpag, "/");
             uint32_t pid = atoi(split[0]);
             int pag = atoi(split[1]);
             t_tabla* tabla = buscar_por_pid_return(pid);
             int frame = list_get(tabla->tabla, pag);
             enviar_tamanio_pag_frame(client_socket, frame);
+            free(pidpag);
+            free(split);
+            
             break;
         }
         case TAM_PAG: {
@@ -56,13 +60,16 @@ void atender_cliente(void *void_args)
 
             lista_arch = list_create();
             lista_arch = abrir_pseudocodigo(path);
-            free(path);
+          
 
             t_tabla* tabla = malloc(sizeof(t_tabla));
             tabla->pid = pid;
             tabla->tabla = lista_arch;
             list_add(tabla_pags, tabla);
             log_info(memoria_log, "PID: <%d> - Tamaño: <%d>", pid, list_size(tabla->tabla));
+            free(pathpid);
+            free(split);
+            free(path);
 
             break;
         }
@@ -70,6 +77,7 @@ void atender_cliente(void *void_args)
             char * pid_recibido =recibir_pc(client_socket);
             pid = atoi(pid_recibido);
             log_info(logger, "Mi PID:%u", pid);
+            free(pid_recibido);
             break;
         }
         case PC:
@@ -87,7 +95,8 @@ void atender_cliente(void *void_args)
             eliminar_linea_n(ins);
             log_debug(logger, "Mando la instruccion: %s", instruccion->buffer->stream);
             enviar_instruccion_mem(client_socket,instruccion);
-           
+           free(pc_recibido);
+           free(ins);
             break;
         }
         case IO_STDIN_READ:{
@@ -186,7 +195,8 @@ void atender_cliente(void *void_args)
                 log_info(logger,"PID: <%d> - Tamaño Actual: <%d> - Tamaño a Reducir: <%d>", pid,tamanio_pid, tamanio);
             }
             }
-           
+           free(mensaje);
+           free(split);
             break;
         }
         case PED_LECTURA:
@@ -206,24 +216,41 @@ void atender_cliente(void *void_args)
 
             char* leido = leer_en_mem(tamanio, dir_fisica);
             enviar_mensaje(leido, client_socket);  
-
+            free(buffer);
+            free(arrayIns);
+            free(leido);
             break;
         }
         case PED_ESCRITURA:{
 
+            int tamanio;
+            char valor[8];
+            int frame; 
+            int desp;
+            uint32_t pid;
+
+            //char* buffer = malloc(sizeof(tamanio)+sizeof(valor)+sizeof(frame)+sizeof(desp)+sizeof(pid));
             char* buffer = recibir_pedido_escritura(client_socket, logger);  
-            char** arrayIns = string_split(buffer,"/");
+            printf("Contenido del buffer recibido: %s\n", buffer);
+
+            sscanf(buffer, "%d/%7[^/]/%d/%d/%d", &tamanio,valor,&frame,&desp,&pid);
+
+            /*char** arrayIns = string_split(buffer,"/");
             int tamanio = atoi(arrayIns[0]);
             uint8_t valor = (uint8_t) atoi(arrayIns[1]);
             int frame= atoi(arrayIns[2]);
             int desp=atoi(arrayIns[3]);
-            uint32_t pid =atoi(arrayIns[4]);
+            uint32_t pid =atoi(arrayIns[4]);*/
+            printf("TAM %d \n", tamanio);
+            printf("valor a escribir %s f\n",valor);
+            printf("frame %d, desp %d \n", frame, desp);
 
+            printf("TAM %d , valor a escribir %s frame %d, desp %d \n", tamanio, valor, frame, desp);
             t_dir_fisica* dir_fisica = malloc(sizeof(t_dir_fisica*));
             dir_fisica->nro_frame = frame;
             dir_fisica->desplazamiento = desp;
             usleep(retardo*1000);   
-            escribir_en_mem(int_to_char(valor), dir_fisica, tamanio);
+            escribir_en_mem(valor, dir_fisica, tamanio);
             log_info(logger, "Escribi en Memoria <%u> \n", valor);
             bitarray_set_bit(escrito, frame);
 
@@ -251,14 +278,43 @@ void atender_cliente(void *void_args)
             
             enviar_mensaje(int_to_char(frame_siguiente_disp), client_socket);
             printf("Envio mensaje frame siguiente %s \n", int_to_char(frame_siguiente_disp));
-
+            free(buffer);
+            free(valor);
+           
             break;
         }
         
         case CPY_STRING:{
-            char* a_escribir = recibir_cpy_string(client_socket, logger);
+
+            int frame1;
+            int desp1;
+            int frame2;
+            int desp2;
+            int cantchar;
+
+            char* a_escribir = malloc(sizeof(frame1)+ sizeof(desp1)+sizeof(frame2)+ sizeof(desp2)+ sizeof(cantchar)); 
+            a_escribir=recibir_cpy_string(client_socket, logger);
+
+            sscanf(a_escribir, "%d/%d/%d/%d/%d", &frame1,&desp1,&frame2,&desp2,&cantchar);
+         
+            t_dir_fisica* dir1=malloc(sizeof(t_dir_fisica*)) ;//direc
+            t_dir_fisica* dir2= malloc(sizeof(t_dir_fisica*)); //stri
+            dir1->nro_frame = frame1;
+            dir1->desplazamiento=desp1;
+            dir2->nro_frame = frame2;
+            dir2->desplazamiento=desp2;
+
             usleep(retardo*1000);
-            //escribir_a_mem(a_escribir, void* donde);
+            
+            char* leido = leer_en_mem(sizeof(char*), dir2);
+            char* cortado = string_substring_until(leido, cantchar);
+            escribir_en_mem(cortado, dir1,sizeof(char*));
+
+            free(leido);
+            free(a_escribir);
+            free(cortado);
+            free(dir1);
+            free(dir2);
             break;
         }
         case FINALIZACION:
@@ -276,6 +332,7 @@ void atender_cliente(void *void_args)
             log_info(logger, "PID: <%u> - Tamaño: <%d>", pid, list_size(tabla_pid->tabla));
 
             free(tabla_pid);
+            free(pidc);
 
             break;
         }
@@ -310,11 +367,13 @@ int server_escuchar(void* arg)
             args->log = logger;
             args->c_socket = client_socket;
             args->server_name = server_name;
- 
+    
             pthread_create(&hilo, NULL, (void *)atender_cliente,  (void*) args); //castear, lo convierto arg a tipo void*
             pthread_detach(hilo); //  hilo se ejecuta de manera independiente, el recurso del hilo se libera automáticamente 
         }
     }
+    free(args);
+
     return 0;
 }
 
