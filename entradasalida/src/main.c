@@ -4,6 +4,7 @@ char* nombre_interfaz;
 int conexion_kernel;
 int conexion_memoria;
 int tiempo_unidad_trabajo;
+int retraso_compactacion;
 int block_size;
 int block_count;
 char* path_base_dialfs;
@@ -65,7 +66,7 @@ void extraer_segun_tipo_io(t_config* config, char* tipo_interfaz){
         path_base_dialfs = config_get_string_value(config, "PATH_BASE_DIALFS");
         block_size = config_get_int_value(config, "BLOCK_SIZE");
         block_count = config_get_int_value(config, "BLOCK_COUNT");
-        int retraso_compactacion = config_get_int_value(config, "RETRASO_COMPACTACION");
+        retraso_compactacion = config_get_int_value(config, "RETRASO_COMPACTACION");
         //conectar_con_memoria(config);
         inicio_filesystem();
     }
