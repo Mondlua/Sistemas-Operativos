@@ -11,10 +11,14 @@
 #include <semaphore.h>
 #include <commons/string.h>
 
-
 extern sem_t grado_planificiacion;
 extern sem_t cola_ready;
 
+typedef struct
+{
+    //instruccion_params *params;
+    op_code opcode;
+} t_instruccion_params_opcode;
 typedef struct {
     char *identificador;
     t_queue *block_queue;

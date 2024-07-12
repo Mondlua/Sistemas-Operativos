@@ -2,7 +2,7 @@
 
 int logica_int;
 
-void validar_peticion(instruccion_params* parametros, t_pcb* pcb, int codigo_op) {
+void validar_peticion(instruccion_params* parametros, t_pcb* pcb, int codigo_op, t_planificacion* kernel_argumentos) {
 
     sem_wait(&sem_contador_int);
     int tamanio_lista = list_size(interfaces);
@@ -93,7 +93,7 @@ instruccion_params* deserializar_io_stdin_stdout_con_interfaz(t_buffer_ins* buff
     return parametros;
 }
 
-void recibir_solicitud_cpu(int socket_servidor, t_pcb* pcb)
+t_instruccion_params_opcode recibir_solicitud_cpu(int socket_servidor, t_pcb* pcb)
 {
     t_paquete_instruccion* instruccion = malloc(sizeof(t_paquete_instruccion));
     instruccion->buffer = malloc(sizeof(t_buffer_ins));
@@ -124,8 +124,15 @@ void recibir_solicitud_cpu(int socket_servidor, t_pcb* pcb)
             printf("Tipo de operación no válido.\n");
             break;
         }
-    validar_peticion(param, pcb, instruccion->codigo_operacion);
+    //validar_peticion(param, pcb, instruccion->codigo_operacion);
+
+    t_instruccion_params_opcode ret;
+    //ret.opcode = instruccion->codigo_operacion;
+    //ret.params = param;
+
     free(instruccion->buffer->stream);
     free(instruccion->buffer);
     free(instruccion);
+
+    return ret;
 }

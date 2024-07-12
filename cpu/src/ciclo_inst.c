@@ -246,6 +246,9 @@ void* obtener_valor_registro(cpu_registros* regs, char* nombre_registro) {
 t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
     
     instrucciones ins = decode->op_code;
+    t_cpu_blockeo ret;
+    ret.blockeo = NO_BLOCK;
+    ret.instrucciones = NULL;
     switch(ins){
     
         case SET:{
@@ -401,19 +404,17 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
         }
         case WAIT:{}
         case SIGNAL:{}
-        case IO_GEN_SLEEP:{
-            enviar_motivo(BLOCK_IO, kernel_socket);
-            instruccion_params* parametros =  malloc(sizeof(instruccion_params));
-            parametros->interfaz = strdup(decode->interfaz);
-            parametros->params.io_gen_sleep_params.unidades_trabajo = decode->valor;
+        case IO_GEN_SLEEP:{ 
+            //enviar_motivo(BLOCK_IO, kernel_socket); // No
+            instruccion_params* parametros =  malloc(sizeof(instruccion_params)); // Si
+            parametros->interfaz = strdup(decode->interfaz); // Si
+            parametros->params.io_gen_sleep_params.unidades_trabajo = decode->valor; // Si
 
-            t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion));
-            paquete->codigo_operacion = IO_GEN_SLEEP;
-            enviar_instruccion_a_Kernel(paquete, parametros, kernel_socket);
-            free(parametros->interfaz); 
-            free(parametros);
-            free(paquete);
-            break;
+            ret.io_opcode = IO_GEN_SLEEP;
+            ret.blockeo = IO_BLOCK;
+            ret.instrucciones = parametros;
+            return ret;
+            // En kernel agregar un recv para recibir el instruccion_params y operar en base a eso tratando de usar las cosas que hizo zoe.
         }
         case IO_STDIN_READ:{
             enviar_motivo(BLOCK_IO, kernel_socket);
@@ -458,13 +459,14 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
         case IO_FS_WRITE:{}
         case IO_FS_READ:{}
         case EXIIT:{
-            log_info(logger, "PID: %d - Ejecutando: EXIT", pcb->pid);        
-            return EXIT_BLOCK;
+            log_info(logger, "PID: %d - Ejecutando: EXIT", pcb->pid);
+            ret.blockeo = EXIT_BLOCK;
+            return ret;
         }
     }
 
     free(decode);
-    return NO_BLOCK;
+    return ret;
 }
 
 char** split_por_bytes(const char* string, size_t bytes, int* cant_partes) {
@@ -509,8 +511,9 @@ char** split_por_bytes(const char* string, size_t bytes, int* cant_partes) {
 
 void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger, int socket_cliente, pthread_mutex_t lock_interrupt){
    
-   t_cpu_blockeo blockeo = NO_BLOCK;
-    while(blockeo == NO_BLOCK && !hay_interrupcion)
+   t_cpu_blockeo blockeo;
+   blockeo.blockeo = NO_BLOCK;
+    while(blockeo.blockeo == NO_BLOCK && !hay_interrupcion)
     {
         t_instruccion* ins = fetch(conexion,pcb);
         log_info(logger, "PID: %d - FETCH - Program counter: <%d>", pcb->pid, pcb->registros->PC);
@@ -533,7 +536,7 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger, int socket_cli
         enviar_pcb(pcb, socket_cliente);
         return;
     }
-    if(blockeo == EXIT_BLOCK)
+    if(blockeo.blockeo == EXIT_BLOCK)
     {
         hay_interrupcion = 0;
         pthread_mutex_unlock(&lock_interrupt);
@@ -542,11 +545,23 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger, int socket_cli
         enviar_pcb(pcb, socket_cliente);
         return;
     }
-    if(blockeo == IO_BLOCK)
+    if(blockeo.blockeo == IO_BLOCK)
     {
-        
+        hay_interrupcion = 0;
+        pthread_mutex_unlock(&lock_interrupt);
+        pcb->motivo_desalojo = 2;
+        log_debug(cpu_log, "Envio PCB desalojado por solicitud a interfaz");
+        enviar_pcb(pcb, socket_cliente);
+
+        t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion)); // En el if
+        paquete->codigo_operacion = blockeo.io_opcode; // En el if
+        enviar_instruccion_a_Kernel(paquete, blockeo.instrucciones, kernel_socket); // En el if
+        free(blockeo.instrucciones->interfaz);  // En el if
+        free(blockeo.instrucciones); // En el if
+        free(paquete); // En el if
+        return;
     }
-    if(blockeo == REC_BLOCK)
+    if(blockeo.blockeo == REC_BLOCK)
     {
 
     }

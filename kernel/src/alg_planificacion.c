@@ -85,7 +85,7 @@ int frenar_timer(t_timer_planificador* timer)
     struct itimerspec remaining;
     timer_gettime(timer->timer, &remaining);
     //timer_delete(timer->timer);
-    return remaining.it_value.tv_nsec * 1000;
+    return remaining.it_value.tv_nsec / 1000000;
 }
 
 void enviar_interrupcion(union sigval sv)
@@ -144,9 +144,17 @@ bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_a
     if(pcb_desalojado->motivo_desalojo == 2) // Desalojado por IO_BLOCK
     {
         int milisegundos_restantes = frenar_timer(kernel_argumentos->timer_quantum);
-        pcb_desalojado->quantum = milisegundos_restantes;
+        if(kernel_argumentos->algo_planning == VRR)
+        {
+            pcb_desalojado->quantum = milisegundos_restantes;
+            log_debug(kernel_argumentos->logger, "Milisegundos restantes: %d", pcb_desalojado->quantum);
+        }
+        // Recibir los parametros del io_block
+        t_instruccion_params_opcode parametros_solicitud;
+        //parametros_solicitud = recibir_solicitud_cpu(kernel_argumentos->socket_cpu_dispatch, pcb_desalojado);
+        //validar_peticion(parametros_solicitud.params, pcb_desalojado, parametros_solicitud.opcode, kernel_argumentos);
         // mover_a_block(kernel_argumentos, pcb_desalojado, nombre_interfaz);
-        log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: EXEC - Estado actual: BLOCK", pcb_desalojado->pid);
+        //log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: EXEC - Estado actual: BLOCK", pcb_desalojado->pid);
         // Realizar la solicitud correspondiente a IO
     }
     if(pcb_desalojado->motivo_desalojo == 3) // Desalojado por WAIT
@@ -158,7 +166,7 @@ bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_a
         // Si existe, pero no hay instancias, a BLOCK correspondiente y return true
         // Si existe y hay instancias, se lo devuelve a EXEC, y se retorna un valor para que no se replanifique
     }
-    if(pcb_desalojado->motivo_desalojo == 4) // Desalojado por EXIT
+    if(pcb_desalojado->motivo_desalojo == 4) // Desalojado por SIGNAL
     {
         char* recurso_solicitado = "placeholder";
         administrador_recursos_signal(pcb_desalojado, recurso_solicitado, kernel_argumentos);

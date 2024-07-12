@@ -28,7 +28,15 @@ typedef enum {
     IO_BLOCK,
     REC_BLOCK,
     EXIT_BLOCK
+} t_cpu_blockeo_enum;
+
+typedef struct
+{
+    t_cpu_blockeo_enum blockeo;
+    instrucciones io_opcode;
+    instruccion_params* instrucciones;
 } t_cpu_blockeo;
+
 
 t_instruccion* fetch(int conexion, t_pcb* pcb);
 t_decode* decode(t_instruccion* ins);
