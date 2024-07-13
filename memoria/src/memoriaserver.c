@@ -74,11 +74,12 @@ void atender_cliente(void *void_args)
             t_tabla* tabla = malloc(sizeof(t_tabla));
             tabla->pid = pid;
             tabla->tabla = list_create();
+            tabla->instrucciones = lista_arch;
+
             list_add(tabla_pags, tabla);
-            log_info(memoria_log, "PID: <%d> - Tamaño: <%d>", pid, list_size(tabla->tabla));
+            log_info(memoria_log, "PID: <%d> - Tamaño: <%d>", pid, list_size(tabla->instrucciones));
           
             free(pathpid);
-            free(path);
 
             break;
         }
@@ -99,7 +100,7 @@ void atender_cliente(void *void_args)
             // char* ins  = instruccion->buffer->stream;
             t_tabla* tabla_pc = list_get(tabla_pags, pid);
             log_debug(logger, "PID obtenido: %d", tabla_pc->pid);
-            t_instruccion *instruccion = (t_instruccion*)list_get(tabla_pc->tabla, pc);
+            t_instruccion *instruccion = (t_instruccion*)list_get(tabla_pc->instrucciones, pc);
             char* ins = instruccion->buffer->stream;
             eliminar_linea_n(ins);
             log_debug(logger, "Mando la instruccion: %s", instruccion->buffer->stream);
@@ -164,7 +165,6 @@ void atender_cliente(void *void_args)
             if(list_size(tabla_pid->tabla) != 0){
             cant_pags = list_size(tabla_pid->tabla);
             int tamanio_pid = cant_pags * tam_pagina;
-            printf("entre aca\n");
             if(tamanio > tamanio_pid){
             //AMPLIAR PROCESO
                 int bytes_a_ampliar = tamanio - tamanio_pid;
@@ -213,8 +213,30 @@ void atender_cliente(void *void_args)
 
             if(list_size(tabla_pid->tabla) == 0){
                 printf("La tabla esta vacia \n");
+                int cant_pags = tamanio/tam_pagina;
+                int cantframes_a_ocupar=  cant_pags;
+                size_t count = 0;
+                for (size_t i = 0; i < bitarray->size; i++) {
+                    if (bitarray_test_bit(bitarray, i) == 0) {
+                        count++;
+                    }
+                if(count>=cantframes_a_ocupar){
+                    int frames_ocupados=0;
+                    for (int i = 0; i < bitarray->size; i++) {
+                         if (bitarray_test_bit(bitarray, i) == 0) {
+                            bitarray_set_bit(bitarray, i);
+                            list_add(tabla_pid->tabla, i);
+                            frames_ocupados++;
+                        }
+                         if (frames_ocupados == cantframes_a_ocupar) {
+                            break;
+                       }
+                    }
+                
             }
-
+            }
+            log_info(logger, "PID: <%u> - Tamaño Actual: <%d> - Tamaño a Ampliar: <%d>", pid, 0, tamanio); 
+            }
            free(mensaje);
            //free(split);
             break;
@@ -251,7 +273,6 @@ void atender_cliente(void *void_args)
 
             //char* buffer = malloc(sizeof(tamanio)+sizeof(valor)+sizeof(frame)+sizeof(desp)+sizeof(pid));
             char* buffer = recibir_pedido_escritura(client_socket, logger);  
-            printf("Contenido del buffer recibido: %s\n", buffer);
 
             sscanf(buffer, "%d/%7[^/]/%d/%d/%d", &tamanio,valor,&frame,&desp,&pid);
 
@@ -261,11 +282,7 @@ void atender_cliente(void *void_args)
             int frame= atoi(arrayIns[2]);
             int desp=atoi(arrayIns[3]);
             uint32_t pid =atoi(arrayIns[4]);*/
-            printf("TAM %d \n", tamanio);
-            printf("valor a escribir %s f\n",valor);
-            printf("frame %d, desp %d \n", frame, desp);
 
-            printf("TAM %d , valor a escribir %s frame %d, desp %d \n", tamanio, valor, frame, desp);
             t_dir_fisica* dir_fisica = malloc(sizeof(t_dir_fisica*));
             dir_fisica->nro_frame = frame;
             dir_fisica->desplazamiento = desp;
@@ -285,7 +302,6 @@ void atender_cliente(void *void_args)
                         if(list_get(tabla_pid->tabla,x) == i){
                         frame_siguiente_disp = i;
                         encontrado = true;
-                        printf("el frame es %d y pid %u", frame_siguiente_disp, pid);
                         break;
                         }
                             
@@ -299,7 +315,6 @@ void atender_cliente(void *void_args)
             enviar_mensaje(int_to_char(frame_siguiente_disp), client_socket);
             printf("Envio mensaje frame siguiente %s \n", int_to_char(frame_siguiente_disp));
             free(buffer);
-            free(valor);
            
             break;
         }
