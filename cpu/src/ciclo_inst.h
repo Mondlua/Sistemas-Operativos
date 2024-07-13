@@ -4,6 +4,7 @@
 #include <commons/collections/list.h>
 #include <commons/string.h>
 #include <utils/io_operation.h>
+#include <utils/Instrucciones_gral.h>
 #include "main.h"
 #include <math.h>
 
@@ -36,7 +37,7 @@ t_cpu_blockeo execute(t_decode* deacodeado, t_pcb* pcb, t_log *logger);
 instrucciones obtener_instruccion(char *nombre);
 void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log *logger);
 void loggear_registros(t_pcb* pcb, t_log* logger);
-char** split_por_bytes(const char* string, size_t bytes, int* cant_partes);
+//char** split_por_bytes(const char* string, size_t bytes, int* cant_partes);
 
 void* obtener_valor_registro(cpu_registros* regs, char* nombre_registro);
 //t_tabla* buscar_por_pid_return(uint32_t pid); 

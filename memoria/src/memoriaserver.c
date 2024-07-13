@@ -32,16 +32,22 @@ void atender_cliente(void *void_args)
         {
         case FRAME:{
             
-            char* pidpag = recibir_pedido_frame(client_socket, logger);
+            char* mensaje = recibir_pedido_frame(client_socket, logger);
+            uint32_t pid;
+            int pag;
+            printf("Contenido del buffer recibido: %s\n", mensaje);
+            sscanf(mensaje, "%u/%d", &pid,&pag);
 
+            /*
             char** split = string_split(pidpag, "/");
             uint32_t pid = atoi(split[0]);
-            int pag = atoi(split[1]);
+            int pag = atoi(split[1]);*/
+            
             t_tabla* tabla = buscar_por_pid_return(pid);
             int frame = list_get(tabla->tabla, pag);
+            printf("el frame q voy a mandar es %d\n", frame);
             enviar_tamanio_pag_frame(client_socket, frame);
-            free(pidpag);
-            free(split);
+            free(mensaje);
             
             break;
         }
@@ -53,22 +59,25 @@ void atender_cliente(void *void_args)
         case MENSAJE:
         {
             char* pathpid = recibir_mensaje(client_socket, logger);
-
+/*
             char** split = string_split(pathpid, "$");
             char* path = split[0];
             uint32_t pid = atoi(split[1]);
-
+*/          
+            uint32_t pid;
+            char path [40];
+            sscanf(pathpid, "%u/%39[^\n]", &pid,path);
+            
             lista_arch = list_create();
             lista_arch = abrir_pseudocodigo(path);
           
-
             t_tabla* tabla = malloc(sizeof(t_tabla));
             tabla->pid = pid;
-            tabla->tabla = lista_arch;
+            tabla->tabla = list_create();
             list_add(tabla_pags, tabla);
             log_info(memoria_log, "PID: <%d> - Tamaño: <%d>", pid, list_size(tabla->tabla));
+          
             free(pathpid);
-            free(split);
             free(path);
 
             break;
@@ -140,16 +149,22 @@ void atender_cliente(void *void_args)
         {   
            char* mensaje = recibir_pedido_resize_tampid(client_socket, logger);
            usleep(retardo*1000);
-           char** split = string_split(mensaje, "/");
+           printf("Contenido del buffer recibido: %s\n", mensaje);
+           int tamanio;
+           uint32_t pid;
+           sscanf(mensaje, "%d/%u", &tamanio,&pid);
+
+           /*char** split = string_split(mensaje, "/");
            uint32_t pid= atoi(split[0]);
-           int tamanio = atoi(split[1]);
+           int tamanio = atoi(split[1]);*/
             usleep(retardo);
 
             t_tabla* tabla_pid = buscar_por_pid_return(pid);
             int cant_pags;
-            if(tabla_pid != NULL){
+            if(list_size(tabla_pid->tabla) != 0){
             cant_pags = list_size(tabla_pid->tabla);
             int tamanio_pid = cant_pags * tam_pagina;
+            printf("entre aca\n");
             if(tamanio > tamanio_pid){
             //AMPLIAR PROCESO
                 int bytes_a_ampliar = tamanio - tamanio_pid;
@@ -195,8 +210,13 @@ void atender_cliente(void *void_args)
                 log_info(logger,"PID: <%d> - Tamaño Actual: <%d> - Tamaño a Reducir: <%d>", pid,tamanio_pid, tamanio);
             }
             }
+
+            if(list_size(tabla_pid->tabla) == 0){
+                printf("La tabla esta vacia \n");
+            }
+
            free(mensaje);
-           free(split);
+           //free(split);
             break;
         }
         case PED_LECTURA:

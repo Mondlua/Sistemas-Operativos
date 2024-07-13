@@ -76,7 +76,7 @@ char* recibir_pedido_escritura(int socket_cliente, t_log* logger);
 void enviar_pedido_resize_tampid(int socket_cliente, char* tampid);
 
 char* recibir_pedido_resize_tampid(int socket_cliente, t_log* logger);
-void enviar_pedido_frame(int conexion_memoria_cpu, uint32_t pid, int numero_pagina);
+void enviar_pedido_frame(int conexion_memoria_cpu, char* mensaje);
 
 void enviar_cpy_string(int socket_cliente, char* valor);
 char* recibir_cpy_string(int socket_cliente, t_log* logger);

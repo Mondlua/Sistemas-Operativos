@@ -2,7 +2,7 @@
 
 t_instruccion* fetch(int conexion, t_pcb* pcb){
     
-    t_instruccion* instruccion = malloc(sizeof(t_instruccion*));
+    t_instruccion* instruccion = malloc(sizeof(t_instruccion));
     enviar_pid(int_to_char(pcb->pid), conexion);
     enviar_pc(int_to_char(pcb->registros->PC),conexion);
     instruccion = recibir_instruccion_cpu(conexion);
@@ -87,12 +87,10 @@ t_decode* decode(t_instruccion* instruccion){
     char* buffer = (char*) instruccion->buffer->stream;
     eliminar_linea_n(buffer);
     char** arrayIns = string_split(buffer," ");
-    char* instruc = malloc(sizeof(char*));
-    instruc = arrayIns[0];
-    printf("Instruccion: %s.\n", instruc);
+    printf("Instruccion: %s.\n", arrayIns[0]);
 
-    instrucciones ins = obtener_instruccion(instruc);
-    t_decode* decode = malloc(sizeof(t_decode*));
+    instrucciones ins = obtener_instruccion(arrayIns[0]);
+    t_decode* decode = malloc(sizeof(t_decode));
     decode->op_code = ins;
     decode->registroCpu = list_create();
     
@@ -404,10 +402,12 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
         }
         case RESIZE:{
             int tamanio_resize = decode->valor;
-            char* tamanio = int_to_char(tamanio_resize);
+            /*char* tamanio = int_to_char(tamanio_resize);
             char* pid_char = int_to_char(pcb->pid);
             char* mensaje1 = strcat(pid_char,"/");
-            char* mensaje = strcat(mensaje1,tamanio);
+            char* mensaje = strcat(mensaje1,tamanio);*/
+            char* mensaje = malloc(sizeof(tamanio_resize)+sizeof(pcb->pid));
+            sprintf(mensaje, "%d/%u", tamanio_resize,pcb->pid); 
             enviar_pedido_resize_tampid(conexion_memoria_cpu, mensaje);
             break;
         }
