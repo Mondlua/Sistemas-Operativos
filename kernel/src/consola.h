@@ -8,7 +8,7 @@
 #include<commons/log.h>
 #include<readline/readline.h>
 #include "utils_consola.h"
-#include "main.h"
+//#include "main.h"
 #include "alg_planificacion.h"
 
 void consola_interactiva(t_planificacion *kernel_argumentos);
