@@ -101,16 +101,18 @@ void iniciar_proceso(char* path, t_planificacion *kernel_argumentos){
 
     log_debug(kernel_log, ">> Se crea el proceso %s en NEW", path);
 
-    char *pid_str = int_to_char(pcb->pid);
+    char* mensaje_enviar = malloc(sizeof(uint32_t)+strlen(path)+2);
+    uint32_t pid = pcb->pid;
+    sprintf(mensaje_enviar, "%u/%s", pid,path);  
+
+    /*char *pid_str = int_to_char(pcb->pid);
     size_t len = strlen(path) + strlen(pid_str) + 2;
     char *pathpid = malloc(len);
     strcpy(pathpid, path);
     strcat(pathpid, "$");
     strcat(pathpid, pid_str);
-    enviar_mensaje(pathpid,conexion_memoria);
-    free(pid_str);
-    free(pathpid);
-
+    */
+    enviar_mensaje(mensaje_enviar,conexion_memoria);
 }
 
 void finalizar_proceso(uint32_t pid, t_planificacion *kernel_argumentos){

@@ -99,12 +99,12 @@ void enviar_mensaje(char* mensaje, int socket_cliente)
     free(a_enviar);
     eliminar_paquete(paquete);
 }
-void enviar_pedido_frame(int conexion_memoria_cpu, uint32_t pid, int numero_pagina)
+void enviar_pedido_frame(int conexion_memoria_cpu, char* mensaje)
     {
-    char* nro_pag = int_to_char(numero_pagina);
+    /*char* nro_pag = int_to_char(numero_pagina);
     char* pid_char = int_to_char(pid);
     char* mensaje1 = strcat(pid_char,"/");
-    char* mensaje = strcat(mensaje1,nro_pag);
+    char* mensaje = strcat(mensaje1,nro_pag);*/
     t_paquete* paquete = malloc(sizeof(t_paquete));
 	paquete->codigo_operacion = FRAME;
 	paquete->buffer = malloc(sizeof(t_buffer));

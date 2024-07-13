@@ -100,7 +100,7 @@ t_instruccion* recibir_instruccion_cpu(int socket_servidor){
 
     recv(socket_servidor, &(instruccion->buffer->size), sizeof(uint32_t), MSG_WAITALL);
 
-    instruccion->buffer->stream = malloc(sizeof(instruccion->buffer->size));
+    instruccion->buffer->stream = malloc(instruccion->buffer->size);
     recv(socket_servidor, instruccion->buffer->stream, instruccion->buffer->size, MSG_WAITALL);
  
     return instruccion;  
