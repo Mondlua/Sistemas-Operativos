@@ -208,4 +208,3 @@ t_buffer_ins* serializar_io_stdin_con_texto(instruccion_params* param){
     return buffer;
 }
 
-// ------- FUNCIONES KERNEL (EX: IO.C) -------

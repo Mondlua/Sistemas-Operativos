@@ -10,13 +10,14 @@
 #include <stdlib.h>
 #include <semaphore.h>
 #include <commons/string.h>
+#include <utils/io_operation.h>
 
 extern sem_t grado_planificiacion;
 extern sem_t cola_ready;
 
 typedef struct
 {
-    //instruccion_params *params;
+    instruccion_params *params;
     op_code opcode;
 } t_instruccion_params_opcode;
 typedef struct {
@@ -79,6 +80,13 @@ typedef struct
     t_tipo_planificacion algo_planning;
 } t_planificacion;
 
+typedef struct {
+    char* nombre_interfaz;
+    int socket_interfaz;
+    sem_t semaforo_interfaz;  
+    t_queue* cola_block;
+} interfaz;
+
 void* hilo_planificador(void *args);
 
 void fifo(t_planificacion *kernel_argumentos);
@@ -109,5 +117,12 @@ t_pcb *planificador_prioridad_a_exec(t_planificacion *kernel_argumentos);
 bool administrador_recursos_wait(t_pcb *pcb_solicitante, char* nombre_recurso, t_planificacion *kernel_argumentos);
 bool administrador_recursos_signal(t_pcb *pcb_desalojado, char* recurso_solicitado, t_planificacion *kernel_argumentos);
 void procesar_desbloqueo_factible(char* recurso_solicitado, t_planificacion *kernel_argumentos);
+
+void validar_peticion(instruccion_params* parametros, t_pcb* pcb, int codigo_op, t_planificacion* kernel_argumentos);
+void enviar_instruccion_a_interfaz(t_queue_block* interfaz_destino, instruccion_params* parametros, int cod_op);
+interfaz* buscar_interfaz_por_nombre(char* nombre_interfaz);
+
+t_instruccion_params_opcode recibir_solicitud_cpu(int socket_servidor, t_pcb* pcb);
+instruccion_params* deserializar_io_gen_sleep_con_interfaz(t_buffer_ins* buffer);
 
 #endif

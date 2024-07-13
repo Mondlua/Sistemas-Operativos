@@ -31,13 +31,6 @@ typedef struct
 
 } t_atender_cliente_args;
 
-typedef struct {
-    char* nombre_interfaz;
-    int socket_interfaz;
-    sem_t semaforo_interfaz;  
-    t_queue* cola_block;
-} interfaz;
-
 void atender_cliente(void* void_args);
 int server_escuchar(void *arg);
 int buscar_posicion_interfaz_por_nombre(char* nombre_interfaz);

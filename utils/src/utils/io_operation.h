@@ -11,6 +11,8 @@
 #include "Instrucciones_gral.h"
 #include <utils/catedra/inicio.h>
 #include "mensajesPropios.h"
+#include <semaphore.h>
+#include <time.h>
 
 
 typedef struct
@@ -36,6 +38,7 @@ typedef struct
         } io_fs_create_params;
      }params;
 }instruccion_params;
+
 
 t_buffer_ins* serializar_io_gen_sleep(instruccion_params* param);
 t_buffer_ins* serializar_io_stdin_stdout(instruccion_params* param);
