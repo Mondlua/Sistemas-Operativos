@@ -284,15 +284,21 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             int num_frame = dir_fisica->nro_frame;
             int desplazamiento = dir_fisica->desplazamiento;
             //HACER SCANF
-            char* tam = strcat(int_to_char(tamanio), "/");
+            /*char* tam = strcat(int_to_char(tamanio), "/");
             char* tamframe = strcat(tam, int_to_char(num_frame));
             char* tamframe1 = strcat(tamframe, "/");
-            char* enviar = strcat(tamframe1, int_to_char(desplazamiento));
-            enviar_pedido_lectura(conexion_memoria_cpu, enviar);
+            char* enviar = strcat(tamframe1, int_to_char(desplazamiento));*/
+
+
+            int tam_mensaje = sizeof(tamanio)+sizeof(num_frame)+sizeof(desplazamiento); 
+            char* mensaje = malloc(tam_mensaje);
+            sprintf(mensaje, "%d/%d/%d", tamanio,num_frame,desplazamiento);      //ver de implementar en demas    
+            enviar_pedido_lectura(conexion_memoria_cpu, mensaje);
             int i = recibir_operacion(conexion_memoria_cpu);
             char* leido = recibir_mensaje(conexion_memoria_cpu, cpu_log);
             asignar_registro(pcb->registros, registro_datos, atoi(leido));
             free(leido);
+            
             break;
         }
         case MOV_OUT:{
