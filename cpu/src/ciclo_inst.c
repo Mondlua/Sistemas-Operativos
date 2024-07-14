@@ -1,21 +1,25 @@
 #include "ciclo_inst.h"
 
-t_instruccion* fetch(int conexion, t_pcb* pcb){
+char* fetch(int conexion, t_pcb* pcb){
     
     t_instruccion* instruccion = malloc(sizeof(t_instruccion));
     enviar_pid(int_to_char(pcb->pid), conexion);
     enviar_pc(int_to_char(pcb->registros->PC),conexion);
-    instruccion = recibir_instruccion_cpu(conexion);
-    
+    int x = recibir_operacion(conexion);
+    char* ins = recibir_mensaje(conexion, cpu_log);
+    //instruccion = recibir_instruccion_cpu(conexion);
+    printf("insrucionn <%s> \n", ins);
     pcb->registros->PC++;
 
-    return instruccion;
+    return ins;
 }
 
-void eliminar_linea_n(char* linea){
-    if(linea[strlen(linea)-1] == '\n'){
-        linea[strlen(linea)-1]='\0';
+char* eliminar_linea_n(char* instruccion) {
+    int len = strlen(instruccion);
+    if (len > 0 && instruccion[len - 1] == '\n') {
+        instruccion[len - 1] = '\0';
     }
+    return instruccion;
 }
 
 instrucciones obtener_instruccion(char *nombre) {
@@ -82,9 +86,9 @@ instrucciones obtener_instruccion(char *nombre) {
     return EXIIT;
 }
 
-t_decode* decode(t_instruccion* instruccion){
+t_decode* decode(char* buffer){
 
-    char* buffer = (char*) instruccion->buffer->stream;
+    //char* buffer; //= (char*) instruccion->buffer->stream;
     eliminar_linea_n(buffer);
     char** arrayIns = string_split(buffer," ");
     printf("Instruccion: %s.\n", arrayIns[0]);
@@ -279,7 +283,7 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
 
             int num_frame = dir_fisica->nro_frame;
             int desplazamiento = dir_fisica->desplazamiento;
-
+            //HACER SCANF
             char* tam = strcat(int_to_char(tamanio), "/");
             char* tamframe = strcat(tam, int_to_char(num_frame));
             char* tamframe1 = strcat(tamframe, "/");
@@ -299,7 +303,7 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
 
             uint8_t valor = (uint8_t) obtener_valor_registro(pcb->registros, registro_datos);
             int tamanio;
-
+            printf ("num a escribir %d\n", valor);
             if(obtener_tipo_registro(registro_datos) == 8){
                 tamanio =1;
             }
@@ -317,27 +321,14 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
 
                 int num_frame = dir_fisica->nro_frame;
                 int desplazamiento = dir_fisica->desplazamiento;
-                
-                printf ("num frame %d\n", num_frame);
 
                 int tam_mensaje = sizeof(tamanio)+sizeof(aescribir)+sizeof(num_frame)+sizeof(desplazamiento)+sizeof(pcb->pid); 
                 char* mensaje = malloc(tam_mensaje);
                 sprintf(mensaje, "%d/%s/%d/%d/%d", tamanio,aescribir,num_frame,desplazamiento,pcb->pid);      //ver de implementar en demas    
                 
-                /*
-                char* valorr= strcat(int_to_char(tamanio), "/");
-                char* valorrr= strcat(valorr, aescribir);
-                char* valorrrr= strcat(valorrr, "/");
-                char* tamframe = strcat(valorrrr, int_to_char(num_frame));
-                char* tamframe1 = strcat(tamframe, "/");
-                char* enviar1 = strcat(tamframe1, int_to_char(desplazamiento));
-                char* enviar2 = strcat(enviar1, "/");
-                char* enviar = strcat(enviar2, int_to_char(pcb->pid));*/
-
                 enviar_pedido_escritura(conexion_memoria_cpu, mensaje);
                 int i = recibir_operacion(conexion_memoria_cpu);
                 char* frame_siguiente = recibir_mensaje(conexion_memoria_cpu,cpu_log);
-                printf("Entre al if de move out\n y el valor es %s, en num %d, y frame sig %s", int_to_char(valor), atoi(int_to_char(valor)), frame_siguiente);
             }/*
             else{
                 printf("Entre al move out con mas de una pagina\n");
@@ -524,7 +515,7 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger){
    t_cpu_blockeo blockeo = NO_BLOCK;
     while(blockeo == NO_BLOCK && !hay_interrupcion)
     {
-        t_instruccion* ins = fetch(conexion,pcb);
+        char* ins = fetch(conexion,pcb);
         log_info(logger, "PID: %d - FETCH - Program counter: <%d>", pcb->pid, pcb->registros->PC);
 
         t_decode* decodeado = decode(ins);

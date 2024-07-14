@@ -23,17 +23,21 @@ t_list* abrir_pseudocodigo(char* path){
         while (fgets(instruccionlinea, sizeof(instruccionlinea), arch_pseudocodigo) != NULL) {
             
             size_t longitud = strlen(instruccionlinea);
-            t_instruccion* instruccion = malloc(sizeof(t_instruccion));
+            /*t_instruccion* instruccion = malloc(sizeof(t_instruccion));
             instruccion->buffer=malloc(sizeof(t_buffer_ins));
             instruccion->codigo_operacion = INSTRUCCION;
             instruccion->buffer->size = longitud;
             instruccion->buffer->stream = malloc(sizeof(instruccionlinea));
-            instruccion->buffer->stream = strdup(instruccionlinea);
+            instruccion->buffer->stream = strdup(instruccionlinea);*/
+
+            char* instruccion = strdup(instruccionlinea);
             list_add_in_index(lista_inst,cont,instruccion);
             cont++;
-            printf("Longitud: %zu, Contenido: %s", instruccion->buffer->size, instruccion->buffer->stream);
+            //printf("Longitud: %zu, Contenido: %s", instruccion->buffer->size, instruccion->buffer->stream);
+            //printf("Contenido: %s", list_get(lista_inst, cont));
+            printf("Contenido: %s", instruccion);
             sem_post(&semaforo_mem); //Contador de intrucciones
-            if(strcmp(instruccion->buffer->stream,"EXIT") == 0){
+            if(strcmp(strdup(instruccionlinea),"EXIT") == 0){
                  break;  
             }
         }   
