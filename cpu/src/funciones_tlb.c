@@ -27,7 +27,6 @@ t_dir_fisica* mmu(int dir_logica, uint32_t pid){
     int numero_pagina = floor(dir_logica / tam_pag);
     int desplazamiento = dir_logica - numero_pagina * tam_pag;
     int frame = buscar_tlb(pid, numero_pagina);
-    printf("el frame es %d\n",frame);
    if (frame != -1) {  // HIT
         log_info(cpu_log, "TLB Hit: “PID: <%i> - TLB HIT - Pagina: <%i>", pid, numero_pagina);
     } else {  // MISS
@@ -38,7 +37,6 @@ t_dir_fisica* mmu(int dir_logica, uint32_t pid){
         enviar_pedido_frame(conexion_memoria_cpu, mensaje);
 
         frame = recibir_frame(conexion_memoria_cpu);
-        printf("el frame es %d\n",frame);
         log_info(cpu_log, "Obtener Marco: “PID: <%i> - OBTENER MARCO - Página: <%i> - Marco: <%i>", pid, numero_pagina, frame);
         if (string_equals_ignore_case(algoritmo, "FIFO")) {
             remplazo_fifo(pid, numero_pagina, frame);
