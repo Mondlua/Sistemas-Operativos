@@ -234,22 +234,24 @@ void atender_cliente(void *void_args)
         case PED_LECTURA:
         {
             char* buffer = recibir_pedido_lectura(client_socket, logger); 
-            char** arrayIns = string_split(buffer,"/");
+            /*char** arrayIns = string_split(buffer,"/");
             int tamanio = atoi(arrayIns[0]);
             int frame= atoi(arrayIns[1]);
-            int desp=atoi(arrayIns[2]);
+            int desp=atoi(arrayIns[2]);*/
+            int tamanio;
+            int frame;
+            int desp;
+            sscanf(buffer, "%d/%d/%d", &tamanio,&frame,&desp);
 
             usleep(retardo*1000);
 
             t_dir_fisica* dir_fisica = malloc(sizeof(t_dir_fisica*));
             dir_fisica->nro_frame = frame;
             dir_fisica->desplazamiento = desp;
-            usleep(retardo);
 
             char* leido = leer_en_mem(tamanio, dir_fisica);
             enviar_mensaje(leido, client_socket);  
             free(buffer);
-            free(arrayIns);
             free(leido);
             break;
         }

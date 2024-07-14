@@ -53,7 +53,7 @@ char* leer_en_mem(int tamanio, t_dir_fisica* dir_fisica){
         memcpy(leido, espacio_de_mem, tamanio);
     }
 
-    printf("Leo en Nro Frame <%d> y Desp <%d>: <%s>", nro_frame, desplazamiento, leido);
+    printf("Leo en Nro Frame <%d> y Desp <%d>: <%s>\n", nro_frame, desplazamiento, leido);
 
     return leido;
 }
