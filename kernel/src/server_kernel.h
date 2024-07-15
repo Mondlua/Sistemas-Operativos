@@ -12,10 +12,10 @@
 #include <utils/mensajesPropios.h>
 #include <commons/collections/list.h>
 #include <semaphore.h>
-#include <utils/io_operation.h>
+//#include <utils/io_operation.h>
 #include <commons/collections/queue.h>
 #include <utils/funcionesUtiles.h>
-#include "alg_planificacion.h"
+#include <utils/planificador.h>
 
 extern t_list* interfaces;
 extern sem_t habilitacion_io;

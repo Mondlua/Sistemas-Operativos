@@ -1,23 +1,23 @@
 #include "utils_consola.h"
 
-t_pcb *crear_nuevo_pcb(uint32_t *pid_contador)
+t_pcb *crear_nuevo_pcb(uint32_t *pid_contador, t_planificacion *kernel_argumentos)
 {
 
     t_pcb *nuevo_pcb = malloc(sizeof(t_pcb));
 
     if (nuevo_pcb == NULL)
     {
-        log_warning(kernel_log, "Se creo un PCB NULL\n");
+        log_warning(kernel_argumentos->logger, "Se creo un PCB NULL\n");
         return NULL;
     }
 
     inicializar_registro(nuevo_pcb);
     nuevo_pcb->pid = *pid_contador;
-    nuevo_pcb->quantum = config_get_int_value(kernel_config, "QUANTUM");
+    nuevo_pcb->quantum = 0;
     nuevo_pcb->estado = NEW;
     nuevo_pcb->motivo_desalojo = 0;
 
-    log_info(kernel_log, "Se crea el proceso con %d en NEW", nuevo_pcb->pid);
+    log_info(kernel_argumentos->logger, "Se crea el proceso con %d en NEW", nuevo_pcb->pid);
     (*pid_contador)++;
     
     return nuevo_pcb;
@@ -25,11 +25,11 @@ t_pcb *crear_nuevo_pcb(uint32_t *pid_contador)
 
 void inicializar_colas_estados()
 {
-    colaNew = queue_create();
-    colaReady = queue_create();
-    colaExec = queue_create();
-    colaBlocked = queue_create();
-    colaExit = queue_create();
+    // colaNew = queue_create();
+    // colaReady = queue_create();
+    // colaExec = queue_create();
+    // colaBlocked = queue_create();
+    // colaExit = queue_create();
 }
 
 void liberar_pcb(t_pcb *pcb)
@@ -51,7 +51,7 @@ void mostrar_pids_en_estado(t_proceso_estado estado)
 
     if (tamanio_cola != 0)
     {
-        log_info(kernel_log, "Los PID en la COLA %s son:", estado_a_string(estado));
+        //log_info(kernel_log, "Los PID en la COLA %s son:", estado_a_string(estado));
 
         while (contador < tamanio_cola)
         {
@@ -59,14 +59,14 @@ void mostrar_pids_en_estado(t_proceso_estado estado)
             t_pcb *pcb_apunta = queue_pop(cola);
             uint32_t pid = pcb_apunta->pid;
             queue_push(cola, pcb_apunta);
-            log_info(kernel_log, "PID: %u", pid);
+            //log_info(kernel_log, "PID: %u", pid);
 
             contador++;
         }
     }
     else
     {
-        log_warning(kernel_log, "La COLA %s esta VACIA", estado_a_string(estado));
+        //log_warning(kernel_log, "La COLA %s esta VACIA", estado_a_string(estado));
     }
 }
 
@@ -82,7 +82,7 @@ t_queue* cola_pcb(uint32_t num_pid){ //buscar cola en cada estado
         }
     }
     if(buscado == NULL){
-        log_error(kernel_log, "No se pudo encontrar el PCB de PID: %u", num_pid);
+        //log_error(kernel_log, "No se pudo encontrar el PCB de PID: %u", num_pid);
     }
     return buscado;
 }
@@ -110,7 +110,7 @@ void borrar_pcb(uint32_t num_pid)
             contador++;
         }
 
-    log_info(kernel_log, "Borre PCB");
+    //log_info(kernel_log, "Borre PCB");
 }
 
 t_pcb* buscar_pcb(uint32_t num_pid){
@@ -143,25 +143,24 @@ void cambiar_a_cola(t_pcb* pcb, t_proceso_estado estado ){
     pcb->estado = estado;
     t_queue* colaNueva = cola_de_estado(estado);
     queue_push(colaNueva, pcb);
-    log_info(kernel_log, "PID: <%u> - Estado Anterior: <%s> - Estado Actual: <%s>", pcb->pid, estado_a_string(ant), estado_a_string(pcb->estado));
+    // log_info(kernel_log, "PID: <%u> - Estado Anterior: <%s> - Estado Actual: <%s>", pcb->pid, estado_a_string(ant), estado_a_string(pcb->estado));
 }
 
 t_queue *cola_de_estado(t_proceso_estado estado)
 {
 
-    switch (estado)
-    {
-    case 0:
-        return colaNew;
-    case 1:
-        return colaReady;
-    case 2:
-        return colaExec;
-    case 3:
-        return colaBlocked;
-    case 4:
-        return colaExit;
-    default:
-        return 0;
-    }
+    // switch (estado)
+    // {
+    // case 0:
+    //     return colaNew;
+    // case 1:
+    //     return colaReady;
+    // case 2:
+    //     return colaExec;
+    // case 3:
+    //     return colaBlocked;
+    // case 4:
+    //     return colaExit;
+    // default:
+    //     return 0;
 }

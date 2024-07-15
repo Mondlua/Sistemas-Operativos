@@ -527,7 +527,7 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger, int socket_cli
     }
 
     pthread_mutex_lock(&lock_interrupt);
-    if(hay_interrupcion == 1) // Fin de quantum
+    if(hay_interrupcion == 1 && blockeo.blockeo == NO_BLOCK) // Fin de quantum
     {
         hay_interrupcion = 0;
         pthread_mutex_unlock(&lock_interrupt);
@@ -554,8 +554,10 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger, int socket_cli
         enviar_pcb(pcb, socket_cliente);
 
         t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion)); // En el if
-        paquete->codigo_operacion = blockeo.io_opcode; // En el if
-        enviar_instruccion_a_Kernel(paquete, blockeo.instrucciones, kernel_socket); // En el if
+        paquete->codigo_operacion = blockeo.io_opcode;
+        log_debug(cpu_log, "OPCODE enviado: %d", paquete->codigo_operacion);
+        enviar_instruccion_a_Kernel(paquete, blockeo.instrucciones, socket_cliente);
+        log_debug(cpu_log, "Instruccion enviada al socket: %d.", socket_cliente);
         free(blockeo.instrucciones->interfaz);  // En el if
         free(blockeo.instrucciones); // En el if
         free(paquete); // En el if

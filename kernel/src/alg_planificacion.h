@@ -11,6 +11,7 @@
 #include <semaphore.h>
 #include <commons/string.h>
 #include <utils/io_operation.h>
+#include <utils/planificador.h>
 
 extern sem_t grado_planificiacion;
 extern sem_t cola_ready;
@@ -20,66 +21,6 @@ typedef struct
     instruccion_params *params;
     op_code opcode;
 } t_instruccion_params_opcode;
-typedef struct {
-    char *identificador;
-    t_queue *block_queue;
-    int cantidad_instancias;
-    int socket_interfaz;
-
-} t_queue_block;
-
-typedef struct {
-    t_queue *new;
-    t_queue *ready;
-    t_queue *exec;
-    t_dictionary *lista_block;
-    int cantidad_procesos_block;
-    t_queue *exit;
-    t_queue *prioridad;
-} t_planificador_colas;
-
-typedef struct{
-    int puerto_escucha;
-    char *ip_memoria;
-    int puerto_memoria;
-    char *ip_cpu;
-    char *puerto_cpu_dispatch;
-    char *puerto_cpu_interrupt;
-} t_config_leida_kernel;
-
-typedef struct{
-    t_config_leida_kernel config_leida;
-    int grado_multiprogramacion;
-    char *algoritmo_planificador;
-    int quantum;
-
-} t_planificador_config;
-
-typedef struct {
-    timer_t timer;
-    struct sigaction sa;
-    struct sigevent sev;
-    struct itimerspec its;
-} t_timer_planificador;
-typedef enum {
-    FIFO,
-    RR,
-    VRR
-}t_tipo_planificacion;
-typedef struct
-{
-    t_log *logger;
-    t_planificador_colas colas;
-    t_planificador_config config;
-    sem_t planificar;
-    int detener_planificacion;
-    t_timer_planificador* timer_quantum;
-    int socket_cpu_dispatch;
-    int socket_cpu_interrupt;
-    int socket_memoria;
-    t_tipo_planificacion algo_planning;
-} t_planificacion;
-
 typedef struct {
     char* nombre_interfaz;
     int socket_interfaz;
@@ -121,8 +62,13 @@ void procesar_desbloqueo_factible(char* recurso_solicitado, t_planificacion *ker
 void validar_peticion(instruccion_params* parametros, t_pcb* pcb, int codigo_op, t_planificacion* kernel_argumentos);
 void enviar_instruccion_a_interfaz(t_queue_block* interfaz_destino, instruccion_params* parametros, int cod_op);
 interfaz* buscar_interfaz_por_nombre(char* nombre_interfaz);
+void pcb_a_exit_por_sol_invalida(t_queue_block* interfaz, t_planificacion *kernel_argumentos);
+
 
 t_instruccion_params_opcode recibir_solicitud_cpu(int socket_servidor, t_pcb* pcb);
 instruccion_params* deserializar_io_gen_sleep_con_interfaz(t_buffer_ins* buffer);
+
+void mover_a_exit(t_pcb* pcb_desalojado, t_planificacion *kernel_argumentos);
+char* proceso_estado_a_string(t_proceso_estado estado);
 
 #endif
