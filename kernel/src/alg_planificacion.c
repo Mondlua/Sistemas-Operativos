@@ -25,6 +25,7 @@ void* hilo_planificador(void *args)
 
         // Planifico a corto plazo
         planificador_corto_plazo(algoritmo_planificador, kernel_argumentos);
+        pthread_mutex_unlock(&kernel_argumentos->planning_mutex);
     }
     return NULL;
 }
@@ -108,7 +109,7 @@ void enviar_interrupcion(union sigval sv)
         return;
     }
     
-    log_debug(kernel_argumentos->logger, "No se envia interrupcion dado que no hay ningun PCB en EXEC");
+    log_debug(kernel_argumentos->logger, "");
 }
 
 void planificador_planificar(t_planificacion *kernel_argumentos)
@@ -119,6 +120,7 @@ void planificador_planificar(t_planificacion *kernel_argumentos)
 bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_argumentos)
 {
     // Saco el pcb viejo de EXEC
+    pthread_mutex_lock(&kernel_argumentos->planning_mutex);
     t_pcb *pcb_outdated = queue_pop(kernel_argumentos->colas.exec);
     log_debug(kernel_argumentos->logger, "PID recibido: %d", pcb_desalojado->pid);
     log_debug(kernel_argumentos->logger, "PID que tengo en EXEC: %d", pcb_outdated->pid);
@@ -138,10 +140,11 @@ bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_a
             frenar_timer(kernel_argumentos->timer_quantum);
         }
 
-        pcb_desalojado->estado = EXIT;
-        queue_push(kernel_argumentos->colas.exit, pcb_desalojado);
+        mover_a_exit(pcb_desalojado, kernel_argumentos);
+        //pcb_desalojado->estado = EXIT;
+        //queue_push(kernel_argumentos->colas.exit, pcb_desalojado);
         // Enviar solicitud a memoria para desalojar el proceso
-        log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: EXEC - Estado actual: EXIT", pcb_desalojado->pid);
+        //log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: EXEC - Estado actual: EXIT", pcb_desalojado->pid);
         log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: SUCCESS", pcb_desalojado->pid);
     }
     if(pcb_desalojado->motivo_desalojo == 1) // Desalojado por fin de quantum
@@ -162,6 +165,7 @@ bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_a
         // Recibir los parametros del io_block
         t_instruccion_params_opcode parametros_solicitud;
         parametros_solicitud = recibir_solicitud_cpu(kernel_argumentos->socket_cpu_dispatch, pcb_desalojado);
+        log_debug(kernel_argumentos->logger, "Solicitud recibida: %s, %d", parametros_solicitud.params->interfaz, parametros_solicitud.params->params.io_gen_sleep_params.unidades_trabajo);
         validar_peticion(parametros_solicitud.params, pcb_desalojado, parametros_solicitud.opcode, kernel_argumentos);
         // mover_a_block(kernel_argumentos, pcb_desalojado, nombre_interfaz);
         //log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: EXEC - Estado actual: BLOCK", pcb_desalojado->pid);
@@ -255,6 +259,14 @@ t_planificacion *inicializar_t_planificacion(t_config *kernel_config, t_log *ker
 
     planificador->timer_quantum = malloc(sizeof(t_timer_planificador));
     planificador->timer_quantum->timer = inicializar_timer(planificador);
+
+    pthread_mutex_init(&planificador->planning_mutex, NULL);
+    pthread_mutex_init(&planificador->colas.mutex_block, NULL);
+    pthread_mutex_init(&planificador->colas.mutex_exec, NULL);
+    pthread_mutex_init(&planificador->colas.mutex_exit, NULL);
+    pthread_mutex_init(&planificador->colas.mutex_new, NULL);
+    pthread_mutex_init(&planificador->colas.mutex_prioridad, NULL);
+    pthread_mutex_init(&planificador->colas.mutex_ready, NULL);
 
     return planificador;
 }
@@ -431,9 +443,11 @@ void validar_peticion(instruccion_params* parametros, t_pcb* pcb, int codigo_op,
 
     enviar_instruccion_a_interfaz(interfaz_solicitada, parametros, codigo_op);
     log_debug(kernel_argumentos->logger, "Instruccion solicitada a la interfaz: %s", interfaz_solicitada->identificador);
+    log_debug(kernel_argumentos->logger, "Enviada por el socket: %d", interfaz_solicitada->socket_interfaz);
 
     pcb->estado = BLOCKED;
     queue_push(interfaz_solicitada->block_queue, pcb);
+    kernel_argumentos->colas.cantidad_procesos_block++;
     log_info(kernel_argumentos->logger, "PID: %d - Bloqueado por: INTERFAZ", pcb->pid);
     log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: EXEC - Estado actual: BLOCK", pcb->pid);
 
@@ -501,8 +515,10 @@ t_instruccion_params_opcode recibir_solicitud_cpu(int socket_servidor, t_pcb* pc
     t_paquete_instruccion* instruccion = malloc(sizeof(t_paquete_instruccion));
     instruccion->buffer = malloc(sizeof(t_buffer_ins));
     
+    printf("Antes de los recv\n");
     recv(socket_servidor, &(instruccion->codigo_operacion), sizeof(instrucciones), MSG_WAITALL);
     recv(socket_servidor, &(instruccion->buffer->size), sizeof(uint32_t), MSG_WAITALL);
+    printf("Recibido!\n");
     
     instruccion->buffer->stream = malloc(instruccion->buffer->size);
     
@@ -539,6 +555,52 @@ t_instruccion_params_opcode recibir_solicitud_cpu(int socket_servidor, t_pcb* pc
     return ret;
 }
 
+void pcb_a_exit_por_sol_invalida(t_queue_block* interfaz, t_planificacion* kernel_argumentos)
+{
+    pthread_mutex_lock(&kernel_argumentos->colas.mutex_block);
+    t_pcb *pcb_desalojado = queue_pop(interfaz->block_queue);
+    pthread_mutex_unlock(&kernel_argumentos->colas.mutex_block);
+
+    mover_a_exit(pcb_desalojado, kernel_argumentos);
+
+    log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: INVALID_INTERFACE", pcb_desalojado->pid);
+}
+
+void procesar_entradasalida_terminada(t_queue_block *interfaz, t_planificacion *kernel_argumentos)
+{
+    pthread_mutex_lock(&kernel_argumentos->colas.mutex_block);
+    t_pcb *pcb_desalojado = queue_pop(interfaz->block_queue);
+    kernel_argumentos->colas.cantidad_procesos_block--;
+    pthread_mutex_unlock(&kernel_argumentos->colas.mutex_block);
+
+    log_debug(kernel_argumentos->logger, "PID: %d", pcb_desalojado->pid);
+    pcb_desalojado->estado = READY;
+
+    if(pcb_desalojado->quantum != 0)
+    {
+        pthread_mutex_lock(&kernel_argumentos->colas.mutex_prioridad);
+        queue_push(kernel_argumentos->colas.prioridad, pcb_desalojado);
+        pthread_mutex_unlock(&kernel_argumentos->colas.mutex_prioridad);
+    }
+    else
+    {
+        pthread_mutex_lock(&kernel_argumentos->colas.mutex_ready);
+        queue_push(kernel_argumentos->colas.ready, pcb_desalojado);
+        pthread_mutex_unlock(&kernel_argumentos->colas.mutex_ready);
+    }
+
+    log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: BLOCK - Estado actual: READY", pcb_desalojado->pid);
+    
+    if(queue_is_empty(kernel_argumentos->colas.exec))
+    {
+        if(pthread_mutex_trylock(&kernel_argumentos->planning_mutex) == 0)
+        {
+            planificador_planificar(kernel_argumentos);
+        }
+    }
+}
+
+
 // -------- RECEPCION DE INTERFACES --------
 
 
@@ -562,3 +624,39 @@ t_pcb *planificador_prioridad_a_exec(t_planificacion *kernel_argumentos)
     return proximo_pcb;
 }
 
+void mover_a_exit(t_pcb* pcb_desalojado, t_planificacion *kernel_argumentos)
+{
+    t_proceso_estado aux = pcb_desalojado->estado;
+    pcb_desalojado->estado = EXIT;
+
+    pthread_mutex_lock(&kernel_argumentos->colas.mutex_exit);
+    queue_push(kernel_argumentos->colas.exit, pcb_desalojado);
+    pthread_mutex_unlock(&kernel_argumentos->colas.mutex_exit);
+
+    char* estado = proceso_estado_a_string(aux);
+    log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: %s - Estado actual: EXIT", pcb_desalojado->pid, estado);
+}
+
+char* proceso_estado_a_string(t_proceso_estado estado)
+{
+    if(estado == READY)
+    {
+        return "READY";
+    }
+    if(estado == NEW)
+    {
+        return "NEW";
+    }
+    if(estado == EXEC)
+    {
+        return "EXEC";
+    }
+    if(estado == BLOCKED)
+    {
+        return "BLOCK";
+    }
+    if(estado == EXIT)
+    {
+        return "EXIT";
+    }
+}

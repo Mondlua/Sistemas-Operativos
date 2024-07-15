@@ -8,8 +8,9 @@
 #include<commons/log.h>
 #include<readline/readline.h>
 #include "utils_consola.h"
+#include <utils/planificador.h>
 //#include "main.h"
-#include "alg_planificacion.h"
+//#include "alg_planificacion.h"
 
 void consola_interactiva(t_planificacion *kernel_argumentos);
 void*leer_consola(void* args);

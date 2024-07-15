@@ -43,7 +43,7 @@ void funciones(char* leido, t_planificacion *kernel_argumentos) {
     } else if (string_equals_ignore_case(funcion[0], "PROCESO_ESTADO")) {
         proceso_estado(kernel_argumentos);
     } else if (!string_is_empty(leido)){
-        log_error(kernel_log, ">> COMANDO ERRONEO!");
+        log_error(kernel_argumentos->logger, ">> COMANDO ERRONEO!");
     }
 }
 
@@ -55,18 +55,18 @@ void ejecutar_script(char* path, t_planificacion *kernel_argumentos){
     size_t len_total = len_path + len_complemento + 2;
     char* ruta_completa = malloc(len_total);
     if (ruta_completa == NULL) {
-        log_error(kernel_log, "Error: No se pudo asignar memoria para la ruta completa.");
+        log_error(kernel_argumentos->logger, "Error: No se pudo asignar memoria para la ruta completa.");
         return;
     }
     strcpy(ruta_completa, complemento);
     strcat(ruta_completa, path);
 
-    log_info(kernel_log, ">> Se ejecuta el script %s", path);
-    log_info(kernel_log, ">> Se ejecuta el script %s", ruta_completa);
+    log_info(kernel_argumentos->logger, ">> Se ejecuta el script %s", path);
+    log_info(kernel_argumentos->logger, ">> Se ejecuta el script %s", ruta_completa);
 
     FILE* file = fopen(ruta_completa, "r");
     if (file == NULL) {
-        log_error(kernel_log, "No se pudo abrir el archivo: %s", path);
+        log_error(kernel_argumentos->logger, "No se pudo abrir el archivo: %s", path);
         return;
     }
 
@@ -81,13 +81,13 @@ void ejecutar_script(char* path, t_planificacion *kernel_argumentos){
             continue;
         }*/
 
-        log_info(kernel_log, ">> Ejecutando comando: %s", linea);
+        log_info(kernel_argumentos->logger, ">> Ejecutando comando: %s", linea);
         funciones(linea, kernel_argumentos);
     }
 
     free(linea);
     fclose(file);
-    log_info(kernel_log, ">> Finalizó la ejecución del script %s", path);
+    log_info(kernel_argumentos->logger, ">> Finalizó la ejecución del script %s", path);
 }
 
 void iniciar_proceso(char* path, t_planificacion *kernel_argumentos){
@@ -96,10 +96,10 @@ void iniciar_proceso(char* path, t_planificacion *kernel_argumentos){
 
     static uint32_t pid_contador = 0;
 
-    pcb = crear_nuevo_pcb(&pid_contador);
+    pcb = crear_nuevo_pcb(&pid_contador, kernel_argumentos);
     queue_push(kernel_argumentos->colas.new, pcb);
 
-    log_debug(kernel_log, ">> Se crea el proceso %s en NEW", path);
+    log_debug(kernel_argumentos->logger, ">> Se crea el proceso %s en NEW", path);
 
     char *pid_str = int_to_char(pcb->pid);
     size_t len = strlen(path) + strlen(pid_str) + 2;
@@ -107,7 +107,7 @@ void iniciar_proceso(char* path, t_planificacion *kernel_argumentos){
     strcpy(pathpid, path);
     strcat(pathpid, "$");
     strcat(pathpid, pid_str);
-    enviar_mensaje(pathpid,conexion_memoria);
+    enviar_mensaje(pathpid, kernel_argumentos->socket_memoria);
     free(pid_str);
     free(pathpid);
 
@@ -120,44 +120,44 @@ void finalizar_proceso(uint32_t pid, t_planificacion *kernel_argumentos){
     char* pid_char= int_to_char(pid); 
     //enviar_mensaje_finalizacion(pid_char,conexion_memoria);  NO ESTA LA FUNCION, HACER O BUSCAR
 
-    log_info(kernel_log, ">> Se finaliza proceso %u <<", pid);
+    log_info(kernel_argumentos->logger, ">> Se finaliza proceso %u <<", pid);
 }
 
 // bool tabla_pid;
 
 void iniciar_planificacion(t_planificacion *kernel_argumentos){
     kernel_argumentos->detener_planificacion = 0;
-    planificador_planificar(kernel_argumentos);
-    log_info(kernel_log, ">> Se inicio la planificacion");
+    sem_post(&kernel_argumentos->planificar);
+    log_info(kernel_argumentos->logger, ">> Se inicio la planificacion");
 }
 void detener_planificacion(t_planificacion *kernel_argumentos){
     kernel_argumentos->detener_planificacion = 1;
-    log_info(kernel_log, ">> Se detiene la planificacion");
+    log_info(kernel_argumentos->logger, ">> Se detiene la planificacion");
 }
 
 void multiprogramacion(char* valor, t_planificacion *kernel_argumentos){
     
 
-    config_set_value(kernel_config, "GRADO_MULTIPROGRAMACION", valor);
+    //config_set_value(kernel_argumentos->config.config_leida., "GRADO_MULTIPROGRAMACION", valor);
 
-    int cambio_ok = config_get_int_value(kernel_config, "GRADO_MULTIPROGRAMACION");
+    //int cambio_ok = config_get_int_value(kernel_config, "GRADO_MULTIPROGRAMACION");
 
-    if (cambio_ok == atoi(valor))
-    {
-        log_info(kernel_log, "Se cambio el grado de multiprogramacion a %s", valor);
-        nivel_multiprog = cambio_ok;
-    }
-    else
-    {
-        log_warning(kernel_log, "No se pudo cambiar el grado de multiprogramacion");
-    }
+    //if (cambio_ok == atoi(valor))
+    // {
+    //     log_info(kernel_log, "Se cambio el grado de multiprogramacion a %s", valor);
+    //     nivel_multiprog = cambio_ok;
+    // }
+    // else
+    // {
+    //     log_warning(kernel_log, "No se pudo cambiar el grado de multiprogramacion");
+    // }
 
-    log_info(kernel_log, ">> Se cambio el grado de multiprogamacion a %s", valor);
+    // log_info(kernel_log, ">> Se cambio el grado de multiprogamacion a %s", valor);
 }
 
 void proceso_estado(t_planificacion *kernel_argumentos){
 
-    log_info(kernel_log, ">> Listado de procesos por estado ...");
+    log_info(kernel_argumentos->logger, ">> Listado de procesos por estado ...");
     for (t_proceso_estado estado = NEW; estado <= EXIT; estado++)
     {
         mostrar_pids_en_estado(estado);

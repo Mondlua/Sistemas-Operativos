@@ -63,7 +63,7 @@ void recibir_instruccion(char* tipo_interfaz)
     atender_cod_op(param, instruccion->codigo_operacion);
     free(instruccion->buffer);
     free(instruccion);
-    free(param);
+    //free(param);
 }
 
 void atender_cod_op(instruccion_params* parametros, instrucciones op_code){
@@ -72,8 +72,10 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code){
     case IO_GEN_SLEEP:{
         int result = 0;
         int unidades_trabajo_recibidas = parametros->params.io_gen_sleep_params.unidades_trabajo;
-        result = unidades_trabajo_recibidas * tiempo_unidad_trabajo; 
-        sleep(result);
+        result = unidades_trabajo_recibidas * tiempo_unidad_trabajo;
+        printf("Durmiendo...\n");
+        usleep(result*1000);
+        printf("Despertando...\n");
         break;
     }
     case IO_STDIN_READ:{
