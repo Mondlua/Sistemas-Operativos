@@ -234,14 +234,11 @@ void atender_cliente(void *void_args)
         case PED_LECTURA:
         {
             char* buffer = recibir_pedido_lectura(client_socket, logger); 
-            /*char** arrayIns = string_split(buffer,"/");
-            int tamanio = atoi(arrayIns[0]);
-            int frame= atoi(arrayIns[1]);
-            int desp=atoi(arrayIns[2]);*/
             int tamanio;
             int frame;
             int desp;
-            sscanf(buffer, "%d/%d/%d", &tamanio,&frame,&desp);
+            int piid;
+            sscanf(buffer, "%d/%d/%d/%u", &tamanio,&frame,&desp,&piid);
 
             usleep(retardo*1000);
 
@@ -250,6 +247,8 @@ void atender_cliente(void *void_args)
             dir_fisica->desplazamiento = desp;
 
             char* leido = leer_en_mem(tamanio, dir_fisica);
+            log_info(logger, "PID: %u - Accion:LEER - Direccion fisica: %d - Tamaño %d",piid ,frame+desp,tamanio);
+
             enviar_mensaje(leido, client_socket);  
             free(buffer);
             free(leido);
@@ -271,6 +270,8 @@ void atender_cliente(void *void_args)
             dir_fisica->desplazamiento = desp;
             usleep(retardo*1000);   
             escribir_en_mem(valor, dir_fisica, tamanio);
+            log_info(logger, "PID: %u - Accion:ESCRIBIR - Direccion fisica: %d - Tamaño %d",pid ,frame+desp,tamanio);
+
             bitarray_set_bit(escrito, frame);
 
             int frame_siguiente_disp;
