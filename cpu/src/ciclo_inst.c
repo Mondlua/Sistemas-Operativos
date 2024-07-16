@@ -402,8 +402,12 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             enviar_cpy_string(conexion_memoria_cpu, string_cortado);
             break;
         }
-        case WAIT:{}
-        case SIGNAL:{}
+        case WAIT:{
+
+        }
+        case SIGNAL:{
+
+        }
         case IO_GEN_SLEEP:{ 
             //enviar_motivo(BLOCK_IO, kernel_socket); // No
             instruccion_params* parametros =  malloc(sizeof(instruccion_params)); // Si
@@ -417,7 +421,6 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             // En kernel agregar un recv para recibir el instruccion_params y operar en base a eso tratando de usar las cosas que hizo zoe.
         }
         case IO_STDIN_READ:{
-            enviar_motivo(BLOCK_IO, kernel_socket);
             instruccion_params* parametros =  malloc(sizeof(instruccion_params));
             parametros->interfaz = strdup(decode->interfaz);
             char* registro_direccion = (char*)list_get(decode->registroCpu, 0);
@@ -426,16 +429,13 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
             parametros->params.io_stdin_stdout.registro_direccion = dir_fisica;
             parametros->params.io_stdin_stdout.registro_tamaño = (cpu_registros*)obtener_valor_registro(pcb->registros, registro_tamaño);
-            t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion));
-            paquete->codigo_operacion = IO_STDIN_READ;
-            enviar_instruccion_a_Kernel(paquete, parametros, kernel_socket);
-            free(parametros->interfaz); 
-            free(parametros);
-            free(paquete);
-            break;
+            
+            ret.io_opcode = IO_STDIN_READ;
+            ret.blockeo = IO_BLOCK;
+            ret.instrucciones = parametros;
+            return ret;
         }
         case IO_STDOUT_WRITE:{
-            enviar_motivo(BLOCK_IO, kernel_socket);
             instruccion_params* parametros =  malloc(sizeof(instruccion_params));
             parametros->interfaz = strdup(decode->interfaz);
             char* registro_direccion = (char*)list_get(decode->registroCpu, 0);
@@ -445,13 +445,18 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             parametros->params.io_stdin_stdout.registro_direccion = dir_fisica;
             parametros->params.io_stdin_stdout.registro_direccion = (cpu_registros*)obtener_valor_registro(pcb->registros, registro_direccion);
             parametros->params.io_stdin_stdout.registro_tamaño = (cpu_registros*)obtener_valor_registro(pcb->registros, registro_tamaño);
-            t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion));
-            paquete->codigo_operacion = IO_STDOUT_WRITE;
-            enviar_instruccion_a_Kernel(paquete, parametros, kernel_socket);
-            free(parametros->interfaz); 
-            free(parametros);
-            free(paquete);
-            break;
+            
+            ret.io_opcode = IO_STDOUT_WRITE;
+            ret.blockeo = IO_BLOCK;
+            ret.instrucciones = parametros;
+            return ret;
+            // t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion));
+            // paquete->codigo_operacion = IO_STDOUT_WRITE;
+            // enviar_instruccion_a_Kernel(paquete, parametros, kernel_socket);
+            // free(parametros->interfaz); 
+            // free(parametros);
+            // free(paquete);
+            // break;
         }
         case IO_FS_CREATE:{}
         case IO_FS_DELETE:{}
@@ -553,17 +558,21 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger, int socket_cli
         log_debug(cpu_log, "Envio PCB desalojado por solicitud a interfaz");
         enviar_pcb(pcb, socket_cliente);
 
-        t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion)); // En el if
+        t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion));
         paquete->codigo_operacion = blockeo.io_opcode;
         log_debug(cpu_log, "OPCODE enviado: %d", paquete->codigo_operacion);
         enviar_instruccion_a_Kernel(paquete, blockeo.instrucciones, socket_cliente);
         log_debug(cpu_log, "Instruccion enviada al socket: %d.", socket_cliente);
-        free(blockeo.instrucciones->interfaz);  // En el if
-        free(blockeo.instrucciones); // En el if
-        free(paquete); // En el if
+        free(blockeo.instrucciones->interfaz);
+        free(blockeo.instrucciones);
+        free(paquete);
         return;
     }
-    if(blockeo.blockeo == REC_BLOCK)
+    if(blockeo.blockeo == REC_BLOCK_WAIT)
+    {
+
+    }
+    if(blockeo.blockeo == REC_BLOCK_SIGNAL)
     {
 
     }
