@@ -9,11 +9,9 @@ void atender_cliente(void *void_args)
     int client_socket = args->c_socket;
     char *server_name = args->server_name;
 
-    
-    free(args);
-    
     while (client_socket != -1)
     {   
+        log_debug(logger, "Escuchando");
         op_code cop = recibir_operacion(client_socket);
 
         if (cop == -1)
@@ -38,11 +36,11 @@ void atender_cliente(void *void_args)
         case PCB:
         {
             t_pcb *pcb_desalojado = recibir_pcb(client_socket);
-            // bool necesario_planificar = planificador_recepcion_pcb(pcb_desalojado);
-            // if(necesario_planificar)
-            // {
-            //     planificador_planificar();
-            // }
+            bool necesario_planificar = planificador_recepcion_pcb(pcb_desalojado, args->planificador);
+            if(necesario_planificar)
+            {
+                planificador_planificar(args->planificador);
+            }
             break;
         }
         case INTERFAZ:
@@ -87,14 +85,11 @@ void atender_cliente(void *void_args)
             log_info(logger, "Cop: %d", cop);
             break;
         }
-            
-            
-        }
-      //log_warning(logger, "El cliente se desconecto de %s server", server_name);  
     }
 
-    
-
+    free(args);
+    //log_warning(logger, "El cliente se desconecto de %s server", server_name);  
+}
 
 int server_escuchar(void* arg)
 {   

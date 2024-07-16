@@ -15,6 +15,13 @@ int iniciar_servidor(char* PUERTO, t_log* logger)
 
     socket_servidor = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
 
+    const int enable = 1;
+    if (setsockopt(socket_servidor, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+    {
+        perror("setsockopt(SO_REUSEADDR) failed");
+        return EXIT_FAILURE;
+    }
+
     bind(socket_servidor, server_info->ai_addr, server_info->ai_addrlen);
 
     listen(socket_servidor, SOMAXCONN);
