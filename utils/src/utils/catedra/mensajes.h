@@ -69,21 +69,13 @@ t_list* recibir_paquete(int);
 bool send_handshake(int conexion, t_log* logger, const char* conexion_name);
 bool rcv_handshake(int fd_conexion);
 
-void enviar_pedido_lectura(int socket_cliente, char* mensaje);
-char* recibir_pedido_lectura(int socket_cliente, t_log* logger);
-void enviar_pedido_escritura(int socket_cliente,  char* mensaje);
-char* recibir_pedido_escritura(int socket_cliente, t_log* logger);
-void enviar_pedido_resize_tampid(int socket_cliente, char* tampid);
+char* recibir_pedido(int socket_cliente);
+void enviar_a_mem(int socket_cliente,char* mensaje, op_code operacion);
 
-char* recibir_pedido_resize_tampid(int socket_cliente, t_log* logger);
-void enviar_pedido_frame(int conexion_memoria_cpu, char* mensaje);
-
-void enviar_cpy_string(int socket_cliente, char* valor);
-char* recibir_cpy_string(int socket_cliente, t_log* logger);
 void enviar_pedido_tam_mem(int socket_cliente);
 void enviar_tamanio_pag_frame(int client_socket, int tam_pagina);
 void recibir_tamanio_pag(int socket_cliente, t_log* logger, int* numero);
 void recibir_ped_tamanio_pag(int socket_cliente, t_log* logger);
 int recibir_frame(int socket_cliente);
-char* recibir_pedido_frame(int socket_cliente, t_log* logger);
+
 #endif

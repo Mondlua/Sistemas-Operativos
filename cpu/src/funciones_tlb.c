@@ -34,7 +34,7 @@ t_dir_fisica* mmu(int dir_logica, uint32_t pid){
 
         char* mensaje = malloc(sizeof(pid)+sizeof(numero_pagina));
         sprintf(mensaje, "%u/%d", pid, numero_pagina); 
-        enviar_pedido_frame(conexion_memoria_cpu, mensaje);
+        enviar_a_mem(conexion_memoria_cpu, mensaje, FRAME);
 
         frame = recibir_frame(conexion_memoria_cpu);
         log_info(cpu_log, "Obtener Marco: “PID: <%i> - OBTENER MARCO - Página: <%i> - Marco: <%i>", pid, numero_pagina, frame);

@@ -2,13 +2,13 @@
 
 char* fetch(int conexion, t_pcb* pcb){
     
-    t_instruccion* instruccion = malloc(sizeof(t_instruccion));
+    //t_instruccion* instruccion = malloc(sizeof(t_instruccion));
     enviar_pid(int_to_char(pcb->pid), conexion);
     enviar_pc(int_to_char(pcb->registros->PC),conexion);
     int x = recibir_operacion(conexion);
     char* ins = recibir_mensaje(conexion, cpu_log);
     //instruccion = recibir_instruccion_cpu(conexion);
-    printf("insrucionn <%s> \n", ins);
+    //printf("insrucionn <%s> \n", ins);
     pcb->registros->PC++;
 
     return ins;
@@ -283,17 +283,14 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
 
             int num_frame = dir_fisica->nro_frame;
             int desplazamiento = dir_fisica->desplazamiento;
-            //HACER SCANF
-            /*char* tam = strcat(int_to_char(tamanio), "/");
-            char* tamframe = strcat(tam, int_to_char(num_frame));
-            char* tamframe1 = strcat(tamframe, "/");
-            char* enviar = strcat(tamframe1, int_to_char(desplazamiento));*/
+            uint32_t pid=pcb->pid;
 
-
-            int tam_mensaje = sizeof(tamanio)+sizeof(num_frame)+sizeof(desplazamiento); 
+            int tam_mensaje = sizeof(tamanio)+sizeof(num_frame)+sizeof(desplazamiento)+sizeof(pid); 
             char* mensaje = malloc(tam_mensaje);
-            sprintf(mensaje, "%d/%d/%d", tamanio,num_frame,desplazamiento);      //ver de implementar en demas    
-            enviar_pedido_lectura(conexion_memoria_cpu, mensaje);
+            sprintf(mensaje, "%d/%d/%d/%u", tamanio,num_frame,desplazamiento,pid); 
+
+            enviar_a_mem(conexion_memoria_cpu, mensaje, PED_LECTURA);
+
             int i = recibir_operacion(conexion_memoria_cpu);
             char* leido = recibir_mensaje(conexion_memoria_cpu, cpu_log);
             asignar_registro(pcb->registros, registro_datos, atoi(leido));
@@ -309,7 +306,7 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
 
             uint8_t valor = (uint8_t) obtener_valor_registro(pcb->registros, registro_datos);
             int tamanio;
-            printf ("num a escribir %d\n", valor);
+          //  printf ("num a escribir %d\n", valor);
             if(obtener_tipo_registro(registro_datos) == 8){
                 tamanio =1;
             }
@@ -330,9 +327,9 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
 
                 int tam_mensaje = sizeof(tamanio)+sizeof(aescribir)+sizeof(num_frame)+sizeof(desplazamiento)+sizeof(pcb->pid); 
                 char* mensaje = malloc(tam_mensaje);
-                sprintf(mensaje, "%d/%s/%d/%d/%d", tamanio,aescribir,num_frame,desplazamiento,pcb->pid);      //ver de implementar en demas    
+                sprintf(mensaje, "%d/%s/%d/%d/%d", tamanio,aescribir,num_frame,desplazamiento,pcb->pid);     
                 
-                enviar_pedido_escritura(conexion_memoria_cpu, mensaje);
+                enviar_a_mem(conexion_memoria_cpu, mensaje,PED_ESCRITURA);
                 int i = recibir_operacion(conexion_memoria_cpu);
                 char* frame_siguiente = recibir_mensaje(conexion_memoria_cpu,cpu_log);
             }/*
@@ -399,13 +396,9 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
         }
         case RESIZE:{
             int tamanio_resize = decode->valor;
-            /*char* tamanio = int_to_char(tamanio_resize);
-            char* pid_char = int_to_char(pcb->pid);
-            char* mensaje1 = strcat(pid_char,"/");
-            char* mensaje = strcat(mensaje1,tamanio);*/
             char* mensaje = malloc(sizeof(tamanio_resize)+sizeof(pcb->pid));
             sprintf(mensaje, "%d/%u", tamanio_resize,pcb->pid); 
-            enviar_pedido_resize_tampid(conexion_memoria_cpu, mensaje);
+            enviar_a_mem(conexion_memoria_cpu, mensaje,CPU_RESIZE);
             break;
         }
         case 7:{
@@ -421,11 +414,11 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             int d4=dirstring->desplazamiento;
             char* mensaje = malloc(sizeof(d1)+sizeof(d2)+sizeof(d3)+sizeof(d4)+sizeof(cant_char));
             sprintf(mensaje, "%d/%d/%d/%d/%d", d1,d2,d3,d4,cant_char);      //ver de implementar en demas    
-            enviar_cpy_string(conexion_memoria_cpu, mensaje);
+            enviar_a_mem(conexion_memoria_cpu, mensaje,CPY_STRING);
            
             break;
         }
-        case 8:{}
+        case 8:{/*wait*/}
         case 9:{}
         case 10:{
             enviar_motivo(BLOCK_IO, kernel_socket);
@@ -521,9 +514,10 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger){
    t_cpu_blockeo blockeo = NO_BLOCK;
     while(blockeo == NO_BLOCK && !hay_interrupcion)
     {
-        char* ins = fetch(conexion,pcb);
-        log_info(logger, "PID: %d - FETCH - Program counter: <%d>", pcb->pid, pcb->registros->PC);
 
+        log_info(logger, "PID: %d - FETCH - Program counter: <%d>", pcb->pid, pcb->registros->PC);
+        char* ins = fetch(conexion,pcb);
+        
         t_decode* decodeado = decode(ins);
     
         log_debug(logger, "Numero instruccion: %d", decodeado->op_code);
