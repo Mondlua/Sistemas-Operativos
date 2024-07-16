@@ -443,7 +443,7 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             int dir_logica =(int)obtener_valor_registro(pcb->registros, registro_direccion);
             t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
             parametros->params.io_stdin_stdout.registro_direccion = dir_fisica;
-            parametros->params.io_stdin_stdout.registro_tamaño = (cpu_registros*)obtener_valor_registro(pcb->registros, registro_tamaño);
+            parametros->params.io_stdin_stdout.registro_tamaño = (uint32_t)obtener_valor_registro(pcb->registros, registro_tamaño);
             t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion));
             paquete->codigo_operacion = IO_STDIN_READ;
             enviar_instruccion_a_Kernel(paquete, parametros, kernel_socket);
@@ -461,8 +461,7 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             int dir_logica =(int)obtener_valor_registro(pcb->registros, registro_direccion);
             t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
             parametros->params.io_stdin_stdout.registro_direccion = dir_fisica;
-            parametros->params.io_stdin_stdout.registro_direccion = (cpu_registros*)obtener_valor_registro(pcb->registros, registro_direccion);
-            parametros->params.io_stdin_stdout.registro_tamaño = (cpu_registros*)obtener_valor_registro(pcb->registros, registro_tamaño);
+            parametros->params.io_stdin_stdout.registro_tamaño = (uint32_t)obtener_valor_registro(pcb->registros, registro_tamaño);
             t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion));
             paquete->codigo_operacion = IO_STDOUT_WRITE;
             enviar_instruccion_a_Kernel(paquete, parametros, kernel_socket);
