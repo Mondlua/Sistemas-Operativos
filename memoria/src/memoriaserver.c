@@ -31,7 +31,9 @@ void atender_cliente(void *void_args)
         {
         case FRAME:{
             
-            char* mensaje = recibir_pedido_frame(client_socket, logger);
+            char* mensaje = recibir_pedido(client_socket);
+            log_info(logger, "Me llego el pedido de frame\n");
+
             uint32_t pid;
             int pag;
             sscanf(mensaje, "%u/%d", &pid,&pag);
@@ -81,11 +83,16 @@ void atender_cliente(void *void_args)
             char * pc_recibido = recibir_pc(client_socket);
             usleep(retardo*1000);
             uint32_t pc = atoi(pc_recibido);
-            sem_wait(&semaforo_mem);
+
+            printf("No Pase \n");
+
+            //sem_wait(&semaforo_mem);
+
+            printf("Pase \n");
 
             t_tabla* tabla_pid = list_get(tabla_pags, pid);
 
-            log_debug(logger, "PID obtenido: %d", tabla_pid->pid);
+            log_debug(logger, "PID obtenido: %d\n", tabla_pid->pid);
             /*
             t_instruccion *instruccion = malloc(sizeof(t_instruccion));
             instruccion->buffer = malloc(sizeof(t_buffer_ins));
@@ -100,7 +107,7 @@ void atender_cliente(void *void_args)
 
 
             enviar_mensaje(instruccion, client_socket);
-            log_debug(logger, "Mando la instruccion: %s", instruccion);
+            log_debug(logger, "Mando la instruccion: %s\n", instruccion);
 
 
             free(pc_recibido);;
@@ -145,7 +152,8 @@ void atender_cliente(void *void_args)
         }
         case CPU_RESIZE:
         {   
-           char* mensaje = recibir_pedido_resize_tampid(client_socket, logger);
+           char* mensaje = recibir_pedido(client_socket);
+           log_info(logger, "Me llego el  Pedido de Resize\n");
            usleep(retardo*1000);
            int tamanio;
            uint32_t pid;
@@ -233,7 +241,8 @@ void atender_cliente(void *void_args)
         }
         case PED_LECTURA:
         {
-            char* buffer = recibir_pedido_lectura(client_socket, logger); 
+            char* buffer = recibir_pedido(client_socket);
+            log_info(logger, "Me llego el Pedido de Lectura\n"); 
             int tamanio;
             int frame;
             int desp;
@@ -261,7 +270,8 @@ void atender_cliente(void *void_args)
             int frame; 
             int desp;
             uint32_t pid;
-            char* buffer = recibir_pedido_escritura(client_socket, logger);  
+            char* buffer = recibir_pedido(client_socket);
+            log_info(logger, "Me llego el Pedido de Escritura \n");  
 
             sscanf(buffer, "%d/%7[^/]/%d/%d/%d", &tamanio,valor,&frame,&desp,&pid);
 
@@ -310,7 +320,9 @@ void atender_cliente(void *void_args)
             int cantchar;
 
             char* a_escribir = malloc(sizeof(frame1)+ sizeof(desp1)+sizeof(frame2)+ sizeof(desp2)+ sizeof(cantchar)); 
-            a_escribir=recibir_cpy_string(client_socket, logger);
+            a_escribir=recibir_pedido(client_socket);
+
+            log_info(logger, "Me llego el string a escribir: <%s>\n ", a_escribir);
 
             sscanf(a_escribir, "%d/%d/%d/%d/%d", &frame1,&desp1,&frame2,&desp2,&cantchar);
          

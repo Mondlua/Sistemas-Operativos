@@ -36,7 +36,7 @@ t_list* abrir_pseudocodigo(char* path){
             //printf("Longitud: %zu, Contenido: %s", instruccion->buffer->size, instruccion->buffer->stream);
             //printf("Contenido: %s", list_get(lista_inst, cont));
             printf("Contenido: %s", instruccion);
-            sem_post(&semaforo_mem); //Contador de intrucciones
+            //sem_post(&semaforo_mem); //Contador de intrucciones
             if(strcmp(strdup(instruccionlinea),"EXIT") == 0){
                  break;  
             }
