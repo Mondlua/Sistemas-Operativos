@@ -81,7 +81,7 @@ void atender_cliente(void *void_args)
         case PC:
         {
             char * pc_recibido = recibir_pc(client_socket);
-            usleep(retardo*1000);
+            //usleep(retardo*1000);
             uint32_t pc = atoi(pc_recibido);
 
             printf("No Pase \n");
@@ -115,17 +115,42 @@ void atender_cliente(void *void_args)
         }
         case IO_STDIN_READ:{
             instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
-            parametros_io = recibir_io_stdin(client_socket);
+            parametros_io = recibir_registro_direccion_tamanio_con_texto(client_socket);
+            usleep(retardo*1000);
             //GUARDAR TEXTO EN REGISTRO_DIRECCION
-            escribir_en_mem(parametros_io->texto, parametros_io->params.io_stdin_stdout.registro_direccion, sizeof(parametros_io->texto));
+            escribir_en_mem(parametros_io->texto, parametros_io->registro_direccion, parametos_io->registro_tamanio);
+            enviar_mensaje("OK", client_socket);
             free(parametros_io);
             break;
         }
         case IO_STDOUT_WRITE: {
             instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
-            parametros_io = recibir_io_stdout(client_socket);
+            parametros_io = recibir_registro_direccion_tamanio(client_socket);
+            usleep(retardo*1000);
             //BUSCAR EN REGISTRO_DIRECCION Y LEER EL REGISTRO_TAMAÑO
-            char* mensaje = leer_en_mem(parametros_io->params.io_stdin_stdout.registro_tamaño, parametros_io->params.io_stdin_stdout.registro_direccion);
+            char* mensaje = leer_en_mem(parametros_io->registro_tamanio, parametros_io->registro_direccion);
+            //MANDAR RESULTADO A IO
+            enviar_mensaje(mensaje, client_socket);
+            free(parametros_io);
+            break;
+
+        }
+        case IO_FS_READ:{
+            instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
+            parametros_io = recibir_registro_direccion_tamanio_con_texto(client_socket);
+            usleep(retardo*1000);
+            //GUARDAR TEXTO EN REGISTRO_DIRECCION
+            escribir_en_mem(parametros_io->texto, parametros_io->registro_direccion, parametos_io->registro_tamanio);
+            enviar_mensaje("OK", client_socket);
+            free(parametros_io);
+            break;
+        }
+        case IO_FS_WRITE: {
+            instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
+            parametros_io = recibir_registro_direccion_tamanio(client_socket);
+            usleep(retardo*1000);
+            //BUSCAR EN REGISTRO_DIRECCION Y LEER EL REGISTRO_TAMAÑO
+            char* mensaje = leer_en_mem(parametros_io->registro_tamanio, parametros_io->registro_direccion);
             //MANDAR RESULTADO A IO
             enviar_mensaje(mensaje, client_socket);
             free(parametros_io);
@@ -155,9 +180,11 @@ void atender_cliente(void *void_args)
            char* mensaje = recibir_pedido(client_socket);
            log_info(logger, "Me llego el  Pedido de Resize\n");
            usleep(retardo*1000);
+
            int tamanio;
            uint32_t pid;
            sscanf(mensaje, "%d/%u", &tamanio,&pid);
+
 
             t_tabla* tabla_pid = buscar_por_pid_return(pid);
             int cant_pags;
@@ -251,9 +278,11 @@ void atender_cliente(void *void_args)
 
             usleep(retardo*1000);
 
+
             t_dir_fisica* dir_fisica = malloc(sizeof(t_dir_fisica*));
             dir_fisica->nro_frame = frame;
             dir_fisica->desplazamiento = desp;
+
 
             char* leido = leer_en_mem(tamanio, dir_fisica);
             log_info(logger, "PID: %u - Accion:LEER - Direccion fisica: %d - Tamaño %d",piid ,frame+desp,tamanio);
@@ -264,6 +293,7 @@ void atender_cliente(void *void_args)
             break;
         }
         case PED_ESCRITURA:{
+
 
             int tamanio;
             char valor[8];

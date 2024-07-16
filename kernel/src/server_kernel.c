@@ -16,7 +16,18 @@ void atender_cliente(void *void_args)
 
         if (cop == -1)
         {
-            log_info(logger, "DISCONNECT!");
+            interfaz* posible_interfaz = buscar_posicion_interfaz_por_cliente(client_socket);
+            if (posible_interfaz != NULL) {
+                if (list_remove_element(interfaces, posible_interfaz)) {
+                    queue_destroy(posible_interfaz->cola_block);
+                    sem_destroy(&posible_interfaz->semaforo_interfaz);
+                    log_info(logger, "DISCONNECT %s!", posible_interfaz->nombre_interfaz);
+                    free(posible_interfaz->nombre_interfaz);
+                    free(posible_interfaz);
+                }
+            } else {
+                log_error(logger, "No se encontró la interfaz %s en la lista", posible_interfaz->nombre_interfaz);
+            }
             return;
         }
 
@@ -41,24 +52,6 @@ void atender_cliente(void *void_args)
             new_client->cola_block = queue_create();
             list_add(interfaces, new_client);
             sem_post(&sem_contador_int);
-            break;
-        }
-        case AVISO_DESCONEXION:
-        {
-            char* interfaz_recibida = recibir_desconexion(client_socket, logger);
-            int posicion_interfaz = buscar_posicion_interfaz_por_nombre(interfaz_recibida);
-            if (posicion_interfaz != -1) {
-                interfaz* interfaz_desconectada = (interfaz*)list_remove(interfaces, posicion_interfaz);
-                free(interfaz_recibida); 
-                if (interfaz_desconectada != NULL) {
-                    queue_destroy(interfaz_desconectada->cola_block);
-                    sem_destroy(&interfaz_desconectada->semaforo_interfaz);
-                    free(interfaz_desconectada);
-                }
-            } else {
-                log_error(logger, "No se encontró la interfaz %s en la lista", interfaz_recibida);
-                free(interfaz_recibida); 
-            }
             break;
         }
         case AVISO_OPERACION_INVALIDA:
@@ -135,4 +128,15 @@ int buscar_posicion_interfaz_por_nombre(char* nombre_interfaz) {
         }
     }
     return -1;
+}
+
+interfaz* buscar_posicion_interfaz_por_cliente(int cliente) {
+    int tamanio_lista = list_size(interfaces);
+    for (int i = 0; i < tamanio_lista; i++) {
+        interfaz* posible_interfaz = list_get(interfaces, i);
+        if (posible_interfaz->socket_interfaz == cliente) {
+            return posible_interfaz;
+        }
+    }
+    return NULL;
 }
