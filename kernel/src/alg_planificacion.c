@@ -1,22 +1,22 @@
 #include "alg_planificacion.h"
 
-
-sem_t *placeholder;
-
 void* hilo_planificador(void *args)
 {
     t_planificacion *kernel_argumentos = (t_planificacion*) args;
 
     t_tipo_planificacion algoritmo_planificador = obtener_algoritmo_planificador(kernel_argumentos->config.algoritmo_planificador);
-    placeholder = &kernel_argumentos->planificar;
+    log_debug(kernel_argumentos->logger, "Algoritmo planificador: %d", algoritmo_planificador);
+    kernel_argumentos->algo_planning = algoritmo_planificador;
     while(1)
     {
         // Espero a que me soliciten planificar
         sem_wait(&kernel_argumentos->planificar);
+        log_debug(kernel_argumentos->logger, "Planificando...");
 
         // Si se ejecuto DETENER_PLANIFICACION, no planifico por mas que me soliciten hacerlo
         if(kernel_argumentos->detener_planificacion)
         {
+            log_debug(kernel_argumentos->logger, "Planificacion detenida.");
             continue;
         }
 
@@ -70,35 +70,51 @@ void virtual_round_robin(t_planificacion *kernel_argumentos)
     return;
 }
 
-void iniciar_timer(t_timer_planificador timer, int milisegundos)
+void iniciar_timer(t_timer_planificador* timer, int milisegundos)
 {
-    timer_create(CLOCK_REALTIME, &timer.sev, &timer.timer);
+    timer->its.it_value.tv_sec = milisegundos / 1000;
+    timer->its.it_value.tv_nsec = (milisegundos % 1000) * 1000000;
+    timer->its.it_interval.tv_nsec = 0;
+    timer->its.it_interval.tv_sec = 0;
 
-    timer.its.it_value.tv_nsec = milisegundos * 1000;
-    timer.its.it_value.tv_sec = 0;
-    timer.its.it_interval.tv_nsec = 0;
-    timer.its.it_interval.tv_sec = 0;
-
-    timer_settime(timer.timer, 0, &timer.its, NULL);
+    timer_settime(timer->timer, 0, &timer->its, NULL);
 }
 
-int frenar_timer(t_timer_planificador timer)
+int frenar_timer(t_timer_planificador* timer)
 {
     struct itimerspec remaining;
-    timer_gettime(timer.timer, &remaining);
-    timer_delete(timer.timer);
+    timer_gettime(timer->timer, &remaining);
+    //timer_delete(timer->timer);
     return remaining.it_value.tv_nsec * 1000;
 }
 
-void planificador_planificar()
+void enviar_interrupcion(union sigval sv)
 {
-    sem_post(placeholder);
+    t_planificacion *kernel_argumentos = (t_planificacion*)sv.sival_ptr;
+
+    // Enviar interrupcion a CPU Interrupt
+    if(!queue_is_empty(kernel_argumentos->colas.exec))
+    {
+        t_pcb* pcb_actual = queue_peek(kernel_argumentos->colas.exec);
+        enviar_int_a_interrupt(kernel_argumentos->socket_cpu_interrupt, pcb_actual->pid);
+        log_debug(kernel_argumentos->logger, "Interrupcion al PID: %d enviada.", pcb_actual->pid);
+        return;
+    }
+    
+    log_debug(kernel_argumentos->logger, "No se envia interrupcion dado que no hay ningun PCB en EXEC");
+}
+
+void planificador_planificar(t_planificacion *kernel_argumentos)
+{
+    sem_post(&kernel_argumentos->planificar);
 }
 
 bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_argumentos)
 {
     // Saco el pcb viejo de EXEC
     t_pcb *pcb_outdated = queue_pop(kernel_argumentos->colas.exec);
+    log_debug(kernel_argumentos->logger, "PID recibido: %d", pcb_desalojado->pid);
+    log_debug(kernel_argumentos->logger, "PID que tengo en EXEC: %d", pcb_outdated->pid);
 
     if(pcb_desalojado->pid != pcb_outdated->pid)
     {   
@@ -107,18 +123,25 @@ bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_a
     }
 
     // Meto el pcb a la cola correspondiente
-    if(pcb_desalojado->estado == 0) // Desalojado por haber ejecutado EXIT
+    if(pcb_desalojado->motivo_desalojo == 0) // Desalojado por haber ejecutado EXIT
     {
+        // Mato al timer si corresponde
+        if(kernel_argumentos->algo_planning != FIFO)
+        {
+            frenar_timer(kernel_argumentos->timer_quantum);
+        }
+
         queue_push(kernel_argumentos->colas.exit, pcb_desalojado);
         // Enviar solicitud a memoria para desalojar el proceso
-        log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: EXEC - Estado actual: READY", pcb_desalojado->pid);
+        log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: EXEC - Estado actual: EXIT", pcb_desalojado->pid);
+        log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: SUCCESS", pcb_desalojado->pid);
     }
-    if(pcb_desalojado->estado == 1) // Desalojado por fin de quantum
+    if(pcb_desalojado->motivo_desalojo == 1) // Desalojado por fin de quantum
     {
         queue_push(kernel_argumentos->colas.ready, pcb_desalojado);
         log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: EXEC - Estado actual: READY", pcb_desalojado->pid);
     }
-    if(pcb_desalojado->estado == 2) // Desalojado por IO_BLOCK
+    if(pcb_desalojado->motivo_desalojo == 2) // Desalojado por IO_BLOCK
     {
         recibir_solicitud_cpu(conexion_cpu_dispatch, pcb_desalojado);
         int milisegundos_restantes = frenar_timer(kernel_argumentos->timer_quantum);
@@ -127,7 +150,7 @@ bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_a
         log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: EXEC - Estado actual: BLOCK", pcb_desalojado->pid);
         // Realizar la solicitud correspondiente a IO
     }
-    if(pcb_desalojado->estado == 3) // Desalojado por WAIT
+    if(pcb_desalojado->motivo_desalojo == 3) // Desalojado por WAIT
     {
         char* recurso_solicitado = "placeholder";
         return administrador_recursos_wait(pcb_desalojado, recurso_solicitado, kernel_argumentos);
@@ -136,7 +159,7 @@ bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_a
         // Si existe, pero no hay instancias, a BLOCK correspondiente y return true
         // Si existe y hay instancias, se lo devuelve a EXEC, y se retorna un valor para que no se replanifique
     }
-    if(pcb_desalojado->estado == 4) // Desalojado por EXIT
+    if(pcb_desalojado->motivo_desalojo == 4) // Desalojado por EXIT
     {
         char* recurso_solicitado = "placeholder";
         administrador_recursos_signal(pcb_desalojado, recurso_solicitado, kernel_argumentos);
@@ -147,7 +170,6 @@ bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_a
         return false;
     }
     return true;
-
 }
 
 void planificador_corto_plazo(t_tipo_planificacion algoritmo, t_planificacion *kernel_argumentos)
@@ -178,6 +200,10 @@ void planificador_largo_plazo(t_planificacion *kernel_argumentos)
 
     if(cantidad_procesos_actual < kernel_argumentos->config.grado_multiprogramacion)
     {
+        if(queue_is_empty(kernel_argumentos->colas.new))
+        {
+            return;
+        }
         while(cantidad_procesos_actual < kernel_argumentos->config.grado_multiprogramacion && !queue_is_empty(kernel_argumentos->colas.new))
         {
             t_pcb* pcb = queue_pop(kernel_argumentos->colas.new);
@@ -188,34 +214,47 @@ void planificador_largo_plazo(t_planificacion *kernel_argumentos)
     }
 }
 
-t_planificacion *inicializar_t_planificacion(int socket_cpu_dispatch, int socket_cpu_interrupt)
+t_planificacion *inicializar_t_planificacion(t_config *kernel_config, t_log *kernel_log)
 {
    t_planificacion *planificador = malloc(sizeof(t_planificacion));
     
-    planificador->config.algoritmo_planificador = config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
-    planificador->config.grado_multiprogramacion = config_get_int_value(kernel_config, "GRADO_MULTIPROGRAMACION");
-    planificador->config.quantum = quantum;
-    
     planificador->logger = kernel_log;
 
-    planificador->colas.new = colaNew;
-    planificador->colas.ready = colaReady;
-    planificador->colas.exec = colaExec;
-    planificador->colas.exit = colaExit;
+    planificador->colas.new = queue_create();
+    planificador->colas.ready = queue_create();
+    planificador->colas.exec = queue_create();
+    planificador->colas.exit = queue_create();
     planificador->colas.prioridad = queue_create();
     planificador->colas.lista_block = dictionary_create();
 
     planificador->detener_planificacion = 0;
     planificador->colas.cantidad_procesos_block = 0;
 
-    planificador->socket_cpu_dispatch = socket_cpu_dispatch;
-    planificador->socket_cpu_interrupt = socket_cpu_interrupt;
-
     sem_init(&planificador->planificar, 0, 0);
 
-    inicializar_lista_recursos(planificador);
-    
+    inicializar_lista_recursos(planificador, kernel_config);
+
+    inicializar_config_kernel(planificador, kernel_config);
+
+    planificador->timer_quantum = malloc(sizeof(t_timer_planificador));
+    planificador->timer_quantum->timer = inicializar_timer(planificador);
+
     return planificador;
+}
+
+timer_t inicializar_timer(t_planificacion *kernel_argumentos)
+{
+    struct sigevent sev;
+    timer_t ret;
+
+    sev.sigev_notify = SIGEV_THREAD;
+    sev.sigev_value.sival_ptr = kernel_argumentos;
+    sev.sigev_notify_function = enviar_interrupcion;
+    sev.sigev_notify_attributes = NULL;
+
+    timer_create(CLOCK_REALTIME, &sev, &ret);
+
+    return ret;
 }
 
 t_tipo_planificacion obtener_algoritmo_planificador(char* algoritmo)
@@ -237,7 +276,7 @@ t_tipo_planificacion obtener_algoritmo_planificador(char* algoritmo)
     return FIFO;
 }
 
-void inicializar_lista_recursos(t_planificacion *planificador)
+void inicializar_lista_recursos(t_planificacion *planificador, t_config *kernel_config)
 {
     char* string_arr_recursos = config_get_string_value(kernel_config, "RECURSOS");
     char* string_arr_instancias_recursos = config_get_string_value(kernel_config, "INSTANCIAS_RECURSOS");
@@ -260,15 +299,28 @@ void inicializar_lista_recursos(t_planificacion *planificador)
         i++;
     }
 
-    free(array_nombre_recursos);
-    free(array_instancias_recursos);
+    //free(array_nombre_recursos);
+    //free(array_instancias_recursos);
 }
 
+void inicializar_config_kernel(t_planificacion *planificador, t_config *kernel_config)
+{
+    planificador->config.algoritmo_planificador = config_get_string_value(kernel_config, "ALGORITMO_PLANIFICACION");
+    planificador->config.grado_multiprogramacion = config_get_int_value(kernel_config, "GRADO_MULTIPROGRAMACION");
+    planificador->config.quantum = config_get_int_value(kernel_config, "QUANTUM");
+    planificador->config.config_leida.ip_cpu = config_get_string_value(kernel_config, "IP_CPU");
+    planificador->config.config_leida.ip_memoria = config_get_string_value(kernel_config, "IP_MEMORIA");
+    planificador->config.config_leida.puerto_cpu_dispatch = config_get_string_value(kernel_config, "PUERTO_CPU_DISPATCH");
+    planificador->config.config_leida.puerto_cpu_interrupt = config_get_string_value(kernel_config, "PUERTO_CPU_INTERRUPT");
+    planificador->config.config_leida.puerto_escucha = config_get_int_value(kernel_config, "PUERTO_ESCUCHA");
+    planificador->config.config_leida.puerto_memoria = config_get_int_value(kernel_config, "PUERTO_MEMORIA");
+}
 // ------- TRANSICIONES DE ESTADOS --------
 t_pcb *planificador_ready_a_exec(t_planificacion *kernel_argumentos)
 {
     
     t_pcb *proximo_proceso = queue_pop(kernel_argumentos->colas.ready);
+    proximo_proceso->estado = EXEC;
     queue_push(kernel_argumentos->colas.exec, proximo_proceso);
     log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: READY - Estado actual: EXEC", proximo_proceso->pid);
     return proximo_proceso;
@@ -277,6 +329,7 @@ t_pcb *planificador_ready_a_exec(t_planificacion *kernel_argumentos)
 t_pcb *planificador_prioridad_a_exec(t_planificacion *kernel_argumentos)
 {
     t_pcb *proximo_pcb = queue_pop(kernel_argumentos->colas.prioridad);
+    proximo_pcb->estado = EXEC;
     queue_push(kernel_argumentos->colas.exec, proximo_pcb);
     log_info(kernel_argumentos->logger, "PID %d - Estado anterior: READY - Estado actual: EXEC", proximo_pcb->pid);
     return proximo_pcb;

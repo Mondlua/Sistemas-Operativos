@@ -23,6 +23,7 @@ typedef struct t_atender_cliente_args
 
 } t_atender_cliente_args;
 
+void atender_cliente(void* void_args);
 int server_escuchar(void *arg);
 void enviar_motivo(op_code FIN_QUANTUM, int kernel_socket);
 void recibir_interrupcion_finq(int socket_cliente);

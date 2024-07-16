@@ -13,6 +13,20 @@
 #include <utils/funcionesUtiles.h>
 #include "funciones_tlb.h"
 
+typedef struct{
+    char *puerto_cpu_dispatch;
+    char *puerto_cpu_interrupt;
+    char *ip_cpu;
+} t_config_leida_cpu;
+
+typedef struct{
+    t_config_leida_cpu config_leida;
+    int socket_dispatch;
+    int socket_interrupt;
+} t_config_cpu;
+
+void* conectar_dispatch(void* args);
+void* conectar_interrupt(void* args);
 
 
 #endif

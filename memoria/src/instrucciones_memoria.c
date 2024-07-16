@@ -7,12 +7,7 @@ t_list* abrir_pseudocodigo(char* path){
     size_t total_length = strlen(path_instrucciones) + strlen(path) + 2; // 1 para el '/' y 1 para el '\0'
     char* path_completo = malloc(total_length);
     snprintf(path_completo, total_length, "%s%s", path_instrucciones, path);
-    //snprintf(path_completo, total_length, "%s/%s", path_instrucciones, path);
-   /* if (path_instrucciones[strlen(path_instrucciones) - 1] == '/') {
-        snprintf(path_completo, total_length, "%s%s", path_instrucciones, path);
-    } else {
-        snprintf(path_completo, total_length, "%s/%s", path_instrucciones, path);
-    }*/
+
     log_info(memoria_log, path_completo);
     FILE* arch_pseudocodigo = fopen(path_completo, "r");
         if(arch_pseudocodigo == NULL){
@@ -21,8 +16,6 @@ t_list* abrir_pseudocodigo(char* path){
         }
     free(path_completo);
 
-    //FILE* arch_pseudocodigo = fopen(strcat(strcat(path_instrucciones,"/"),path), "r"); // strcat no permite crear mas de 1 proceso
-
     t_list* lista_inst= list_create();
     char instruccionlinea[50]; //Ver 
 
@@ -30,17 +23,21 @@ t_list* abrir_pseudocodigo(char* path){
         while (fgets(instruccionlinea, sizeof(instruccionlinea), arch_pseudocodigo) != NULL) {
             
             size_t longitud = strlen(instruccionlinea);
-            t_instruccion* instruccion = malloc(sizeof(t_instruccion));
+            /*t_instruccion* instruccion = malloc(sizeof(t_instruccion));
             instruccion->buffer=malloc(sizeof(t_buffer_ins));
             instruccion->codigo_operacion = INSTRUCCION;
             instruccion->buffer->size = longitud;
             instruccion->buffer->stream = malloc(sizeof(instruccionlinea));
-            instruccion->buffer->stream = strdup(instruccionlinea);
+            instruccion->buffer->stream = strdup(instruccionlinea);*/
+
+            char* instruccion = strdup(instruccionlinea);
             list_add_in_index(lista_inst,cont,instruccion);
             cont++;
-            printf("Longitud: %zu, Contenido: %s", instruccion->buffer->size, instruccion->buffer->stream);
-            sem_post(&semaforo_mem); //Contador de intrucciones
-            if(strcmp(instruccion->buffer->stream,"EXIT") == 0){
+            //printf("Longitud: %zu, Contenido: %s", instruccion->buffer->size, instruccion->buffer->stream);
+            //printf("Contenido: %s", list_get(lista_inst, cont));
+            printf("Contenido: %s", instruccion);
+            //sem_post(&semaforo_mem); //Contador de intrucciones
+            if(strcmp(strdup(instruccionlinea),"EXIT") == 0){
                  break;  
             }
         }   

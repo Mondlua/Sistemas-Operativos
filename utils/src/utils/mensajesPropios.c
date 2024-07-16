@@ -100,7 +100,7 @@ t_instruccion* recibir_instruccion_cpu(int socket_servidor){
 
     recv(socket_servidor, &(instruccion->buffer->size), sizeof(uint32_t), MSG_WAITALL);
 
-    instruccion->buffer->stream = malloc(sizeof(instruccion->buffer->size));
+    instruccion->buffer->stream = malloc(instruccion->buffer->size);
     recv(socket_servidor, instruccion->buffer->stream, instruccion->buffer->size, MSG_WAITALL);
  
     return instruccion;  
@@ -174,8 +174,10 @@ void enviar_pcb(t_pcb* pcb, int socket_cliente){
     agregar_a_paquete(paquete, &(pcb->quantum), sizeof(int));
     agregar_a_paquete(paquete, pcb->registros, sizeof(cpu_registros));
     agregar_a_paquete(paquete, &(pcb->estado), sizeof(t_proceso_estado));
+    agregar_a_paquete(paquete, &(pcb->motivo_desalojo), sizeof(int));
     enviar_paquete(paquete, socket_cliente);
     eliminar_paquete(paquete);
+    printf("Paquete enviado a socket: %d\n", socket_cliente);
 }
 
 t_pcb* recibir_pcb(int socket_cliente) {
@@ -186,6 +188,7 @@ t_pcb* recibir_pcb(int socket_cliente) {
     pcb->quantum = *((int*)list_get(valores_paquete, 1));
     pcb->registros = (cpu_registros*)list_get(valores_paquete, 2);
     pcb->estado = *((t_proceso_estado*)list_get(valores_paquete, 3));
+    pcb->motivo_desalojo = *((int*)list_get(valores_paquete, 4));
     list_destroy(valores_paquete);
     return pcb;
 }
@@ -210,3 +213,22 @@ char *estado_a_string(t_proceso_estado estado)
     }
 }
 
+void enviar_int_a_interrupt(int socket_cpu_interrupt, uint32_t pid)
+{
+    t_paquete* paquete = crear_paquete();
+    paquete->codigo_operacion= KERNEL_CPU_INTERRUPT;
+    agregar_a_paquete(paquete, &(pid), sizeof(uint32_t));
+    enviar_paquete(paquete, socket_cpu_interrupt);
+    eliminar_paquete(paquete);
+}
+
+uint32_t recibir_int_a_interrupt(int socket_cpu_interrupt)
+{
+    uint32_t ret;
+
+    t_list* valores_paquete = recibir_paquete(socket_cpu_interrupt);
+    ret = (uint32_t)list_get(valores_paquete, 0);
+    list_destroy(valores_paquete);
+
+    return ret;
+}
