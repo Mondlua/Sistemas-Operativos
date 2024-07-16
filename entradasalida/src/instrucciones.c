@@ -1,72 +1,67 @@
 #include "instrucciones.h"
 
 
-instruccion_params* deserializar_io_gen_sleep(t_buffer_ins* buffer)
-{
+instruccion_params* deserializar_io_gen_sleep(t_buffer_ins* buffer) {
     instruccion_params* parametros = malloc(sizeof(instruccion_params));
-    memcpy(&(parametros->params.io_gen_sleep_params.unidades_trabajo), buffer->stream, sizeof(int));
+    memcpy(&(parametros->params.io_gen_sleep.unidades_trabajo), buffer->stream, sizeof(int));
     return parametros;
 }
 
-instruccion_params* deserializar_io_stdin_stdout(t_buffer_ins* buffer){
+instruccion_params* deserializar_registro_direccion_tamanio(t_buffer_ins* buffer) {
     instruccion_params* parametros = malloc(sizeof(instruccion_params));
     void* stream = buffer->stream;
-    memcpy(&(parametros->params.io_stdin_stdout.registro_direccion), stream, sizeof(t_dir_fisica));
+    memcpy(&(parametros->registro_direccion), stream, sizeof(t_dir_fisica));
     stream += sizeof(t_dir_fisica);
-    memcpy(&(parametros->params.io_stdin_stdout.registro_tamaño), stream, sizeof(uint32_t));
+    memcpy(&(parametros->registro_tamanio), stream, sizeof(uint32_t));
     return parametros;
 }
 
-instruccion_params* deserializar_io_fs_create_delete(t_buffer_ins* buffer)
-{
+instruccion_params* deserializar_io_fs_create_delete(t_buffer_ins* buffer) {
     instruccion_params* parametros = malloc(sizeof(instruccion_params));
     
     uint32_t offset = 0;
     uint32_t archivo_len;
     memcpy(&archivo_len, buffer->stream + offset, sizeof(uint32_t));
     offset += sizeof(uint32_t);
-    parametros->params.io_fs_create_delete_params.nombre_archivo = malloc(archivo_len);
-    memcpy(parametros->params.io_fs_create_delete_params.nombre_archivo, buffer->stream + offset, archivo_len);
+    parametros->params.io_fs.nombre_archivo = malloc(archivo_len);
+    memcpy(parametros->params.io_fs.nombre_archivo, buffer->stream + offset, archivo_len);
     
     return parametros;
 }
 
-instruccion_params* deserializar_io_fs_truncate(t_buffer_ins* buffer)
-{
+instruccion_params* deserializar_io_fs_truncate(t_buffer_ins* buffer) {
     instruccion_params* parametros = malloc(sizeof(instruccion_params));
     
     uint32_t offset = 0;
     uint32_t archivo_len;
     memcpy(&archivo_len, buffer->stream + offset, sizeof(uint32_t));
     offset += sizeof(uint32_t);
-    parametros->params.io_fs_truncate_params.nombre_archivo = malloc(archivo_len);
-    memcpy(parametros->params.io_fs_truncate_params.nombre_archivo, buffer->stream + offset, archivo_len);
+    parametros->params.io_fs.nombre_archivo = malloc(archivo_len);
+    memcpy(parametros->params.io_fs.nombre_archivo, buffer->stream + offset, archivo_len);
     offset += archivo_len;
-    memcpy(&(parametros->params.io_fs_truncate_params.tamaño), buffer->stream + offset, sizeof(uint32_t));
+    memcpy(&(parametros->registro_tamanio), buffer->stream + offset, sizeof(uint32_t));
     
     return parametros;
 }
 
-instruccion_params* deserializar_io_fs_write_read(t_buffer_ins* buffer)
-{
+instruccion_params* deserializar_io_fs_write_read(t_buffer_ins* buffer) {
     instruccion_params* parametros = malloc(sizeof(instruccion_params));
     
     uint32_t offset = 0;
     uint32_t archivo_len;
     memcpy(&archivo_len, buffer->stream + offset, sizeof(uint32_t));
     offset += sizeof(uint32_t);
-    parametros->params.io_fs_read_write.nombre_archivo = malloc(archivo_len);
-    memcpy(parametros->params.io_fs_read_write.nombre_archivo, buffer->stream + offset, archivo_len);
+    parametros->params.io_fs.nombre_archivo = malloc(archivo_len);
+    memcpy(parametros->params.io_fs.nombre_archivo, buffer->stream + offset, archivo_len);
     offset += archivo_len;
-    memcpy(&(parametros->params.io_fs_read_write.registro_direccion), buffer->stream + offset, sizeof(t_dir_fisica));
+    memcpy(&(parametros->registro_direccion), buffer->stream + offset, sizeof(t_dir_fisica));
     offset += sizeof(t_dir_fisica);
-    memcpy(&(parametros->params.io_fs_read_write.registro_tamaño), buffer->stream + offset, sizeof(uint32_t));
+    memcpy(&(parametros->registro_tamanio), buffer->stream + offset, sizeof(uint32_t));
     offset += sizeof(uint32_t);
-    memcpy(&(parametros->params.io_fs_read_write.registro_puntero_archivo), buffer->stream + offset, sizeof(off_t));
+    memcpy(&(parametros->params.io_fs.registro_puntero_archivo), buffer->stream + offset, sizeof(off_t));
     
     return parametros;
 }
-
 
 void recibir_instruccion(char* tipo_interfaz)
 {
@@ -142,13 +137,13 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code){
     {
     case IO_GEN_SLEEP:{
         int result = 0;
-        int unidades_trabajo_recibidas = parametros->params.io_gen_sleep_params.unidades_trabajo;
+        int unidades_trabajo_recibidas = parametros->params.io_gen_sleep.unidades_trabajo;
         result = unidades_trabajo_recibidas * tiempo_unidad_trabajo * 1000; 
         usleep(result);
         break;
     }
     case IO_STDIN_READ:{
-        uint32_t tamaño = parametros->params.io_stdin_stdout.registro_tamaño;
+        uint32_t tamaño = parametros->registro_tamanio;
         char* texto = (char*)malloc(sizeof(tamaño));
         printf("Ingrese el texto: ");
         fgets(texto, tamaño, stdin);
@@ -170,15 +165,15 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code){
         break;
     }
     case IO_FS_CREATE:{
-        crear_archivo(parametros->params.io_fs_create_params.nombre_archivo);
+        crear_archivo(parametros->params.io_fs.nombre_archivo);
         break;
     }
     case IO_FS_DELETE:{
-        borrar_archivo(parametros->params.io_fs_create_params.nombre_archivo);
+        borrar_archivo(parametros->params.io_fs.nombre_archivo);
         break;
     }
     case IO_FS_TRUNCATE:{
-        truncar_archivo(parametros->params.io_fs_truncate_params.nombre_archivo, parametros->params.io_fs_truncate_params.tamaño);
+        truncar_archivo(parametros->params.io_fs.nombre_archivo, parametros->registro_tamanio);
         break;
     }
     case IO_FS_WRITE:{
@@ -187,12 +182,12 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code){
         enviar_instruccion_IO_Mem(instruccion_enviar,parametros,conexion_memoria);
         free(instruccion_enviar);
         char* a_escribir = recibir_mensaje(conexion_memoria, entradasalida_log);
-        escribir_archivo(parametros->params.io_fs_read_write.nombre_archivo, parametros->params.io_fs_read_write.registro_puntero_archivo, a_escribir,parametros->params.io_fs_read_write.registro_tamaño);
+        escribir_archivo(parametros->params.io_fs.nombre_archivo, parametros->params.io_fs.registro_puntero_archivo, a_escribir, parametros->registro_tamanio);
         free(a_escribir);
         break;
     }
     case IO_FS_READ:{
-        char* leido = leer_archivo(parametros->params.io_fs_read_write.nombre_archivo, parametros->params.io_fs_read_write.registro_puntero_archivo,parametros->params.io_fs_read_write.registro_tamaño);
+        char* leido = leer_archivo(parametros->params.io_fs.nombre_archivo, parametros->params.io_fs.registro_puntero_archivo, parametros->registro_tamanio);
         t_paquete_instruccion* instruccion_enviar = malloc(sizeof(t_paquete_instruccion));
         instruccion_enviar->codigo_operacion = IO_FS_READ;
         parametros->texto = leido;
