@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-instruccion_params* recibir_io_stdin(int client_socket);
-instruccion_params* recibir_io_stdout(int client_socket);
+instruccion_params* recibir_registro_direccion_tamanio_con_texto(int client_socket);
+instruccion_params* recibir_registro_direccion_tamanio(int client_socket);
 
 #endif

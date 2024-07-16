@@ -58,9 +58,7 @@ void enviar_instruccion_a_interfaz(interfaz* interfaz_destino, instruccion_param
 
 // RECIBIR DE CPU
 
-
-instruccion_params* deserializar_io_gen_sleep_con_interfaz(t_buffer_ins* buffer)
-{
+instruccion_params* deserializar_io_gen_sleep_con_interfaz(t_buffer_ins* buffer) {
     instruccion_params* parametros = malloc(sizeof(instruccion_params));
     
     uint32_t offset = 0;
@@ -70,14 +68,12 @@ instruccion_params* deserializar_io_gen_sleep_con_interfaz(t_buffer_ins* buffer)
     parametros->interfaz = malloc(interfaz_len);
     memcpy(parametros->interfaz, buffer->stream + offset, interfaz_len);
     offset += interfaz_len;
-    memcpy(&(parametros->params.io_gen_sleep_params.unidades_trabajo), buffer->stream + offset, sizeof(int));
+    memcpy(&(parametros->params.io_gen_sleep.unidades_trabajo), buffer->stream + offset, sizeof(int));
     
     return parametros;
 }
 
-
-instruccion_params* deserializar_io_stdin_stdout_con_interfaz(t_buffer_ins* buffer)
-{
+instruccion_params* deserializar_io_stdin_stdout_con_interfaz(t_buffer_ins* buffer) {
     instruccion_params* parametros = malloc(sizeof(instruccion_params));
     
     uint32_t offset = 0;
@@ -90,6 +86,7 @@ instruccion_params* deserializar_io_stdin_stdout_con_interfaz(t_buffer_ins* buff
     memcpy(&(parametros->params.io_stdin_stdout.registro_direccion), buffer->stream + offset, sizeof(t_dir_fisica));
     offset += sizeof(t_dir_fisica);
     memcpy(&(parametros->params.io_stdin_stdout.registro_tamaño), buffer->stream + offset, sizeof(uint32_t));
+    
     return parametros;
 }
 
@@ -107,8 +104,8 @@ instruccion_params* deserializar_io_fs_create_delete_con_interfaz(t_buffer_ins* 
     uint32_t archivo_len;
     memcpy(&archivo_len, buffer->stream + offset, sizeof(uint32_t));
     offset += sizeof(uint32_t);
-    parametros->params.io_fs_create_delete_params.nombre_archivo = malloc(archivo_len);
-    memcpy(parametros->params.io_fs_create_delete_params.nombre_archivo, buffer->stream + offset, archivo_len);
+    parametros->params.io_fs.nombre_archivo = malloc(archivo_len);
+    memcpy(parametros->params.io_fs.nombre_archivo, buffer->stream + offset, archivo_len);
     
     return parametros;
 }
@@ -127,11 +124,11 @@ instruccion_params* deserializar_io_fs_truncate_con_interfaz(t_buffer_ins* buffe
     uint32_t archivo_len;
     memcpy(&archivo_len, buffer->stream + offset, sizeof(uint32_t));
     offset += sizeof(uint32_t);
-    parametros->params.io_fs_truncate_params.nombre_archivo = malloc(archivo_len);
-    memcpy(parametros->params.io_fs_truncate_params.nombre_archivo, buffer->stream + offset, archivo_len);
+    parametros->params.io_fs.nombre_archivo = malloc(archivo_len);
+    memcpy(parametros->params.io_fs.nombre_archivo, buffer->stream + offset, archivo_len);
     offset += archivo_len;
     
-    memcpy(&(parametros->params.io_fs_truncate_params.tamaño), buffer->stream + offset, sizeof(uint32_t));
+    memcpy(&(parametros->registro_tamanio), buffer->stream + offset, sizeof(uint32_t));
     
     return parametros;
 }
@@ -150,17 +147,17 @@ instruccion_params* deserializar_io_fs_write_read_con_interfaz(t_buffer_ins* buf
     uint32_t archivo_len;
     memcpy(&archivo_len, buffer->stream + offset, sizeof(uint32_t));
     offset += sizeof(uint32_t);
-    parametros->params.io_fs_read_write.nombre_archivo = malloc(archivo_len);
-    memcpy(parametros->params.io_fs_read_write.nombre_archivo, buffer->stream + offset, archivo_len);
+    parametros->params.io_fs.nombre_archivo = malloc(archivo_len);
+    memcpy(parametros->params.io_fs.nombre_archivo, buffer->stream + offset, archivo_len);
     offset += archivo_len;
     
-    memcpy(&(parametros->params.io_fs_read_write.registro_direccion), buffer->stream + offset, sizeof(t_dir_fisica));
+    memcpy(&(parametros->registro_direccion), buffer->stream + offset, sizeof(t_dir_fisica));
     offset += sizeof(t_dir_fisica);
     
-    memcpy(&(parametros->params.io_fs_read_write.registro_tamaño), buffer->stream + offset, sizeof(uint32_t));
+    memcpy(&(parametros->registro_tamanio), buffer->stream + offset, sizeof(uint32_t));
     offset += sizeof(uint32_t);
     
-    memcpy(&(parametros->params.io_fs_read_write.registro_puntero_archivo), buffer->stream + offset, sizeof(off_t));
+    memcpy(&(parametros->params.io_fs.registro_puntero_archivo), buffer->stream + offset, sizeof(off_t));
     
     return parametros;
 }

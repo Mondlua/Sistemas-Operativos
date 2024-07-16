@@ -88,20 +88,42 @@ void atender_cliente(void *void_args)
         }
         case IO_STDIN_READ:{
             instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
-            parametros_io = recibir_io_stdin(client_socket);
+            parametros_io = recibir_registro_direccion_tamanio_con_texto(client_socket);
             usleep(retardo*1000);
             //GUARDAR TEXTO EN REGISTRO_DIRECCION
-            escribir_en_mem(parametros_io->texto, parametros_io->params.io_stdin_stdout.registro_direccion);
+            escribir_en_mem(parametros_io->texto, parametros_io->registro_direccion);
             enviar_mensaje("OK", client_socket);
             free(parametros_io);
             break;
         }
         case IO_STDOUT_WRITE: {
             instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
-            parametros_io = recibir_io_stdout(client_socket);
+            parametros_io = recibir_registro_direccion_tamanio(client_socket);
             usleep(retardo*1000);
             //BUSCAR EN REGISTRO_DIRECCION Y LEER EL REGISTRO_TAMAÑO
-            char* mensaje = leer_en_mem(parametros_io->params.io_stdin_stdout.registro_tamaño, parametros_io->params.io_stdin_stdout.registro_direccion);
+            char* mensaje = leer_en_mem(parametros_io->registro_tamanio, parametros_io->registro_direccion);
+            //MANDAR RESULTADO A IO
+            enviar_mensaje(mensaje, client_socket);
+            free(parametros_io);
+            break;
+
+        }
+        case IO_FS_READ:{
+            instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
+            parametros_io = recibir_registro_direccion_tamanio_con_texto(client_socket);
+            usleep(retardo*1000);
+            //GUARDAR TEXTO EN REGISTRO_DIRECCION
+            escribir_en_mem(parametros_io->texto, parametros_io->registro_direccion);
+            enviar_mensaje("OK", client_socket);
+            free(parametros_io);
+            break;
+        }
+        case IO_FS_WRITE: {
+            instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
+            parametros_io = recibir_registro_direccion_tamanio(client_socket);
+            usleep(retardo*1000);
+            //BUSCAR EN REGISTRO_DIRECCION Y LEER EL REGISTRO_TAMAÑO
+            char* mensaje = leer_en_mem(parametros_io->registro_tamanio, parametros_io->registro_direccion);
             //MANDAR RESULTADO A IO
             enviar_mensaje(mensaje, client_socket);
             free(parametros_io);

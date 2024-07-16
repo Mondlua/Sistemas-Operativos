@@ -23,32 +23,21 @@ typedef struct
 {   
     char* interfaz;
     char* texto;
+    t_dir_fisica* registro_direccion;
+    uint32_t registro_tamanio;
      union {
         struct {
             int unidades_trabajo;
-        } io_gen_sleep_params;
-        struct {
-            t_dir_fisica* registro_direccion;
-            uint32_t registro_tamaño;
-        } io_stdin_stdout;
+        } io_gen_sleep;
          struct {
             char* nombre_archivo;
-        } io_fs_create_delete_params;
-        struct {
-            char* nombre_archivo;
-            uint32_t tamaño;
-        } io_fs_truncate_params;
-        struct {
-            char* nombre_archivo;
-            t_dir_fisica* registro_direccion;
-            uint32_t registro_tamaño;
             off_t registro_puntero_archivo;
-        } io_fs_read_write;
+        } io_fs;
      }params;
 }instruccion_params;
 
 t_buffer_ins* serializar_io_gen_sleep(instruccion_params* param);
-t_buffer_ins* serializar_registro_direccion_tamanio(instruccion_params* param);
+t_buffer_ins* serializar_registro_direccion_tamanio(instruccion_params* param); //Tambien va con memoria
 t_buffer_ins* serializar_io_fs_create_delete(instruccion_params* param);
 t_buffer_ins* serializar_io_fs_truncate(instruccion_params* param);
 t_buffer_ins* serializar_io_fs_write_read(instruccion_params* param);
@@ -66,7 +55,7 @@ void enviar_instruccion_a_Kernel(t_paquete_instruccion* instruccion, instruccion
 
 
 //A MEMORIA
-t_buffer_ins* serializar_io_stdin_con_texto(instruccion_params* param);
+t_buffer_ins* serializar_registro_direccion_tamanio_con_texto(instruccion_params* param);
 void enviar_instruccion_IO_Mem(t_paquete_instruccion* instruccion, instruccion_params* parametros, int socket_cliente);
 
 
