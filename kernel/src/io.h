@@ -15,5 +15,9 @@ interfaz* buscar_interfaz_por_nombre(char* nombre_interfaz);
 
 void recibir_solicitud_cpu(int socket_servidor, t_pcb* pcb);
 instruccion_params* deserializar_io_gen_sleep_con_interfaz(t_buffer_ins* buffer);
+instruccion_params* deserializar_io_stdin_stdout_con_interfaz(t_buffer_ins* buffer);
+instruccion_params* deserializar_io_fs_create_delete_con_interfaz(t_buffer_ins* buffer);
+instruccion_params* deserializar_io_fs_truncate_con_interfaz(t_buffer_ins* buffer);
+instruccion_params* deserializar_io_fs_write_read_con_interfaz(t_buffer_ins* buffer);
 
 #endif

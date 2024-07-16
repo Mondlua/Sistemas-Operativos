@@ -67,7 +67,7 @@ void extraer_segun_tipo_io(t_config* config, char* tipo_interfaz){
         block_size = config_get_int_value(config, "BLOCK_SIZE");
         block_count = config_get_int_value(config, "BLOCK_COUNT");
         retraso_compactacion = config_get_int_value(config, "RETRASO_COMPACTACION");
-        //conectar_con_memoria(config);
+        conectar_con_memoria(config);
         inicio_filesystem();
     }
 }
