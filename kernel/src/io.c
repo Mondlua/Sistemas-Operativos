@@ -93,6 +93,79 @@ instruccion_params* deserializar_io_stdin_stdout_con_interfaz(t_buffer_ins* buff
     return parametros;
 }
 
+instruccion_params* deserializar_io_fs_create_delete_con_interfaz(t_buffer_ins* buffer) {
+    instruccion_params* parametros = malloc(sizeof(instruccion_params));
+    
+    uint32_t offset = 0;
+    uint32_t interfaz_len;
+    memcpy(&interfaz_len, buffer->stream + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    parametros->interfaz = malloc(interfaz_len);
+    memcpy(parametros->interfaz, buffer->stream + offset, interfaz_len);
+    offset += interfaz_len;
+    
+    uint32_t archivo_len;
+    memcpy(&archivo_len, buffer->stream + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    parametros->params.io_fs_create_delete_params.nombre_archivo = malloc(archivo_len);
+    memcpy(parametros->params.io_fs_create_delete_params.nombre_archivo, buffer->stream + offset, archivo_len);
+    
+    return parametros;
+}
+
+instruccion_params* deserializar_io_fs_truncate_con_interfaz(t_buffer_ins* buffer) {
+    instruccion_params* parametros = malloc(sizeof(instruccion_params));
+    
+    uint32_t offset = 0;
+    uint32_t interfaz_len;
+    memcpy(&interfaz_len, buffer->stream + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    parametros->interfaz = malloc(interfaz_len);
+    memcpy(parametros->interfaz, buffer->stream + offset, interfaz_len);
+    offset += interfaz_len;
+    
+    uint32_t archivo_len;
+    memcpy(&archivo_len, buffer->stream + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    parametros->params.io_fs_truncate_params.nombre_archivo = malloc(archivo_len);
+    memcpy(parametros->params.io_fs_truncate_params.nombre_archivo, buffer->stream + offset, archivo_len);
+    offset += archivo_len;
+    
+    memcpy(&(parametros->params.io_fs_truncate_params.tamaño), buffer->stream + offset, sizeof(uint32_t));
+    
+    return parametros;
+}
+
+instruccion_params* deserializar_io_fs_write_read_con_interfaz(t_buffer_ins* buffer) {
+    instruccion_params* parametros = malloc(sizeof(instruccion_params));
+    
+    uint32_t offset = 0;
+    uint32_t interfaz_len;
+    memcpy(&interfaz_len, buffer->stream + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    parametros->interfaz = malloc(interfaz_len);
+    memcpy(parametros->interfaz, buffer->stream + offset, interfaz_len);
+    offset += interfaz_len;
+    
+    uint32_t archivo_len;
+    memcpy(&archivo_len, buffer->stream + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    parametros->params.io_fs_read_write.nombre_archivo = malloc(archivo_len);
+    memcpy(parametros->params.io_fs_read_write.nombre_archivo, buffer->stream + offset, archivo_len);
+    offset += archivo_len;
+    
+    memcpy(&(parametros->params.io_fs_read_write.registro_direccion), buffer->stream + offset, sizeof(t_dir_fisica));
+    offset += sizeof(t_dir_fisica);
+    
+    memcpy(&(parametros->params.io_fs_read_write.registro_tamaño), buffer->stream + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    
+    memcpy(&(parametros->params.io_fs_read_write.registro_puntero_archivo), buffer->stream + offset, sizeof(off_t));
+    
+    return parametros;
+}
+
+
 void recibir_solicitud_cpu(int socket_servidor, t_pcb* pcb)
 {
     t_paquete_instruccion* instruccion = malloc(sizeof(t_paquete_instruccion));
@@ -111,20 +184,29 @@ void recibir_solicitud_cpu(int socket_servidor, t_pcb* pcb)
             param = deserializar_io_gen_sleep_con_interfaz(instruccion->buffer);
             break;
         }
-        case IO_STDIN_READ:{
+        case IO_STDIN_READ:
+        case IO_STDOUT_WRITE:
             param = deserializar_io_stdin_stdout_con_interfaz(instruccion->buffer);
             break;
-        }
-        case IO_STDOUT_WRITE:{
-            param = deserializar_io_stdin_stdout_con_interfaz(instruccion->buffer);
+        case IO_FS_CREATE:
+        case IO_FS_DELETE:
+            param = deserializar_io_fs_create_delete_con_interfaz(instruccion->buffer);
             break;
-        }
+        case IO_FS_TRUNCATE:
+            param = deserializar_io_fs_truncate_con_interfaz(instruccion->buffer);
+            break;
+        case IO_FS_WRITE:
+        case IO_FS_READ:
+            param = deserializar_io_fs_write_read_con_interfaz(instruccion->buffer);
+            break;
          // Otros casos
         default:
             printf("Tipo de operación no válido.\n");
             break;
         }
     validar_peticion(param, pcb, instruccion->codigo_operacion);
+    free(param->interfaz);
+    free(param);
     free(instruccion->buffer->stream);
     free(instruccion->buffer);
     free(instruccion);

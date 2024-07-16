@@ -83,8 +83,8 @@ void crear_archivo(char* nombre){
 
     char new_file_path[256];
     snprintf(new_file_path, sizeof(new_file_path), "%s/%s", path_base_dialfs, nombre);
-    open(new_file_path, O_CREAT | O_RDWR, 0666);
-    close(new_file_path);
+    int fd = open(new_file_path, O_CREAT | O_RDWR, 0666);
+    close(fd);
     
     t_config* new_file_config;
     new_file_config = config_create(new_file_path);
@@ -104,6 +104,7 @@ void crear_archivo(char* nombre){
     config_destroy(new_file_config);
 
     Archivo* file = malloc(sizeof(Archivo));
+    file->nombre = nombre;
     file->ruta = new_file_path;
     file->comienzo = bloque_libre;
     file->tamaño = 0;
@@ -113,10 +114,8 @@ void crear_archivo(char* nombre){
 void borrar_archivo(char* nombre){
     usleep(tiempo_unidad_trabajo * 1000);
 
-    char file_path[256];
-    snprintf(file_path, sizeof(file_path), "%s/%s", path_base_dialfs, nombre);
-    
-    t_config* file_config = config_create(file_path);
+    Archivo* archivo = buscar_archivo_por_nombre(nombre);
+    t_config* file_config = config_create(archivo->ruta);
     
     int bloque_inicial = config_get_int_value(file_config, "BLOQUE_INICIAL");
     int tamaño_archivo = config_get_int_value(file_config, "TAMANIO_ARCHIVO");
@@ -128,7 +127,7 @@ void borrar_archivo(char* nombre){
     }
 
     config_destroy(file_config);
-    if (unlink(file_path) == 0) {
+    if (unlink(archivo->ruta) == 0) {
         printf("Archivo eliminado exitosamente.\n");
     } else {
         perror("Error al eliminar el archivo");
@@ -143,10 +142,8 @@ void borrar_archivo(char* nombre){
 void truncar_archivo(char* nombre, uint32_t tamaño){
     usleep(tiempo_unidad_trabajo * 1000);
 
-    char file_path[256];
-    snprintf(file_path, sizeof(file_path), "%s/%s", path_base_dialfs, nombre);
-    
-    t_config* file_config = config_create(file_path);
+    Archivo* archivo = buscar_archivo_por_nombre(nombre);
+    t_config* file_config = config_create(archivo->ruta);
     
     int bloque_inicial = config_get_int_value(file_config, "BLOQUE_INICIAL");
     int cantidad_bloques = (tamaño + block_size - 1) / block_size; //Es para redondear hacia arriba
@@ -169,9 +166,10 @@ void truncar_archivo(char* nombre, uint32_t tamaño){
     }
     else if (bloque_final != bloque_final_anterior) { //Agrandar
         if (!bloques_contiguos_libres(bloque_final_anterior, bloque_final)){
-            compactar(&bloque_inicial, &bloque_final);
+            compactar(&bloque_inicial, bloque_final);
+            bloque_final = bloque_inicial + cantidad_bloques - 1;
         }
-        for (int i = bloque_final_anterior + 1; i <= bloque_final; i++) {
+        for (int i = bloque_inicial; i <= bloque_final; i++) {
             bitarray_set_bit(bitmap, i);
         }
     }
@@ -186,12 +184,27 @@ void truncar_archivo(char* nombre, uint32_t tamaño){
     close(bitmap_file);
 }
 
-void escribir_archivo(char* nombre){
+void escribir_archivo(char* nombre, off_t puntero, char* a_escribir, uint32_t tamaño){
+    usleep(tiempo_unidad_trabajo * 1000);
 
+    Archivo* archivo = buscar_archivo_por_nombre(nombre);
+    FILE* archivo_bloques = fopen(blocks_path, "rb+");
+    fseeko(archivo_bloques, (archivo->comienzo * block_size) + puntero, SEEK_SET);
+    fwrite(a_escribir, tamaño, 1, archivo_bloques);
+    fclose(archivo_bloques);
 }
 
-void leer_archivo(char* nombre){
+char* leer_archivo(char* nombre, off_t puntero, uint32_t tamaño){
+    usleep(tiempo_unidad_trabajo * 1000);
+    Archivo* archivo = buscar_archivo_por_nombre(nombre);
+    FILE* archivo_bloques = fopen(blocks_path, "rb");
+    fseeko(archivo_bloques, (archivo->comienzo * block_size) + puntero, SEEK_SET);
+    char* buffer = malloc(tamaño + 1);
+    fread(buffer, 1, tamaño, archivo_bloques);
+    buffer[tamaño] = '\0';
+    fclose(archivo_bloques);
 
+    return buffer;
 }
 
 
@@ -206,6 +219,16 @@ uint32_t buscar_bloque_libre(){
 
 uint8_t leer_de_bitmap(uint32_t nroBloque){
     return bitarray_test_bit(bitmap, nroBloque);
+}
+
+Archivo* buscar_archivo_por_nombre(char* nombre) {
+    for (int i = 0; i < list_size(lista_archivos); i++) {
+        Archivo* archivo = list_get(lista_archivos, i);
+        if (strcmp(archivo->nombre, nombre) == 0) {
+            return archivo;
+        }
+    }
+    return NULL;
 }
 
 int buscar_archivo_x_bloque_inicial(int bloque_inicial){
@@ -244,33 +267,54 @@ bool bloques_contiguos_libres(int bloque_inicial, int bloque_final){
     return true;
 }
 
-void compactar(int* bloque_inicial){
-    
+bool comparar_archivos_por_bloque_inicial(void* a, void* b) {
+    Archivo* archivo_a = *(Archivo**)a;
+    Archivo* archivo_b = *(Archivo**)b;
+    return archivo_a->comienzo - archivo_b->comienzo;
+}
+
+
+void compactar(int* bloque_inicial, int bloque_final){
+
+    list_sort(lista_archivos, comparar_archivos_por_bloque_inicial);
+
+    for (int i = *bloque_inicial; i <= bloque_final; i++) {
+            bitarray_clean_bit(bitmap, i);
+        }
+
     int siguiente_bloque = 0;
     while (leer_de_bitmap(siguiente_bloque) != 0) { //Busca hasta encontrar un bloque libre
         siguiente_bloque++;
     }
     int bloque_libre_actual = siguiente_bloque;
     int inicio_nuevo = bloque_libre_actual;
-    FILE* archivo_bloques = fopen(blocks_path, O_CREAT | O_RDWR, 0666);
+    FILE* archivo_bloques = fopen(blocks_path, "rb+");
     for (int i = 0; i < list_size(lista_archivos); i++) {
         Archivo* archivo = (Archivo*)list_get(lista_archivos, i);
         int bloque_final_archivo = archivo->comienzo + ((archivo->tamaño + block_size - 1) / block_size) - 1;
         if (archivo->comienzo > bloque_libre_actual) {
+
+            char* buffer = malloc(archivo->tamaño);
+            fseek(archivo_bloques, archivo->comienzo * block_size, SEEK_SET);
+            fread(buffer, archivo->tamaño, 1, archivo_bloques);
+
+            fseek(archivo_bloques, bloque_libre_actual * block_size, SEEK_SET);
+            fwrite(buffer, archivo->tamaño, 1, archivo_bloques);
+            free(buffer);
+
             for (int bloque = archivo->comienzo; bloque <= bloque_final_archivo; bloque++) {
                 bitarray_clean_bit(bitmap, bloque);
                 bitarray_set_bit(bitmap, bloque_libre_actual);
                 bloque_libre_actual++;
             }
             archivo->comienzo = inicio_nuevo;
-            t_config* new_file_config;
-            new_file_config = config_create(archivo->ruta);
+            t_config* new_file_config = config_create(archivo->ruta);
             config_set_value(new_file_config, "BLOQUE_INICIAL", int_to_char(archivo->comienzo));
-            fseek(archivo_bloques, ,SEEK_SET);
+            config_destroy(new_file_config);
             inicio_nuevo = bloque_libre_actual;
         }
     }
-    close(blocks_path);
+    fclose(archivo_bloques);
 
     *bloque_inicial = inicio_nuevo;
     int bitmap_file = open(bitmap_path, O_RDWR);
@@ -278,4 +322,4 @@ void compactar(int* bloque_inicial){
     close(bitmap_file);
 
     usleep(retraso_compactacion * 1000);
-} 
+}
