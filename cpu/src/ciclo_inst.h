@@ -26,7 +26,8 @@ typedef struct {
 typedef enum {
     NO_BLOCK,
     IO_BLOCK,
-    REC_BLOCK,
+    REC_BLOCK_WAIT,
+    REC_BLOCK_SIGNAL,
     EXIT_BLOCK
 } t_cpu_blockeo_enum;
 
