@@ -17,7 +17,7 @@ t_list* abrir_pseudocodigo(char* path){
     FILE* arch_pseudocodigo = fopen(path_completo, "r");
         if(arch_pseudocodigo == NULL){
             log_error(memoria_log, "No se pudo abrir el archivo.\n");
-            EXIT_FAILURE;
+            return NULL;
         }
     free(path_completo);
 

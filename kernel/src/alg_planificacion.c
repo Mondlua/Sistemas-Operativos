@@ -17,6 +17,7 @@ void* hilo_planificador(void *args)
         if(kernel_argumentos->detener_planificacion)
         {
             log_debug(kernel_argumentos->logger, "Planificacion detenida.");
+            pthread_mutex_unlock(&kernel_argumentos->planning_mutex);
             continue;
         }
 
@@ -38,6 +39,11 @@ void fifo(t_planificacion *kernel_argumentos)
         proximo_pcb->estado = EXEC;
         enviar_pcb(proximo_pcb, kernel_argumentos->socket_cpu_dispatch);
     }
+    if(kernel_argumentos->colas.ready == 0)
+    {
+        log_debug(kernel_argumentos->logger, "No hay mas procesos para enviar a EXEC. Se detiene la planificacion");
+        kernel_argumentos->detener_planificacion = 1;
+    }
     return;
 }
 
@@ -49,6 +55,11 @@ void round_robin(t_planificacion *kernel_argumentos)
         proximo_pcb->estado = EXEC;
         iniciar_timer(kernel_argumentos->timer_quantum, kernel_argumentos->config.quantum);
         enviar_pcb(proximo_pcb, kernel_argumentos->socket_cpu_dispatch);
+    }
+    if(kernel_argumentos->colas.ready == 0)
+    {
+        log_debug(kernel_argumentos->logger, "No hay mas procesos para enviar a EXEC. Se detiene la planificacion");
+        kernel_argumentos->detener_planificacion = 1;
     }
     return;
 }
@@ -74,6 +85,11 @@ void virtual_round_robin(t_planificacion *kernel_argumentos)
         iniciar_timer(kernel_argumentos->timer_quantum, kernel_argumentos->config.quantum);
 
         enviar_pcb(proximo_pcb, kernel_argumentos->socket_cpu_dispatch);
+    }
+    if(kernel_argumentos->colas.ready == 0)
+    {
+        log_debug(kernel_argumentos->logger, "No hay mas procesos para enviar a EXEC. Se detiene la planificacion");
+        kernel_argumentos->detener_planificacion = 1;
     }
     return;
 }
@@ -125,6 +141,12 @@ bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_a
     log_debug(kernel_argumentos->logger, "PID recibido: %d", pcb_desalojado->pid);
     log_debug(kernel_argumentos->logger, "PID que tengo en EXEC: %d", pcb_outdated->pid);
 
+    if(pcb_outdated == NULL)
+    {
+        log_debug(kernel_argumentos->logger, "El proceso fue terminado por el usuario");
+        return true;
+    }
+    
     if(pcb_desalojado->pid != pcb_outdated->pid)
     {   
         log_error(kernel_argumentos->logger, "Discordancia entre el pcb en EXEC y el ejecutado por CPU.");
@@ -257,7 +279,7 @@ t_planificacion *inicializar_t_planificacion(t_config *kernel_config, t_log *ker
     planificador->colas.prioridad = queue_create();
     planificador->colas.lista_block = dictionary_create();
 
-    planificador->detener_planificacion = 0;
+    planificador->detener_planificacion = 1;
     planificador->colas.cantidad_procesos_block = 0;
 
     sem_init(&planificador->planificar, 0, 0);
@@ -327,7 +349,7 @@ void inicializar_lista_recursos(t_planificacion *planificador, t_config *kernel_
     {
         t_queue_block *block_queue = malloc(sizeof(t_queue_block));
         block_queue->block_dictionary = list_create();
-        block_queue->block_queue = NULL;
+        block_queue->block_queue = queue_create();
         block_queue->identificador = string_duplicate(array_nombre_recursos[i]);
         block_queue->cantidad_instancias = atoi(array_instancias_recursos[i]);
         block_queue->socket_interfaz = 0;
@@ -401,8 +423,10 @@ bool administrador_recursos_wait(t_pcb *pcb_solicitante, char* nombre_recurso, i
     pthread_mutex_unlock(&kernel_argumentos->colas.mutex_block);
     log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: EXEC - Estado actual: BLOCK", pcb_solicitante->pid);
     log_info(kernel_argumentos->logger, "PID: %d - Bloqueado por: %s", pcb_solicitante->pid, nombre_recurso);
-    return true;
+    
+    agregar_recurso_a_lista_global(pcb_solicitante->pid, nombre_recurso, kernel_argumentos);
 
+    return true;
 }
 
 bool administrador_recursos_signal(t_pcb *pcb_desalojado, char* recurso_solicitado, int milisegundos_restantes, t_planificacion *kernel_argumentos)
@@ -439,7 +463,42 @@ bool administrador_recursos_signal(t_pcb *pcb_desalojado, char* recurso_solicita
     enviar_pcb(pcb_desalojado, kernel_argumentos->socket_cpu_dispatch);
 
     pthread_mutex_unlock(&kernel_argumentos->planning_mutex);
+
     return false;
+}
+
+void agregar_recurso_a_lista_global(uint32_t pid, char* nombre_recurso, t_planificacion* kernel_argumentos)
+{
+    char* pid_proceso = string_itoa(pid);
+    t_list* lista_proceso = dictionary_get(kernel_argumentos->recursos_tomados, pid_proceso);
+    if(lista_proceso == NULL)
+    {
+        lista_proceso = list_create();
+        dictionary_put(kernel_argumentos->recursos_tomados, pid_proceso, lista_proceso);
+    }
+    list_add(lista_proceso, nombre_recurso);
+    free(pid_proceso);
+}
+
+void eliminar_recurso_de_lista_global(uint32_t pid, char* recurso_afectado, t_planificacion* kernel_argumentos)
+{
+
+    char* pid_proceso = string_itoa(pid);
+    t_list* lista_proceso = dictionary_get(kernel_argumentos->recursos_tomados, pid_proceso);
+    if(lista_proceso != NULL)
+    {
+        int i = 0, tamanio = list_size(lista_proceso);
+        while(i<tamanio)
+        {
+            char* nombre_recurso = list_get(lista_proceso, i);
+            if(string_equals_ignore_case(nombre_recurso, recurso_afectado))
+            {
+                list_remove_and_destroy_element(lista_proceso, i, free);
+            }
+            i++;
+        }
+    }
+    free(pid_proceso);
 }
 
 void procesar_desbloqueo_factible(char* recurso_solicitado, t_planificacion *kernel_argumentos)
