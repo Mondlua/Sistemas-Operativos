@@ -56,17 +56,14 @@ void atender_cliente(void *void_args)
 
             uint32_t pid;
             char path [40];
-            sscanf(pathpid, "%u/%39[^\n]", &pid,path);
-            
-            
+            sscanf(pathpid, "%u/%39[^\n]", &pid,path);          
             t_list* lista_arch = abrir_pseudocodigo(path);
             t_tabla* tabla = malloc(sizeof(t_tabla));
             tabla->pid = pid;
             tabla->tabla = list_create();
             tabla->instrucciones = lista_arch;
             list_add(tabla_pags, tabla);
-            log_info(memoria_log, "PID: <%d> - Tamaño: <%d>", pid, list_size(tabla->instrucciones));
-          
+            log_info(memoria_log, "PID: <%d> - Tamaño: <%d>", pid, list_size(tabla->instrucciones));       
             free(pathpid);
 
             break;
@@ -81,34 +78,16 @@ void atender_cliente(void *void_args)
         case PC:
         {
             char * pc_recibido = recibir_pc(client_socket);
-            //usleep(retardo*1000);
+            usleep(retardo*1000);
             uint32_t pc = atoi(pc_recibido);
-
-            printf("No Pase \n");
-
-            //sem_wait(&semaforo_mem);
-
-            printf("Pase \n");
 
             t_tabla* tabla_pid = list_get(tabla_pags, pid);
 
             log_debug(logger, "PID obtenido: %d\n", tabla_pid->pid);
-            /*
-            t_instruccion *instruccion = malloc(sizeof(t_instruccion));
-            instruccion->buffer = malloc(sizeof(t_buffer_ins));
-            instruccion->buffer->stream = list_get(tabla_pid->instrucciones, pc);
-
-            log_debug(logger, "Mando la instruccion: %s", instruccion->buffer->stream);
-
-            enviar_instruccion_mem(client_socket,instruccion);*/
-            
             char* instruccion = list_get(tabla_pid->instrucciones, pc);
             eliminar_linea_n(instruccion);
-
-
             enviar_mensaje(instruccion, client_socket);
             log_debug(logger, "Mando la instruccion: %s\n", instruccion);
-
 
             free(pc_recibido);;
             break;
@@ -118,7 +97,7 @@ void atender_cliente(void *void_args)
             parametros_io = recibir_registro_direccion_tamanio_con_texto(client_socket);
             usleep(retardo*1000);
             //GUARDAR TEXTO EN REGISTRO_DIRECCION
-            escribir_en_mem(parametros_io->texto, parametros_io->registro_direccion, parametos_io->registro_tamanio);
+            escribir_en_mem(parametros_io->texto, parametros_io->registro_direccion, parametros_io->registro_tamanio);//VER CAMI EMI 
             enviar_mensaje("OK", client_socket);
             free(parametros_io);
             break;
@@ -128,7 +107,7 @@ void atender_cliente(void *void_args)
             parametros_io = recibir_registro_direccion_tamanio(client_socket);
             usleep(retardo*1000);
             //BUSCAR EN REGISTRO_DIRECCION Y LEER EL REGISTRO_TAMAÑO
-            char* mensaje = leer_en_mem(parametros_io->registro_tamanio, parametros_io->registro_direccion);
+            char* mensaje = leer_en_mem(parametros_io->registro_tamanio, parametros_io->registro_direccion); 
             //MANDAR RESULTADO A IO
             enviar_mensaje(mensaje, client_socket);
             free(parametros_io);
@@ -140,7 +119,7 @@ void atender_cliente(void *void_args)
             parametros_io = recibir_registro_direccion_tamanio_con_texto(client_socket);
             usleep(retardo*1000);
             //GUARDAR TEXTO EN REGISTRO_DIRECCION
-            escribir_en_mem(parametros_io->texto, parametros_io->registro_direccion, parametos_io->registro_tamanio);
+            escribir_en_mem(parametros_io->texto, parametros_io->registro_direccion, parametros_io->registro_tamanio); //VER CAMI EMI
             enviar_mensaje("OK", client_socket);
             free(parametros_io);
             break;
@@ -150,7 +129,7 @@ void atender_cliente(void *void_args)
             parametros_io = recibir_registro_direccion_tamanio(client_socket);
             usleep(retardo*1000);
             //BUSCAR EN REGISTRO_DIRECCION Y LEER EL REGISTRO_TAMAÑO
-            char* mensaje = leer_en_mem(parametros_io->registro_tamanio, parametros_io->registro_direccion);
+            char* mensaje = leer_en_mem(parametros_io->registro_tamanio, parametros_io->registro_direccion); //Ver 
             //MANDAR RESULTADO A IO
             enviar_mensaje(mensaje, client_socket);
             free(parametros_io);
@@ -166,7 +145,7 @@ void atender_cliente(void *void_args)
             int pag = atoi(split[1]);
             t_tabla* tabla_pid = buscar_por_pid_return(pid);
             if(pag<list_size(tabla_pid->tabla)){
-            int frame = list_get(tabla_pid->tabla, pag);
+            int frame = (int)list_get(tabla_pid->tabla, pag);
             enviar_mensaje(int_to_char(frame), client_socket); //ver funcion de enviar(crearla)
             log_info(logger,"PID: %u - Pagina: %d - Marco: %d",pid, pag, frame);
             }
@@ -293,8 +272,6 @@ void atender_cliente(void *void_args)
             break;
         }
         case PED_ESCRITURA:{
-
-
             int tamanio;
             char valor[8];
             int frame; 
@@ -314,28 +291,10 @@ void atender_cliente(void *void_args)
 
             bitarray_set_bit(escrito, frame);
 
-            int frame_siguiente_disp;
-            t_tabla* tabla_pid = buscar_por_pid_return(pid);
-            bool encontrado = false;
-            for (int i = 0; i < bitarray->size; i++) {
-
-                if (bitarray_test_bit(bitarray, i) == 1 && bitarray_test_bit(escrito, i)==0) {
-
-                    for(int x = 0; x< list_size(tabla_pid->tabla); x++){
-                        if(list_get(tabla_pid->tabla,x) == i){
-                        frame_siguiente_disp = i;
-                        encontrado = true;
-                        break;
-                        }
-                            
-                    }
-                }
-                if (encontrado) {
-                     break;
-                }
-            }
-            
-            enviar_mensaje(int_to_char(frame_siguiente_disp), client_socket);
+            int frame_siguiente= frame_sig_disp(pid, frame);
+         
+            enviar_mensaje(int_to_char(frame_siguiente), client_socket);
+           
             free(buffer);
            
             break;

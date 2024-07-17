@@ -14,6 +14,7 @@
 
 extern sem_t grado_planificiacion;
 extern sem_t cola_ready;
+extern int conexion_cpu_dispatch;
 
 typedef struct {
     char *identificador;

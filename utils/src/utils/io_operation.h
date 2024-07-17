@@ -13,7 +13,7 @@
 #include "mensajesPropios.h"
 
 
-typedef struct
+typedef struct 
 {
     instrucciones codigo_operacion;
     t_buffer_ins* buffer;
@@ -42,8 +42,6 @@ t_buffer_ins* serializar_io_fs_create_delete(instruccion_params* param);
 t_buffer_ins* serializar_io_fs_truncate(instruccion_params* param);
 t_buffer_ins* serializar_io_fs_write_read(instruccion_params* param);
 void enviar_instruccion(t_paquete_instruccion* instruccion, instruccion_params* parametros ,int socket_cliente, uint32_t pid);
-
-
 
 //A KERNEL
 t_buffer_ins* serializar_io_gen_sleep_con_interfaz(instruccion_params* param);

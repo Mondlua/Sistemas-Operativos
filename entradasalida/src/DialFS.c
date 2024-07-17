@@ -17,9 +17,9 @@ void inicio_filesystem() {
         exit(EXIT_FAILURE);
     }
 
-    off_t tamaño_archivo = (off_t) block_size * block_size;
-    if (ftruncate(blocks_file, tamaño_archivo) < 0) {
-        perror("No se pudo establecer el tamaño del archivo");
+    off_t tamanio_archivo = (off_t) block_size * block_size;
+    if (ftruncate(blocks_file, tamanio_archivo) < 0) {
+        perror("No se pudo establecer el tamanio del archivo");
         close(blocks_file);
         exit(EXIT_FAILURE);
     }
@@ -107,7 +107,7 @@ void crear_archivo(char* nombre){
     file->nombre = nombre;
     file->ruta = new_file_path;
     file->comienzo = bloque_libre;
-    file->tamaño = 0;
+    file->tamanio = 0;
     list_add(lista_archivos, file);
 }
 
@@ -118,9 +118,9 @@ void borrar_archivo(char* nombre){
     t_config* file_config = config_create(archivo->ruta);
     
     int bloque_inicial = config_get_int_value(file_config, "BLOQUE_INICIAL");
-    int tamaño_archivo = config_get_int_value(file_config, "TAMANIO_ARCHIVO");
+    int tamanio_archivo = config_get_int_value(file_config, "TAMANIO_ARCHIVO");
 
-    int cantidad_bloques = (tamaño_archivo + block_size - 1) / block_size; //Es para redondear hacia arriba
+    int cantidad_bloques = (tamanio_archivo + block_size - 1) / block_size; //Es para redondear hacia arriba
 
     for (int contador_bloques = bloque_inicial; contador_bloques < bloque_inicial + cantidad_bloques; contador_bloques++) {
         bitarray_clean_bit(bitmap, contador_bloques);
@@ -139,23 +139,23 @@ void borrar_archivo(char* nombre){
     eliminar_archivo_de_lista(bloque_inicial);
 }
 
-void truncar_archivo(char* nombre, uint32_t tamaño){
+void truncar_archivo(char* nombre, uint32_t tamanio){
     usleep(tiempo_unidad_trabajo * 1000);
 
     Archivo* archivo = buscar_archivo_por_nombre(nombre);
     t_config* file_config = config_create(archivo->ruta);
     
     int bloque_inicial = config_get_int_value(file_config, "BLOQUE_INICIAL");
-    int cantidad_bloques = (tamaño + block_size - 1) / block_size; //Es para redondear hacia arriba
+    int cantidad_bloques = (tamanio + block_size - 1) / block_size; //Es para redondear hacia arriba
     int bloque_final = bloque_inicial + cantidad_bloques - 1;
 
-    int tamaño_anterior = config_get_int_value(file_config, "TAMANIO_ARCHIVO");
+    int tamanio_anterior = config_get_int_value(file_config, "TAMANIO_ARCHIVO");
     int bloque_final_anterior;
-    if(tamaño_anterior == 0) {
+    if(tamanio_anterior == 0) {
         bloque_final_anterior = bloque_inicial;
     }
     else{
-        int bloques_ocupados_anteriormente = (tamaño_anterior + block_size - 1) / block_size;
+        int bloques_ocupados_anteriormente = (tamanio_anterior + block_size - 1) / block_size;
         bloque_final_anterior = bloque_inicial + bloques_ocupados_anteriormente - 1;
     }
     
@@ -174,34 +174,34 @@ void truncar_archivo(char* nombre, uint32_t tamaño){
         }
     }
 
-    config_set_value(file_config, "TAMANIO_ARCHIVO", int_to_char(tamaño));
+    config_set_value(file_config, "TAMANIO_ARCHIVO", int_to_char(tamanio));
     config_save(file_config);
     Archivo* file = (Archivo*)list_get(lista_archivos, buscar_archivo_x_bloque_inicial(bloque_inicial));
-    file->tamaño = tamaño;
+    file->tamanio = tamanio;
     config_destroy(file_config);
     int bitmap_file = open(bitmap_path, O_RDWR);
     msync(bitmap->bitarray, bitmap_size, MS_SYNC);
     close(bitmap_file);
 }
 
-void escribir_archivo(char* nombre, off_t puntero, char* a_escribir, uint32_t tamaño){
+void escribir_archivo(char* nombre, off_t puntero, char* a_escribir, uint32_t tamanio){
     usleep(tiempo_unidad_trabajo * 1000);
 
     Archivo* archivo = buscar_archivo_por_nombre(nombre);
     FILE* archivo_bloques = fopen(blocks_path, "rb+");
     fseeko(archivo_bloques, (archivo->comienzo * block_size) + puntero, SEEK_SET);
-    fwrite(a_escribir, tamaño, 1, archivo_bloques);
+    fwrite(a_escribir, tamanio, 1, archivo_bloques);
     fclose(archivo_bloques);
 }
 
-char* leer_archivo(char* nombre, off_t puntero, uint32_t tamaño){
+char* leer_archivo(char* nombre, off_t puntero, uint32_t tamanio){
     usleep(tiempo_unidad_trabajo * 1000);
     Archivo* archivo = buscar_archivo_por_nombre(nombre);
     FILE* archivo_bloques = fopen(blocks_path, "rb");
     fseeko(archivo_bloques, (archivo->comienzo * block_size) + puntero, SEEK_SET);
-    char* buffer = malloc(tamaño + 1);
-    fread(buffer, 1, tamaño, archivo_bloques);
-    buffer[tamaño] = '\0';
+    char* buffer = malloc(tamanio + 1);
+    fread(buffer, 1, tamanio, archivo_bloques);
+    buffer[tamanio] = '\0';
     fclose(archivo_bloques);
 
     return buffer;
@@ -291,15 +291,15 @@ void compactar(int* bloque_inicial, int bloque_final){
     FILE* archivo_bloques = fopen(blocks_path, "rb+");
     for (int i = 0; i < list_size(lista_archivos); i++) {
         Archivo* archivo = (Archivo*)list_get(lista_archivos, i);
-        int bloque_final_archivo = archivo->comienzo + ((archivo->tamaño + block_size - 1) / block_size) - 1;
+        int bloque_final_archivo = archivo->comienzo + ((archivo->tamanio + block_size - 1) / block_size) - 1;
         if (archivo->comienzo > bloque_libre_actual) {
 
-            char* buffer = malloc(archivo->tamaño);
+            char* buffer = malloc(archivo->tamanio);
             fseek(archivo_bloques, archivo->comienzo * block_size, SEEK_SET);
-            fread(buffer, archivo->tamaño, 1, archivo_bloques);
+            fread(buffer, archivo->tamanio, 1, archivo_bloques);
 
             fseek(archivo_bloques, bloque_libre_actual * block_size, SEEK_SET);
-            fwrite(buffer, archivo->tamaño, 1, archivo_bloques);
+            fwrite(buffer, archivo->tamanio, 1, archivo_bloques);
             free(buffer);
 
             for (int bloque = archivo->comienzo; bloque <= bloque_final_archivo; bloque++) {
