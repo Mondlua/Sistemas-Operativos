@@ -55,8 +55,8 @@ void inicializar_config_kernel(t_planificacion *planificador, t_config *kernel_c
 t_pcb *planificador_ready_a_exec(t_planificacion *kernel_argumentos);
 t_pcb *planificador_prioridad_a_exec(t_planificacion *kernel_argumentos);
 
-bool administrador_recursos_wait(t_pcb *pcb_solicitante, char* nombre_recurso, t_planificacion *kernel_argumentos);
-bool administrador_recursos_signal(t_pcb *pcb_desalojado, char* recurso_solicitado, t_planificacion *kernel_argumentos);
+bool administrador_recursos_wait(t_pcb *pcb_solicitante, char* nombre_recurso, int milisegundos_restantes, t_planificacion *kernel_argumentos);
+bool administrador_recursos_signal(t_pcb *pcb_desalojado, char* recurso_solicitado, int milisegundos_restantes, t_planificacion *kernel_argumentos);
 void procesar_desbloqueo_factible(char* recurso_solicitado, t_planificacion *kernel_argumentos);
 
 void validar_peticion(instruccion_params* parametros, t_pcb* pcb, int codigo_op, t_planificacion* kernel_argumentos);

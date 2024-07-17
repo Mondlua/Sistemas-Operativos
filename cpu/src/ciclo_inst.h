@@ -36,6 +36,7 @@ typedef struct
     t_cpu_blockeo_enum blockeo;
     instrucciones io_opcode;
     instruccion_params* instrucciones;
+    char* nombre_recurso;
 } t_cpu_blockeo;
 
 

@@ -13,7 +13,7 @@ typedef struct {
     t_queue *block_queue;
     int cantidad_instancias;
     int socket_interfaz;
-
+    t_list *block_dictionary;
 } t_queue_block;
 
 typedef struct {
