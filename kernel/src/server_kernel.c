@@ -38,6 +38,7 @@ void atender_cliente(void *void_args)
             new_client->identificador = recibir_interfaz(client_socket, logger);
             new_client->socket_interfaz = client_socket;
             new_client->block_queue = queue_create();
+            new_client->block_dictionary = list_create();
 
             dictionary_put(args->planificador->colas.lista_block, new_client->identificador, new_client);
             log_debug(logger, "Se ha conectado la interfaz: %s", new_client->identificador);

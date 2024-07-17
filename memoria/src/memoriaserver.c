@@ -58,6 +58,11 @@ void atender_cliente(void *void_args)
             lista_arch = abrir_pseudocodigo(path);
             free(path);
 
+            if(lista_arch == NULL)
+            {
+                break;
+            }
+
             t_tabla* tabla = malloc(sizeof(t_tabla));
             tabla->pid = pid;
             tabla->tabla = lista_arch;

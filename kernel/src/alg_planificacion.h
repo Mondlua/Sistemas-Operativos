@@ -58,6 +58,8 @@ t_pcb *planificador_prioridad_a_exec(t_planificacion *kernel_argumentos);
 bool administrador_recursos_wait(t_pcb *pcb_solicitante, char* nombre_recurso, int milisegundos_restantes, t_planificacion *kernel_argumentos);
 bool administrador_recursos_signal(t_pcb *pcb_desalojado, char* recurso_solicitado, int milisegundos_restantes, t_planificacion *kernel_argumentos);
 void procesar_desbloqueo_factible(char* recurso_solicitado, t_planificacion *kernel_argumentos);
+void agregar_recurso_a_lista_global(uint32_t pid, char* nombre_recurso, t_planificacion* kernel_argumentos);
+void eliminar_recurso_de_lista_global(uint32_t pid, char* recurso_afectado, t_planificacion* kernel_argumentos);
 
 void validar_peticion(instruccion_params* parametros, t_pcb* pcb, int codigo_op, t_planificacion* kernel_argumentos);
 void enviar_instruccion_a_interfaz(t_queue_block* interfaz_destino, instruccion_params* parametros, int cod_op);

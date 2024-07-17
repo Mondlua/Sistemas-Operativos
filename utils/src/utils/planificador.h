@@ -75,6 +75,7 @@ typedef struct
     int socket_memoria;
     t_tipo_planificacion algo_planning;
     pthread_mutex_t planning_mutex;
+    t_dictionary* recursos_tomados;
 } t_planificacion;
 
 #endif
