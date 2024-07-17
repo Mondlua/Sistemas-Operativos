@@ -84,11 +84,11 @@ void recibir_instruccion(char* tipo_interfaz)
             break;
             }
             case IO_STDIN_READ:{
-            param = deserializar_io_stdin_stdout(instruccion->buffer);
+            param = deserializar_registro_direccion_tamanio(instruccion->buffer);
             break;
             }
             case IO_STDOUT_WRITE:{
-            param = deserializar_io_stdin_stdout(instruccion->buffer);
+            param = deserializar_registro_direccion_tamanio(instruccion->buffer);
             break;
             }
             case IO_FS_CREATE:
@@ -143,10 +143,10 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code){
         break;
     }
     case IO_STDIN_READ:{
-        uint32_t tamaño = parametros->registro_tamanio;
-        char* texto = (char*)malloc(sizeof(tamaño));
+        uint32_t tamanio = parametros->registro_tamanio;
+        char* texto = (char*)malloc(sizeof(tamanio));
         printf("Ingrese el texto: ");
-        fgets(texto, tamaño, stdin);
+        fgets(texto, tamanio, stdin);
         parametros->texto = texto;
         t_paquete_instruccion* instruccion_enviar = malloc(sizeof(t_paquete_instruccion));
         instruccion_enviar->codigo_operacion = IO_STDIN_READ;

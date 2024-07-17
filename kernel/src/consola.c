@@ -117,7 +117,7 @@ void iniciar_proceso(char* path, t_planificacion *kernel_argumentos){
 
 void finalizar_proceso(uint32_t pid, t_planificacion *kernel_argumentos){
 
-    borrar_pcb(pid);
+    borrar_pcb(pid, kernel_argumentos);
 
     char* pid_char= int_to_char(pid); 
     //enviar_mensaje_finalizacion(pid_char,conexion_memoria);  NO ESTA LA FUNCION, HACER O BUSCAR

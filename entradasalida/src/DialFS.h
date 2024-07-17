@@ -19,7 +19,7 @@ typedef struct
 {
     char* nombre;
     char* ruta;
-    int tamaño;
+    int tamanio;
     int comienzo; //Bloque inicial
 }Archivo;
 
@@ -33,9 +33,9 @@ extern char* path_base_dialfs;
 void inicio_filesystem();
 void crear_archivo(char* nombre);
 void borrar_archivo(char* nombre);
-void truncar_archivo(char* nombre, uint32_t tamaño);
-void escribir_archivo(char* nombre, off_t puntero, char* a_escribir, uint32_t tamaño);
-char* leer_archivo(char* nombre, off_t puntero, uint32_t tamaño);
+void truncar_archivo(char* nombre, uint32_t tamanio);
+void escribir_archivo(char* nombre, off_t puntero, char* a_escribir, uint32_t tamanio);
+char* leer_archivo(char* nombre, off_t puntero, uint32_t tamanio);
 
 uint32_t buscar_bloque_libre();
 uint8_t leer_de_bitmap(uint32_t nroBloque);

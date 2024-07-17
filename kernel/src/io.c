@@ -83,9 +83,9 @@ instruccion_params* deserializar_io_stdin_stdout_con_interfaz(t_buffer_ins* buff
     parametros->interfaz = malloc(interfaz_len);
     memcpy(parametros->interfaz, buffer->stream + offset, interfaz_len);
     offset += interfaz_len;
-    memcpy(&(parametros->params.io_stdin_stdout.registro_direccion), buffer->stream + offset, sizeof(t_dir_fisica));
+    memcpy(&(parametros->registro_direccion), buffer->stream + offset, sizeof(t_dir_fisica));
     offset += sizeof(t_dir_fisica);
-    memcpy(&(parametros->params.io_stdin_stdout.registro_tamaño), buffer->stream + offset, sizeof(uint32_t));
+    memcpy(&(parametros->registro_tamanio), buffer->stream + offset, sizeof(uint32_t));
     
     return parametros;
 }

@@ -4,9 +4,9 @@
 #include <commons/collections/list.h>
 #include <commons/string.h>
 #include <utils/io_operation.h>
-#include <utils/Instrucciones_gral.h>
 #include "main.h"
 #include <math.h>
+//#include "/home/utnso/tp-2024-1c-Operati2/memoria/src/main.h"
 
 typedef struct t_decode {
 instrucciones op_code;
@@ -17,12 +17,12 @@ char* interfaz;
 bool logicaAFisica;
 instrucciones instrucciones;
 }t_decode;
-
+/*
 typedef struct {
     const char* nombre;
     void* puntero;
     size_t tamano; 
-} registro_mapa;
+} registro_mapa;*/
 
 typedef enum {
     NO_BLOCK,

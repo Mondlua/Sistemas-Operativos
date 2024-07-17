@@ -18,7 +18,7 @@ extern int conexion_memoria;
 
 void recibir_instruccion(char*interfaz);
 instruccion_params* deserializar_io_gen_sleep(t_buffer_ins* buffer);
-instruccion_params* deserializar_io_stdin_stdout(t_buffer_ins* buffer);
+instruccion_params* deserializar_registro_direccion_tamanio(t_buffer_ins* buffer);
 instruccion_params* deserializar_io_fs_create_delete(t_buffer_ins* buffer);
 instruccion_params* deserializar_io_fs_truncate(t_buffer_ins* buffer);
 instruccion_params* deserializar_io_fs_write_read(t_buffer_ins* buffer);

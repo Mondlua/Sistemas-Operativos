@@ -39,7 +39,7 @@ int main(void) {
     ip_kernel= config_get_string_value(entradasalida_config,"IP_KERNEL");
     puerto_kernel = config_get_string_value(entradasalida_config, "PUERTO_KERNEL");
     extraer_segun_tipo_io(entradasalida_config, interfaz);
-    /*conexion_kernel = crear_conexion(ip_kernel, puerto_kernel);
+    conexion_kernel = crear_conexion(ip_kernel, puerto_kernel);
     log_info(entradasalida_log, "I/O conectado a KERNEL");
     send_handshake(conexion_kernel, entradasalida_log, "I/O / KERNEL");
 
@@ -47,7 +47,7 @@ int main(void) {
 
     pthread_t hilo;
     pthread_create(&hilo, NULL, (void *)recibir_instruccion, interfaz);
-    pthread_join(hilo, NULL);*/
+    pthread_join(hilo, NULL);
     return 0;
 }
 
