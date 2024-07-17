@@ -173,22 +173,31 @@ bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_a
     }
     if(pcb_desalojado->motivo_desalojo == 3) // Desalojado por WAIT
     {
-        char* recurso_solicitado = "placeholder";
-        return administrador_recursos_wait(pcb_desalojado, recurso_solicitado, kernel_argumentos);
-        // Verificar existencia y disponibilidad del recurso solicitado
-        // Si no existe, a EXIT y return true.
-        // Si existe, pero no hay instancias, a BLOCK correspondiente y return true
-        // Si existe y hay instancias, se lo devuelve a EXEC, y se retorna un valor para que no se replanifique
+        int milisegundos_restantes;
+        if(kernel_argumentos->algo_planning != FIFO)
+        {
+            milisegundos_restantes = frenar_timer(kernel_argumentos->timer_quantum);
+        }
+
+        recibir_operacion(kernel_argumentos->socket_cpu_dispatch);
+        char* recurso_solicitado = recibir_mensaje(kernel_argumentos->socket_cpu_dispatch, kernel_argumentos->logger);
+        log_debug(kernel_argumentos->logger, "Se recibe una solicitud de WAIT al recurso: %s", recurso_solicitado);
+        
+        return administrador_recursos_wait(pcb_desalojado, recurso_solicitado, milisegundos_restantes, kernel_argumentos);
     }
     if(pcb_desalojado->motivo_desalojo == 4) // Desalojado por SIGNAL
     {
-        char* recurso_solicitado = "placeholder";
-        administrador_recursos_signal(pcb_desalojado, recurso_solicitado, kernel_argumentos);
-        // Verificar existencia del recurso solicitado
-        // Si no existe, a EXIT y return true
-        // Si existe, se le suma 1 al indice correspondiente y se lo devuelve a EXEC.
-        // Si hay procesos esperando, se mueve uno de BLOCK a READY
-        return false;
+        int milisegundos_restantes;
+        if(kernel_argumentos->algo_planning != FIFO)
+        {
+            milisegundos_restantes = frenar_timer(kernel_argumentos->timer_quantum);
+        }
+        
+        recibir_operacion(kernel_argumentos->socket_cpu_dispatch);
+        char* recurso_solicitado = recibir_mensaje(kernel_argumentos->socket_cpu_dispatch, kernel_argumentos->logger);
+        log_debug(kernel_argumentos->logger, "Se recibe una solicitud de SIGNAL al recurso: %s", recurso_solicitado);
+        
+        return administrador_recursos_signal(pcb_desalojado, recurso_solicitado, milisegundos_restantes, kernel_argumentos);
     }
     return true;
 }
@@ -317,14 +326,15 @@ void inicializar_lista_recursos(t_planificacion *planificador, t_config *kernel_
     while(array_nombre_recursos[i] != NULL)
     {
         t_queue_block *block_queue = malloc(sizeof(t_queue_block));
-        block_queue->block_queue = queue_create();
+        block_queue->block_dictionary = list_create();
+        block_queue->block_queue = NULL;
         block_queue->identificador = string_duplicate(array_nombre_recursos[i]);
         block_queue->cantidad_instancias = atoi(array_instancias_recursos[i]);
         block_queue->socket_interfaz = 0;
-        printf("Recurso agregado\n");
+        log_debug(planificador->logger, "Recurso agregado. Identificador: %s, Cantidad de instancias: %d", block_queue->identificador, block_queue->cantidad_instancias);
 
         dictionary_put(planificador->colas.lista_block, block_queue->identificador, block_queue);
-        free(block_queue); // Este free capaz no tenga que estar aca, sino al final de la ejecucion
+        //free(block_queue); // Este free capaz no tenga que estar aca, sino al final de la ejecucion
         i++;
     }
 
@@ -347,50 +357,67 @@ void inicializar_config_kernel(t_planificacion *planificador, t_config *kernel_c
 
 // -------- ADMINISTRACION DE RECURSOS --------
 
-bool administrador_recursos_wait(t_pcb *pcb_solicitante, char* nombre_recurso, t_planificacion *kernel_argumentos)
+bool administrador_recursos_wait(t_pcb *pcb_solicitante, char* nombre_recurso, int milisegundos_restantes, t_planificacion *kernel_argumentos)
 {
     t_queue_block *recurso = dictionary_get(kernel_argumentos->colas.lista_block, nombre_recurso);
-    
+    // Verificar existencia y disponibilidad del recurso solicitado
+    // Si no existe, a EXIT y return true.
+    // Si existe, pero no hay instancias, a BLOCK correspondiente y return true
+    // Si existe y hay instancias, se lo devuelve a EXEC, y se retorna un valor para que no se replanifique
+
     if(recurso == NULL)
     {
         // El recurso no existe. Mando el proceso a EXIT y habilito la replanificacion
-        // TODO: cambiar esto a una funcion que remueva de la lista de bloqueados al proceso solicitante, no al primero
-        queue_pop(recurso->block_queue); 
-        queue_push(kernel_argumentos->colas.exit, pcb_solicitante);
-        log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: EXEC - Estado Actual: EXIT", pcb_solicitante->pid);
+        mover_a_exit(pcb_solicitante, kernel_argumentos);
         log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: INVALID_RESOURCE", pcb_solicitante->pid);
         return true;
     }
 
     recurso->cantidad_instancias--;
+    log_debug(kernel_argumentos->logger, "Cantidad de instancias restantes para el recurso %s: %d", nombre_recurso, recurso->cantidad_instancias);
 
     if(recurso->cantidad_instancias >= 0)
     {
         // Se habilita la instancia del recurso para el proceso
+        pthread_mutex_lock(&kernel_argumentos->colas.mutex_exec);
         queue_push(kernel_argumentos->colas.exec, pcb_solicitante);
+        pthread_mutex_unlock(&kernel_argumentos->colas.mutex_exec);
+
         log_debug(kernel_argumentos->logger, "Se devuelve el PID: %d a cpu por haber solicitado un recurso disponible.", pcb_solicitante->pid);
+
+        if(kernel_argumentos->algo_planning != FIFO)
+        {
+            iniciar_timer(kernel_argumentos->timer_quantum, milisegundos_restantes);
+        }
         enviar_pcb(pcb_solicitante, kernel_argumentos->socket_cpu_dispatch);
+        pthread_mutex_unlock(&kernel_argumentos->planning_mutex);
         return false;
     }
 
     // Se bloque el proceso
-    queue_push(recurso->block_queue, pcb_solicitante);
+    pcb_solicitante->estado = BLOCKED;
+    pthread_mutex_lock(&kernel_argumentos->colas.mutex_block);
+    list_add(recurso->block_dictionary, pcb_solicitante);
+    pthread_mutex_unlock(&kernel_argumentos->colas.mutex_block);
+    log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: EXEC - Estado actual: BLOCK", pcb_solicitante->pid);
     log_info(kernel_argumentos->logger, "PID: %d - Bloqueado por: %s", pcb_solicitante->pid, nombre_recurso);
     return true;
 
 }
 
-bool administrador_recursos_signal(t_pcb *pcb_desalojado, char* recurso_solicitado, t_planificacion *kernel_argumentos)
+bool administrador_recursos_signal(t_pcb *pcb_desalojado, char* recurso_solicitado, int milisegundos_restantes, t_planificacion *kernel_argumentos)
 {
+    // Verificar existencia del recurso solicitado
+    // Si no existe, a EXIT y return true
+    // Si existe, se le suma 1 al indice correspondiente y se lo devuelve a EXEC.
+    // Si hay procesos esperando, se mueve uno de BLOCK a READY
     t_queue_block *recurso = dictionary_get(kernel_argumentos->colas.lista_block, recurso_solicitado);
+    log_debug(kernel_argumentos->logger, "Recurso obtenido del diccionario: %s", recurso->identificador);
 
     if(recurso == NULL)
     {
         // El recurso no existe. Mando el proceso a EXIT y habilito la replanificacion
-        // TODO: cambiar esto a una funcion que remueva de la lista de bloqueados al proceso solicitante, no al primero
-        queue_pop(recurso->block_queue); 
-        queue_push(kernel_argumentos->colas.exit, pcb_desalojado);
-        log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: EXEC - Estado Actual: EXIT", pcb_desalojado->pid);
+        mover_a_exit(pcb_desalojado, kernel_argumentos);
         log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: INVALID_RESOURCE", pcb_desalojado->pid);
         return true;
     }
@@ -398,20 +425,39 @@ bool administrador_recursos_signal(t_pcb *pcb_desalojado, char* recurso_solicita
     recurso->cantidad_instancias++;
 
     procesar_desbloqueo_factible(recurso_solicitado, kernel_argumentos);
+    log_debug(kernel_argumentos->logger, "Desbloqueo procesado.");
+
+    pthread_mutex_lock(&kernel_argumentos->colas.mutex_exec);
+    queue_push(kernel_argumentos->colas.exec, pcb_desalojado);
+    pthread_mutex_unlock(&kernel_argumentos->colas.mutex_exec);
 
     // Devuelvo el pcb a CPU
+    if(kernel_argumentos->algo_planning != FIFO)
+    {
+        iniciar_timer(kernel_argumentos->timer_quantum, milisegundos_restantes);
+    }
     enviar_pcb(pcb_desalojado, kernel_argumentos->socket_cpu_dispatch);
+
+    pthread_mutex_unlock(&kernel_argumentos->planning_mutex);
     return false;
 }
 
 void procesar_desbloqueo_factible(char* recurso_solicitado, t_planificacion *kernel_argumentos)
 {
     t_queue_block *recurso = dictionary_get(kernel_argumentos->colas.lista_block, recurso_solicitado);
+    log_debug(kernel_argumentos->logger, "Recurso obtenido del diccionario: %s", recurso->identificador);
 
-    if(!queue_is_empty(recurso->block_queue))
+    if(!list_is_empty(recurso->block_dictionary))
     {
-        t_pcb *pcb_desbloqueado = queue_pop(recurso->block_queue);
+        int tamanio = list_size(recurso->block_dictionary);
+        log_debug(kernel_argumentos->logger, "Tamanio de la lista: %d", tamanio);
+        t_pcb *pcb_desbloqueado = list_remove(recurso->block_dictionary, 0);
+        log_debug(kernel_argumentos->logger, "Obtuve un PCB de PID: %d", pcb_desbloqueado->pid);
+        
+        pthread_mutex_lock(&kernel_argumentos->colas.mutex_ready);
         queue_push(kernel_argumentos->colas.ready, pcb_desbloqueado);
+        pthread_mutex_unlock(&kernel_argumentos->colas.mutex_ready);
+
         recurso->cantidad_instancias--;
         log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: BLOCK - Estado actual: READY", pcb_desbloqueado->pid);
     }

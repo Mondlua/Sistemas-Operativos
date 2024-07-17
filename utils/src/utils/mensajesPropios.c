@@ -199,6 +199,73 @@ t_pcb* recibir_pcb(int socket_cliente) {
     return pcb;
 }
 
+void enviar_nombre_recurso(char* nombre_recurso, int socket_cliente)
+{
+    // t_paquete *paquete = malloc(sizeof(t_paquete));
+    // paquete->codigo_operacion = NOMBRE_RECURSO;
+    // paquete->buffer = malloc(sizeof(t_buffer));
+
+    // uint32_t tamanio = strlen(nombre_recurso) + 1;
+
+    // paquete->buffer->size = sizeof(uint32_t)*2 + tamanio;
+    // paquete->buffer->stream = malloc(paquete->buffer->size);
+
+    // uint32_t offset = 0;
+    // memcpy(paquete->buffer->stream + offset, &tamanio, sizeof(uint32_t));
+    // offset += sizeof(uint32_t);
+
+    // memcpy(paquete->buffer->stream + offset, nombre_recurso, tamanio);
+    // offset += tamanio;
+
+    // uint32_t bytes = paquete->buffer->size + (2*sizeof(int32_t)) + sizeof(op_code);
+    // void* buffer_intermedio = malloc(bytes);
+    // int desplazamiento = 0;
+
+    // memcpy(buffer_intermedio + desplazamiento, &(paquete->codigo_operacion), sizeof(op_code));
+    // desplazamiento += sizeof(op_code);
+    // memcpy(buffer_intermedio + desplazamiento, &(paquete->buffer->size), sizeof(uint32_t));
+    // desplazamiento += sizeof(uint32_t);
+    // memcpy(buffer_intermedio + desplazamiento, &offset, sizeof(uint32_t));
+    // desplazamiento += sizeof(uint32_t);
+    // memcpy(buffer_intermedio + desplazamiento, &(paquete->buffer->stream), paquete->buffer->size);
+    // desplazamiento += paquete->buffer->size;
+
+    // send(socket_cliente, buffer_intermedio, bytes, 0);
+    // printf("Paquete enviado al socket %d, con un tamanio de %d\n", socket_cliente, bytes);
+    // free(buffer_intermedio);
+
+    // free(paquete->buffer->stream);
+    // free(paquete->buffer);
+    // free(paquete);
+}
+
+char* recibir_nombre_recurso(int socket_cliente)
+{
+    t_paquete *paquete = malloc(sizeof(t_paquete));
+    paquete->buffer = malloc(sizeof(t_buffer));
+
+    uint32_t offset;
+    recv(socket_cliente, &(paquete->codigo_operacion), sizeof(op_code), MSG_WAITALL);
+    printf("OPCODE: %d", paquete->codigo_operacion);
+    recv(socket_cliente, &(paquete->buffer->size), sizeof(uint32_t), MSG_WAITALL);
+    printf("Size: %d", paquete->buffer->size);
+    recv(socket_cliente, &offset, sizeof(uint32_t), MSG_WAITALL);
+    paquete->buffer->stream = malloc(sizeof(paquete->buffer->size));
+    recv(socket_cliente, &(paquete->buffer->stream), paquete->buffer->size, MSG_WAITALL);
+    
+    void* stream = paquete->buffer->stream;
+
+    uint32_t tamanio;
+    memcpy(tamanio, stream, sizeof(uint32_t));
+    printf("Tamanio de la palabra: %d", tamanio);
+    stream += sizeof(uint32_t);
+    char* ret = malloc(tamanio);
+    memcpy(ret, stream, tamanio);
+    stream += tamanio;
+    
+    return ret;
+}
+
 
 char *estado_a_string(t_proceso_estado estado)
 {

@@ -39,5 +39,7 @@ char* recibir_pc(int socket_cliente);
 void enviar_int_a_interrupt(int socket_cpu_interrupt, uint32_t pid);
 uint32_t recibir_int_a_interrupt(int socket_cpu_interrupt);
 
+void enviar_nombre_recurso(char* nombre_recurso, int socket_cliente);
+char* recibir_nombre_recurso(int socket_cliente);
 
 #endif
