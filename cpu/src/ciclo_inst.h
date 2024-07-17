@@ -14,6 +14,7 @@ t_list* registroCpu;
 int valor;
 char* recurso;
 char* interfaz;
+char* archivo;
 bool logicaAFisica;
 instrucciones instrucciones;
 }t_decode;
