@@ -130,6 +130,7 @@ void recibir_instruccion(char* tipo_interfaz)
         }
         
     }
+
 }
 
 void atender_cod_op(instruccion_params* parametros, instrucciones op_code){

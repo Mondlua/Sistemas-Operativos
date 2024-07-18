@@ -34,6 +34,7 @@ typedef enum
     PID,
     INSTRUCCION,
     PCB,
+    NOMBRE_RECURSO,
     INS_EXIT,
     BLOCK_IO,
     BLOCK_RECURSO,

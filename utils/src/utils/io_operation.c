@@ -378,3 +378,4 @@ t_buffer_ins* serializar_registro_direccion_tamanio_con_texto(instruccion_params
     
     return buffer;
 }
+

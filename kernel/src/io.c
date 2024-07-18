@@ -208,3 +208,4 @@ void recibir_solicitud_cpu(int socket_servidor, t_pcb* pcb)
     free(instruccion->buffer);
     free(instruccion);
 }
+

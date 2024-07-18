@@ -20,7 +20,8 @@ typedef struct t_atender_cliente_args
     t_log *log;
     int c_socket;
     char *server_name;
-
+    pthread_mutex_t lock_interrupt;
+    
 } t_atender_cliente_args;
 
 void atender_cliente(void* void_args);
