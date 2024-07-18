@@ -54,6 +54,10 @@ int main(void){
     cpu_argumentos->config_leida.puerto_cpu_dispatch = config_get_string_value(cpu_config, "PUERTO_ESCUCHA_DISPATCH");
 	cpu_argumentos->config_leida.puerto_cpu_interrupt = config_get_string_value(cpu_config, "PUERTO_ESCUCHA_INTERRUPT");
 
+    // Mutex para la flag de interrupciones
+    pthread_mutex_t lock_interrupt;
+    pthread_mutex_init(&lock_interrupt, NULL);
+
     // Inicio CPU DISPATCH server  
     pthread_t hilo_conectar_dispatch;
     pthread_create(&hilo_conectar_dispatch, NULL, conectar_dispatch, (void *) cpu_argumentos);
@@ -69,6 +73,7 @@ int main(void){
     args_dispatch->log = cpu_log;
     args_dispatch->c_socket = cpu_argumentos->socket_dispatch;
     args_dispatch->server_name = "CPU DISPATCH";
+    args_dispatch->lock_interrupt = lock_interrupt;
     pthread_t hilo_atender_cpu_dispatch;
     pthread_create(&hilo_atender_cpu_dispatch, NULL, (void *)atender_cliente, (void*) args_dispatch);
     pthread_detach(hilo_atender_cpu_dispatch);
@@ -78,6 +83,7 @@ int main(void){
     args_interrupt->log = cpu_log;
     args_interrupt->c_socket = cpu_argumentos->socket_interrupt;
     args_interrupt->server_name = "CPU INTERRUPT";
+    args_interrupt->lock_interrupt = lock_interrupt;
     pthread_t hilo_atender_cpu_interrupt;
     pthread_create(&hilo_atender_cpu_interrupt, NULL, (void *) atender_cliente, (void*) args_interrupt);
     pthread_join(hilo_atender_cpu_interrupt, NULL);
@@ -85,6 +91,8 @@ int main(void){
     //free(args_dispatch);
     //free(args_interrupt);
     free(cpu_argumentos);
+    pthread_mutex_destroy(&lock_interrupt);
+
     return 0;
 }
 

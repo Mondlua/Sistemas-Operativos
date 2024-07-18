@@ -28,15 +28,25 @@ typedef struct {
 typedef enum {
     NO_BLOCK,
     IO_BLOCK,
-    REC_BLOCK,
+    REC_BLOCK_WAIT,
+    REC_BLOCK_SIGNAL,
     EXIT_BLOCK
+} t_cpu_blockeo_enum;
+
+typedef struct
+{
+    t_cpu_blockeo_enum blockeo;
+    instrucciones io_opcode;
+    instruccion_params* instrucciones;
+    char* nombre_recurso;
 } t_cpu_blockeo;
 
-char* fetch(int conexion, t_pcb* pcb);
-t_decode* decode(char* ins);
+
+t_instruccion* fetch(int conexion, t_pcb* pcb);
+t_decode* decode(t_instruccion* ins);
 t_cpu_blockeo execute(t_decode* deacodeado, t_pcb* pcb, t_log *logger);
 instrucciones obtener_instruccion(char *nombre);
-void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log *logger);
+void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log *logger, int socket_cliente, pthread_mutex_t lock_interrupt);
 void loggear_registros(t_pcb* pcb, t_log* logger);
 void* obtener_valor_registro(cpu_registros* regs, char* nombre_registro);
 

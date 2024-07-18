@@ -1,5 +1,5 @@
-#ifndef IO_OP_H
-#define IO_OP_H_
+#ifndef IO_OPERATION_H
+#define IO_OPERATION_H_
 
 #include<stdio.h>
 #include<stdlib.h>
@@ -11,6 +11,8 @@
 #include "Instrucciones_gral.h"
 #include <utils/catedra/inicio.h>
 #include "mensajesPropios.h"
+#include <semaphore.h>
+#include <time.h>
 
 
 typedef struct 
@@ -35,6 +37,7 @@ typedef struct
         } io_fs;
      }params;
 }instruccion_params;
+
 
 t_buffer_ins* serializar_io_gen_sleep(instruccion_params* param);
 t_buffer_ins* serializar_registro_direccion_tamanio(instruccion_params* param); //Tambien va con memoria

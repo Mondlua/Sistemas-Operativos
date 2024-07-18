@@ -54,10 +54,20 @@ void atender_cliente(void *void_args)
         {
             char* pathpid = recibir_mensaje(client_socket, logger);
 
-            uint32_t pid;
-            char path [40];
-            sscanf(pathpid, "%u/%39[^\n]", &pid,path);          
-            t_list* lista_arch = abrir_pseudocodigo(path);
+
+            char** split = string_split(pathpid, "$");
+            char* path = split[0];
+            uint32_t pid = atoi(split[1]);
+
+            lista_arch = list_create();
+            lista_arch = abrir_pseudocodigo(path);
+            free(path);
+
+            if(lista_arch == NULL)
+            {
+                break;
+            }
+
             t_tabla* tabla = malloc(sizeof(t_tabla));
             tabla->pid = pid;
             tabla->tabla = list_create();
