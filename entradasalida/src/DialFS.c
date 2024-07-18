@@ -132,14 +132,22 @@ void borrar_archivo(char* nombre){
     } else {
         perror("Error al eliminar el archivo");
     }
-
+    FILE* archivo_bloques = fopen(blocks_path, "rb+");
+    char* buffer = calloc(block_size, 1); //lleno de 0
+    fseek(archivo_bloques, bloque_inicial * block_size, SEEK_SET);
+    for (int i = 0; i < cantidad_bloques; i++) {
+        fwrite(buffer, block_size, 1, archivo_bloques);
+    }
+    fclose(archivo_bloques);
+    free(buffer);
+    
     int bitmap_file = open(bitmap_path, O_RDWR);
     msync(bitmap->bitarray, bitmap_size, MS_SYNC);
     close(bitmap_file);
     eliminar_archivo_de_lista(bloque_inicial);
 }
 
-void truncar_archivo(char* nombre, uint32_t tamanio){
+void truncar_archivo(char* nombre, uint32_t tamanio, uint32_t pid){
     usleep(tiempo_unidad_trabajo * 1000);
 
     Archivo* archivo = buscar_archivo_por_nombre(nombre);
@@ -166,7 +174,9 @@ void truncar_archivo(char* nombre, uint32_t tamanio){
     }
     else if (bloque_final != bloque_final_anterior) { //Agrandar
         if (!bloques_contiguos_libres(bloque_final_anterior, bloque_final)){
+            log_info(entradasalida_log, "PID: <%i> - Inicio Compactación.", pid);
             compactar(&bloque_inicial, bloque_final);
+            log_info(entradasalida_log, "PID: <%i> - Fin Compactación.", pid);
             bloque_final = bloque_inicial + cantidad_bloques - 1;
         }
         for (int i = bloque_inicial; i <= bloque_final; i++) {
