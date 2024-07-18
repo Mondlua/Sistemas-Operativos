@@ -124,7 +124,7 @@ void finalizar_proceso(uint32_t pid, t_planificacion *kernel_argumentos){
         pcb_candidato = queue_peek(kernel_argumentos->colas.exec);
         if(pcb_candidato->pid == pid)
         {
-            log_debug(kernel_argumentos, "Encontre el PID: %d en EXEC", pcb_candidato->pid);
+            log_debug(kernel_argumentos->logger, "Encontre el PID: %d en EXEC", pcb_candidato->pid);
             pcb_a_eliminar = queue_pop(kernel_argumentos->colas.exec);
             eliminar_proceso(pcb_a_eliminar, kernel_argumentos);
             pthread_mutex_unlock(&kernel_argumentos->planning_mutex);
@@ -136,7 +136,7 @@ void finalizar_proceso(uint32_t pid, t_planificacion *kernel_argumentos){
     pcb_a_eliminar = buscar_pcb_en_cola(kernel_argumentos->colas.ready, pid);
     if(pcb_a_eliminar != NULL)
     {
-        log_debug(kernel_argumentos, "Encontre el PID: %d en READY", pcb_a_eliminar->pid);
+        log_debug(kernel_argumentos->logger, "Encontre el PID: %d en READY", pcb_a_eliminar->pid);
         eliminar_proceso(pcb_a_eliminar, kernel_argumentos);
         pthread_mutex_unlock(&kernel_argumentos->planning_mutex);
         return;
@@ -146,7 +146,7 @@ void finalizar_proceso(uint32_t pid, t_planificacion *kernel_argumentos){
     pcb_a_eliminar = buscar_pcb_en_cola(kernel_argumentos->colas.prioridad, pid);
     if(pcb_a_eliminar != NULL)
     {
-        log_debug(kernel_argumentos, "Encontre el PID: %d en PRIORIDAD", pcb_a_eliminar->pid);
+        log_debug(kernel_argumentos->logger, "Encontre el PID: %d en PRIORIDAD", pcb_a_eliminar->pid);
         eliminar_proceso(pcb_a_eliminar, kernel_argumentos);
         pthread_mutex_unlock(&kernel_argumentos->planning_mutex);
         return;
@@ -156,7 +156,7 @@ void finalizar_proceso(uint32_t pid, t_planificacion *kernel_argumentos){
     pcb_a_eliminar = buscar_pcb_en_cola(kernel_argumentos->colas.new, pid);
     if(pcb_a_eliminar != NULL)
     {
-        log_debug(kernel_argumentos, "Encontre el PID: %d en NEW", pcb_a_eliminar->pid);
+        log_debug(kernel_argumentos->logger, "Encontre el PID: %d en NEW", pcb_a_eliminar->pid);
         eliminar_proceso(pcb_a_eliminar, kernel_argumentos);
         pthread_mutex_unlock(&kernel_argumentos->planning_mutex);
         return;
