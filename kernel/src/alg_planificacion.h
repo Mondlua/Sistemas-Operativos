@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <semaphore.h>
 #include <commons/string.h>
-#include <utils/io_operation.h>
+#include "io.h"
 #include <utils/planificador.h>
 
 extern sem_t grado_planificiacion;
@@ -63,13 +63,12 @@ void agregar_recurso_a_lista_global(uint32_t pid, char* nombre_recurso, t_planif
 void eliminar_recurso_de_lista_global(uint32_t pid, char* recurso_afectado, t_planificacion* kernel_argumentos);
 
 void validar_peticion(instruccion_params* parametros, t_pcb* pcb, int codigo_op, t_planificacion* kernel_argumentos);
-void enviar_instruccion_a_interfaz(t_queue_block* interfaz_destino, instruccion_params* parametros, int cod_op);
+void enviar_instruccion_a_interfaz(t_queue_block* interfaz_destino, instruccion_params* parametros, int cod_op, uint32_t pid);
 interfaz* buscar_interfaz_por_nombre(char* nombre_interfaz);
 void pcb_a_exit_por_sol_invalida(t_queue_block* interfaz, t_planificacion *kernel_argumentos);
 
 
 t_instruccion_params_opcode recibir_solicitud_cpu(int socket_servidor, t_pcb* pcb);
-instruccion_params* deserializar_io_gen_sleep_con_interfaz(t_buffer_ins* buffer);
 
 void mover_a_exit(t_pcb* pcb_desalojado, t_planificacion *kernel_argumentos);
 char* proceso_estado_a_string(t_proceso_estado estado);
