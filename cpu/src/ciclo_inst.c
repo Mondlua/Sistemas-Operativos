@@ -331,7 +331,7 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             char* tamframe = strcat(tam, int_to_char(num_frame));
             char* tamframe1 = strcat(tamframe, "/");
             char* enviar = strcat(tamframe1, int_to_char(desplazamiento));
-            enviar_pedido_lectura(conexion_memoria_cpu, enviar);
+            //enviar_pedido_lectura(conexion_memoria_cpu, enviar);
 
             int i = recibir_operacion(conexion_memoria_cpu);
             char* leido = recibir_mensaje(conexion_memoria_cpu, cpu_log);
@@ -463,7 +463,7 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             char* pid_char = int_to_char(pcb->pid);
             char* mensaje1 = strcat(pid_char,"/");
             char* mensaje = strcat(mensaje1,tamanio);
-            enviar_pedido_resize_tampid(conexion_memoria_cpu, mensaje);
+            //enviar_pedido_resize_tampid(conexion_memoria_cpu, mensaje);
 
             break;
         }
@@ -505,21 +505,13 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             instruccion_params* parametros =  malloc(sizeof(instruccion_params));
             parametros->interfaz = strdup(decode->interfaz);
             parametros->params.io_gen_sleep.unidades_trabajo = decode->valor;
-
-            t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion));
-            paquete->codigo_operacion = IO_GEN_SLEEP;
-            enviar_instruccion_a_Kernel(paquete, parametros, kernel_socket);
-            free(parametros->interfaz); 
-            free(parametros);
-            free(paquete);
-
-            log_info(cpu_log, "PID: %d - Ejecutando: IO_GEN_SLEEP %s %d", pcb->pid, parametros->interfaz, parametros->params.io_gen_sleep_params.unidades_trabajo);
+            
+            log_info(cpu_log, "PID: %d - Ejecutando: IO_GEN_SLEEP %s %d", pcb->pid, parametros->interfaz, parametros->params.io_gen_sleep.unidades_trabajo);
 
             ret.io_opcode = IO_GEN_SLEEP;
             ret.blockeo = IO_BLOCK;
-            ret.instrucciones = parametros; //¿Esto va o no?
+            ret.instrucciones = parametros; 
             return ret;
-            // En kernel agregar un recv para recibir el instruccion_params y operar en base a eso tratando de usar las cosas que hizo zoe.
         }
         case IO_STDIN_READ:{
 
@@ -531,18 +523,10 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             log_info(cpu_log, "PID: %d - Ejecutando IO_STDIN_READ %s %s %s", pcb->pid, parametros->interfaz, registro_direccion, registro_tamaño);
 
             int dir_logica =(int)obtener_valor_registro(pcb->registros, registro_direccion);
-
             t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
-
             parametros->registro_direccion = dir_fisica;
             parametros->registro_tamanio = (uint32_t)obtener_valor_registro(pcb->registros, registro_tamaño);
-          
-            t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion));
-            paquete->codigo_operacion = IO_STDIN_READ;
-            enviar_instruccion_a_Kernel(paquete, parametros, kernel_socket);
-            free(parametros->interfaz); 
-            free(parametros);
-            free(paquete);
+ 
             ret.io_opcode = IO_STDIN_READ;
             ret.blockeo = IO_BLOCK;
             ret.instrucciones = parametros;
@@ -558,9 +542,7 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             log_info(cpu_log, "PID: %d - Ejecutando IO_STDOUT_WRITE %s %s %s", pcb->pid, parametros->interfaz, registro_direccion, registro_tamaño);
 
             int dir_logica =(int)obtener_valor_registro(pcb->registros, registro_direccion);
-
             t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
-
             parametros->registro_direccion = dir_fisica;
             parametros->registro_tamanio = (uint32_t)obtener_valor_registro(pcb->registros, registro_tamaño);
             
@@ -568,113 +550,89 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             ret.blockeo = IO_BLOCK;
             ret.instrucciones = parametros;
             return ret;
-            // t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion));
-            // paquete->codigo_operacion = IO_STDOUT_WRITE;
-            // enviar_instruccion_a_Kernel(paquete, parametros, kernel_socket);
-            // free(parametros->interfaz); 
-            // free(parametros);
-            // free(paquete); VER SI VA O NO EN TODOS
-            // break;
         }
-        case 13:{ //IO_FS_CREATE
-            //enviar_motivo(BLOCK_IO, kernel_socket);
+        case IO_FS_CREATE:{ 
+            instruccion_params* parametros = malloc(sizeof(instruccion_params));
+            parametros->interfaz = strdup(decode->interfaz);
+            parametros->params.io_fs.nombre_archivo = strdup(decode->archivo);
+
+            log_info(cpu_log, "PID: %d - Ejecutando IO_FS_CREATE %s %s", pcb->pid, parametros->interfaz, parametros->params.io_fs.nombre_archivo);
+    
+            ret.io_opcode = IO_FS_CREATE;
+            ret.blockeo = IO_BLOCK;
+            ret.instrucciones = parametros;
+            return ret;
+        }
+        case IO_FS_DELETE:{ 
             instruccion_params* parametros = malloc(sizeof(instruccion_params));
             parametros->interfaz = strdup(decode->interfaz);
             parametros->params.io_fs.nombre_archivo = strdup(decode->archivo);
     
-            t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion));
-            paquete->codigo_operacion = IO_FS_CREATE;
+            log_info(cpu_log, "PID: %d - Ejecutando IO_FS_DELETE %s %s", pcb->pid, parametros->interfaz, parametros->params.io_fs.nombre_archivo);
     
-            enviar_instruccion_a_Kernel(paquete, parametros, kernel_socket);
-            free(parametros->interfaz);
-            free(parametros->params.io_fs.nombre_archivo);
-            free(parametros);
-            free(paquete);
-            return IO_BLOCK;
+            ret.io_opcode = IO_FS_DELETE;
+            ret.blockeo = IO_BLOCK;
+            ret.instrucciones = parametros;
+            return ret;
         }
-        case 14:{ //IO_FS_DELETE
-            //enviar_motivo(BLOCK_IO, kernel_socket);
-            instruccion_params* parametros = malloc(sizeof(instruccion_params));
-            parametros->interfaz = strdup(decode->interfaz);
-            parametros->params.io_fs.nombre_archivo = strdup(decode->archivo);
-    
-            t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion));
-            paquete->codigo_operacion = IO_FS_DELETE;
-    
-            enviar_instruccion_a_Kernel(paquete, parametros, kernel_socket);
-            free(parametros->interfaz);
-            free(parametros->params.io_fs.nombre_archivo);
-            free(parametros);
-            free(paquete);
-            return IO_BLOCK;
-        }
-        case 15:{ //IO_FS_TRUNCATE
-           // enviar_motivo(BLOCK_IO, kernel_socket);
+        case IO_FS_TRUNCATE:{
+       
             instruccion_params* parametros = malloc(sizeof(instruccion_params));
             parametros->interfaz = strdup(decode->interfaz);
             parametros->params.io_fs.nombre_archivo = strdup(decode->archivo);
             char* registro_tamanio = list_get(decode->registroCpu, 0);
             parametros->registro_tamanio = (uint32_t)obtener_valor_registro(pcb->registros, registro_tamanio);
     
-            t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion));
-            paquete->codigo_operacion = IO_FS_TRUNCATE;
-    
-            enviar_instruccion_a_Kernel(paquete, parametros, kernel_socket);
-            free(parametros->interfaz);
-            free(parametros->params.io_fs.nombre_archivo);
-            free(parametros);
-            free(paquete);
-            return IO_BLOCK;
+            log_info(cpu_log, "PID: %d - Ejecutando IO_FS_TRUNCATE %s %s", pcb->pid, parametros->interfaz, registro_tamanio);
+            
+            ret.io_opcode = IO_FS_TRUNCATE;
+            ret.blockeo = IO_BLOCK;
+            ret.instrucciones = parametros;
+            return ret;
         }
-        case 16:{ //IO_FS_WRITE
-            //enviar_motivo(BLOCK_IO, kernel_socket);
+        case IO_FS_WRITE:{ 
+            
             instruccion_params* parametros = malloc(sizeof(instruccion_params));
             parametros->interfaz = strdup(decode->interfaz);
             parametros->params.io_fs.nombre_archivo = strdup(decode->archivo);
             char* registro_direccion = list_get(decode->registroCpu, 0);
-            char* registro_tamano = list_get(decode->registroCpu, 1);
+            char* registro_tamanio = list_get(decode->registroCpu, 1);
             char* registro_puntero_archivo = list_get(decode->registroCpu, 2);
             int dir_logica =(int)obtener_valor_registro(pcb->registros, registro_direccion);
 
             t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
             parametros->registro_direccion = dir_fisica;
-            parametros->registro_tamanio = (uint32_t)obtener_valor_registro(pcb->registros, registro_tamano);
+            parametros->registro_tamanio = (uint32_t)obtener_valor_registro(pcb->registros, registro_tamanio);
             parametros->params.io_fs.registro_puntero_archivo = (off_t)obtener_valor_registro(pcb->registros, registro_puntero_archivo);
-    
-            t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion));
-            paquete->codigo_operacion = IO_FS_WRITE;
-    
-            enviar_instruccion_a_Kernel(paquete, parametros, kernel_socket);
-            free(parametros->interfaz);
-            free(parametros->params.io_fs.nombre_archivo);
-            free(parametros);
-            free(paquete);
-            return IO_BLOCK;
+
+            log_info(cpu_log, "PID: %d - Ejecutando IO_FS_WRITE %s %s %s", pcb->pid, parametros->interfaz, registro_tamanio, registro_direccion);
+
+            ret.io_opcode = IO_FS_WRITE;
+            ret.blockeo = IO_BLOCK;
+            ret.instrucciones = parametros;
+            return ret;
         }
-        case 17:{ //IO_FS_READ
-           // enviar_motivo(BLOCK_IO, kernel_socket);
+        case IO_FS_READ:{ 
+           
             instruccion_params* parametros = malloc(sizeof(instruccion_params));
             parametros->interfaz = strdup(decode->interfaz);
             parametros->params.io_fs.nombre_archivo = strdup(decode->archivo);
             char* registro_direccion = list_get(decode->registroCpu, 0);
-            char* registro_tamano = list_get(decode->registroCpu, 1);
+            char* registro_tamanio = list_get(decode->registroCpu, 1);
             char* registro_puntero_archivo = list_get(decode->registroCpu, 2);
             int dir_logica =(int)obtener_valor_registro(pcb->registros, registro_direccion);
 
             t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
             parametros->registro_direccion = dir_fisica;
-            parametros->registro_tamanio = (uint32_t)obtener_valor_registro(pcb->registros, registro_tamano);
+            parametros->registro_tamanio = (uint32_t)obtener_valor_registro(pcb->registros, registro_tamanio);
             parametros->params.io_fs.registro_puntero_archivo = (off_t)obtener_valor_registro(pcb->registros, registro_puntero_archivo);
     
-            t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion));
-            paquete->codigo_operacion = IO_FS_READ;
-    
-            enviar_instruccion_a_Kernel(paquete, parametros, kernel_socket);
-            free(parametros->interfaz);
-            free(parametros->params.io_fs.nombre_archivo);
-            free(parametros);
-            free(paquete);
-            return IO_BLOCK;
+            log_info(cpu_log, "PID: %d - Ejecutando IO_FS_READ %s %s %s", pcb->pid, parametros->interfaz, registro_tamanio, registro_direccion);
+
+            ret.io_opcode = IO_FS_READ;
+            ret.blockeo = IO_BLOCK;
+            ret.instrucciones = parametros;
+            return ret;
         }
         case EXIIT:{
             log_info(logger, "PID: %d - Ejecutando: EXIT", pcb->pid);
