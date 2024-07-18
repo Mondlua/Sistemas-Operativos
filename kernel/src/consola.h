@@ -33,4 +33,7 @@ t_pcb* buscar_pcb_en_lista(t_list* lista, uint32_t pid);
 void eliminar_proceso(t_pcb* pcb, t_planificacion* kernel_argumentos);
 void eliminar_proceso_recurso(t_pcb* pcb, char* nombre_recurso, t_planificacion* kernel_argumentos);
 
+void logear_cola_estado(t_queue* cola, pthread_mutex_t mutex, char* nombre_cola, t_log* logger);
+void logear_colas_block(t_planificacion* kernel_argumentos);
+
 #endif

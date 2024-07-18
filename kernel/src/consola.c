@@ -311,14 +311,106 @@ void multiprogramacion(char* valor, t_planificacion *kernel_argumentos){
 void proceso_estado(t_planificacion *kernel_argumentos){
 
     pthread_mutex_lock(&kernel_argumentos->planning_mutex);
+    log_info(kernel_argumentos->logger, "Listado de procesos por estado:");
 
+    logear_cola_estado(kernel_argumentos->colas.new, kernel_argumentos->colas.mutex_new, "NEW", kernel_argumentos->logger);
+    logear_cola_estado(kernel_argumentos->colas.ready, kernel_argumentos->colas.mutex_ready, "READY", kernel_argumentos->logger);
+    logear_cola_estado(kernel_argumentos->colas.prioridad, kernel_argumentos->colas.mutex_prioridad, "READY (Prioridad)", kernel_argumentos->logger);
 
+    pthread_mutex_lock(&kernel_argumentos->colas.mutex_exec);
+    if(!queue_is_empty(kernel_argumentos->colas.exec))
+    {
+        t_pcb* pcb = queue_peek(kernel_argumentos->colas.exec);
+        log_info(kernel_argumentos->logger, "   EXEC: [ %d ]", pcb->pid);
+    }
+    pthread_mutex_unlock(&kernel_argumentos->colas.mutex_exec);
+
+    logear_colas_block(kernel_argumentos);
 
     pthread_mutex_unlock(&kernel_argumentos->planning_mutex);
+}
 
-    // log_info(kernel_argumentos->logger, ">> Listado de procesos por estado ...");
-    // for (t_proceso_estado estado = NEW; estado <= EXIT; estado++)
-    // {
-    //     mostrar_pids_en_estado(estado);
-    // }
+void logear_cola_estado(t_queue* cola, pthread_mutex_t mutex, char* nombre_cola, t_log* logger)
+{
+    pthread_mutex_lock(&mutex);
+    if(!queue_is_empty(cola))
+    {
+        int i = 0, tamanio = queue_size(cola);
+        char* lista = string_new();
+        while(i < tamanio)
+        {
+            t_pcb* pcb = queue_pop(cola);
+            char* pid = string_itoa(pcb->pid);
+            string_append(&lista, pid);
+            if(i != tamanio - 1)
+            {
+                string_append(&lista, ", ");
+            }
+            i++;
+        }
+        log_info(logger, "   %s: [%s]", nombre_cola, lista);
+        free(lista);
+    }
+    pthread_mutex_unlock(&mutex);
+}
+
+void logear_colas_block(t_planificacion* kernel_argumentos)
+{
+    pthread_mutex_lock(&kernel_argumentos->colas.mutex_block);
+    
+    if(kernel_argumentos->colas.cantidad_procesos_block == 0)
+    {
+        return;
+    }
+
+    char* cadena_general = string_new();
+    t_list* lista_de_listas = dictionary_elements(kernel_argumentos->colas.lista_block);
+
+    int i = 0, tamanio = list_size(lista_de_listas);
+    bool ultimo = false;
+    while(i < tamanio)
+    {
+        t_queue_block* elemento = list_get(lista_de_listas, i);
+        if(i == tamanio - 1)
+        {
+            ultimo = true;
+        }
+
+        if(!queue_is_empty(elemento->block_queue))
+        {
+            int j = 0, k = queue_size(elemento->block_queue);
+            while(j < k)
+            {
+                t_pcb* pcb = queue_pop(elemento->block_queue);
+                char* pid = string_itoa(pcb->pid);
+                string_append(&cadena_general, pid);
+                if(ultimo && (j != k - 1))
+                {
+                    string_append(&cadena_general, ", ");
+                }
+                queue_push(elemento->block_queue, pcb);
+                j++;
+            }
+        }
+        if(!list_is_empty(elemento->block_dictionary))
+        {
+            int j = 0, k = list_size(elemento->block_dictionary);
+            while(j < k)
+            {
+                t_pcb* pcb = list_get(elemento->block_dictionary, j);
+                char* pid = string_itoa(pcb->pid);
+                string_append(&cadena_general, pid);
+                if(ultimo && (j != k - 1))
+                {
+                    string_append(&cadena_general, ", ");
+                }
+                j++;
+            }
+        }
+
+        i++;
+    }
+    log_info(kernel_argumentos->logger, "   BLOCK: [%s]", cadena_general);
+    free(cadena_general);
+    pthread_mutex_unlock(&kernel_argumentos->colas.mutex_block);
 }
