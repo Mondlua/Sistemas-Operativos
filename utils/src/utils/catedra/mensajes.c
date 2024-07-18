@@ -99,57 +99,11 @@ void enviar_mensaje(char* mensaje, int socket_cliente)
     free(a_enviar);
     eliminar_paquete(paquete);
 }
-void enviar_pedido_frame(int conexion_memoria_cpu, uint32_t pid, int numero_pagina)
-    {
-    char* nro_pag = int_to_char(numero_pagina);
-    char* pid_char = int_to_char(pid);
-    char* mensaje1 = strcat(pid_char,"/");
-    char* mensaje = strcat(mensaje1,nro_pag);
-    t_paquete* paquete = malloc(sizeof(t_paquete));
-	paquete->codigo_operacion = FRAME;
-	paquete->buffer = malloc(sizeof(t_buffer));
-	paquete->buffer->size = strlen(mensaje) + 1;
-	paquete->buffer->stream = malloc(paquete->buffer->size);
-	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
 
-	int bytes = paquete->buffer->size + 2*sizeof(int);
-
-	void* a_enviar = serializar_paquete(paquete, bytes);
-
-    int resultado_send = send(conexion_memoria_cpu, a_enviar, bytes, MSG_NOSIGNAL);  // Evita la generación de SIGPIPE
-
-    if (resultado_send == -1) {
-        fprintf(stderr, "Error al enviar el mensaje: socket cerrado.\n");
-    }
-
-    free(a_enviar);
-    eliminar_paquete(paquete);
-}
-void enviar_pedido_resize_tampid(int socket_cliente, char* mensaje)
-{   
-	t_paquete* paquete = malloc(sizeof(t_paquete));
-	paquete->codigo_operacion = CPU_RESIZE;
-	paquete->buffer = malloc(sizeof(t_buffer));
-	paquete->buffer->size = strlen(mensaje) + 1;
-	paquete->buffer->stream = malloc(paquete->buffer->size);
-	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
-
-	int bytes = paquete->buffer->size + 2*sizeof(int);
-
-	void* a_enviar = serializar_paquete(paquete, bytes);
-
-    int resultado_send = send(socket_cliente, a_enviar, bytes, MSG_NOSIGNAL);  // Evita la generación de SIGPIPE
-
-    if (resultado_send == -1) {
-        fprintf(stderr, "Error al enviar el Pedido de Resize: socket cerrado.\n");
-    }
-    free(a_enviar);
-    eliminar_paquete(paquete);
-}
-void enviar_pedido_lectura(int socket_cliente,char* mensaje){
+void enviar_a_mem(int socket_cliente,char* mensaje, op_code operacion){
     t_paquete* paquete = malloc(sizeof(t_paquete));
 
-    paquete->codigo_operacion =  PED_LECTURA;
+    paquete->codigo_operacion =  operacion;
 	paquete->buffer = malloc(sizeof(t_buffer));
 	paquete->buffer->size = strlen(mensaje)+1;
 	paquete->buffer->stream = malloc(paquete->buffer->size);
@@ -163,51 +117,6 @@ void enviar_pedido_lectura(int socket_cliente,char* mensaje){
 
     if (resultado_send == -1) {
         fprintf(stderr, "Error al enviar el pedido de lectura: socket cerrado.\n");
-    }
-
-    free(a_enviar);
-    eliminar_paquete(paquete);
-}
-
-void enviar_pedido_escritura(int socket_cliente,  char* mensaje){
-    t_paquete* paquete = malloc(sizeof(t_paquete));
-
-	paquete->codigo_operacion =  PED_ESCRITURA;
-	paquete->buffer = malloc(sizeof(t_buffer));
-	paquete->buffer->size = strlen(mensaje) +1;
-	paquete->buffer->stream = malloc(paquete->buffer->size);
-	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
-
-	int bytes = paquete->buffer->size + 2*sizeof(int);
-
-	void* a_enviar = serializar_paquete(paquete, bytes);
-
-    int resultado_send = send(socket_cliente, a_enviar, bytes, MSG_NOSIGNAL);  // Evita la generación de SIGPIPE
-
-    if (resultado_send == -1) {
-        fprintf(stderr, "Error al enviar el pedido de escritura: socket cerrado.\n");
-    }
-
-    free(a_enviar);
-    eliminar_paquete(paquete);
-}
-void enviar_cpy_string(int socket_cliente, char* valor){
-    t_paquete* paquete = malloc(sizeof(t_paquete));
-
-	paquete->codigo_operacion= CPY_STRING;
-	paquete->buffer = malloc(sizeof(t_buffer));
-	paquete->buffer->size = strlen(valor)+1;
-	paquete->buffer->stream = malloc(paquete->buffer->size);
-	memcpy(paquete->buffer->stream, &valor, paquete->buffer->size);
-
-	int bytes = paquete->buffer->size + 2*sizeof(int);
-
-	void* a_enviar = serializar_paquete(paquete, bytes);
-
-    int resultado_send = send(socket_cliente, a_enviar, bytes, MSG_NOSIGNAL);  // Evita la generación de SIGPIPE
-
-    if (resultado_send == -1) {
-        fprintf(stderr, "Error al enviar el string a copiar: socket cerrado.\n");
     }
 
     free(a_enviar);
@@ -248,49 +157,20 @@ void  enviar_pedido_tam_mem(int socket_cliente){
     eliminar_paquete(paquete);
 }
 
-char* recibir_pedido_lectura(int socket_cliente, t_log* logger)
+char* recibir_pedido(int socket_cliente)
 {
     int size;
     char* buffer = recibir_buffer(&size, socket_cliente);
-    log_info(logger, "Me llego el Pedido de Lectura");
-    return buffer;
-}
-char* recibir_pedido_escritura(int socket_cliente, t_log* logger)
-{
-    int size;
-    char* buffer = recibir_buffer(&size, socket_cliente);
-    log_info(logger, "Me llego el Pedido de Escritura");
-    return buffer;
-}
-
-char* recibir_cpy_string(int socket_cliente, t_log* logger)
-{
-    int size;
-    char* buffer = recibir_buffer(&size, socket_cliente);
-    log_info(logger, "Me llego el string a escribir: <%s>", buffer);
     return buffer;
 }
 
 
-char* recibir_pedido_resize_tampid(int socket_cliente, t_log* logger)
-{
-    int size;
-    char* buffer = recibir_buffer(&size, socket_cliente);
-    log_info(logger, "Me llego el  Pedido de Resize", buffer);
-    return buffer;
-}
-char* recibir_pedido_frame(int socket_cliente, t_log* logger)
-{
-    int size;
-    char* buffer = recibir_buffer(&size, socket_cliente);
-    log_info(logger, "Me llego el Pedido de FRAME");
-    return buffer;
-}
 void recibir_ped_tamanio_pag(int socket_cliente, t_log* logger)
 {
     int size;
     char* buffer = recibir_buffer(&size, socket_cliente);
     log_info(logger, "Me llego el Pedido de TAM PAG");
+    free(buffer);
 }
 
 void recibir_tamanio_pag(int socket_cliente, t_log* logger, int* numero)

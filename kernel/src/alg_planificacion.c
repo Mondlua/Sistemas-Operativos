@@ -180,6 +180,7 @@ bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_a
     }
     if(pcb_desalojado->motivo_desalojo == 2) // Desalojado por IO_BLOCK
     {
+        recibir_solicitud_cpu(conexion_cpu_dispatch, pcb_desalojado);
         int milisegundos_restantes = frenar_timer(kernel_argumentos->timer_quantum);
         if(kernel_argumentos->algo_planning == VRR)
         {

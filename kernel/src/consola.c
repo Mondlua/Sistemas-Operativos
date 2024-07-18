@@ -100,7 +100,11 @@ void iniciar_proceso(char* path, t_planificacion *kernel_argumentos){
 
     log_debug(kernel_argumentos->logger, ">> Se crea el proceso %s en NEW", path);
 
-    char *pid_str = int_to_char(pcb->pid);
+    char* mensaje_enviar = malloc(sizeof(uint32_t)+strlen(path)+2);
+    uint32_t pid = pcb->pid;
+    sprintf(mensaje_enviar, "%u/%s", pid,path);  
+
+    /*char *pid_str = int_to_char(pcb->pid);
     size_t len = strlen(path) + strlen(pid_str) + 2;
     char *pathpid = malloc(len);
     strcpy(pathpid, path);
@@ -110,13 +114,17 @@ void iniciar_proceso(char* path, t_planificacion *kernel_argumentos){
     free(pid_str);
     free(pathpid);
 
+    */
+
 }
 
 void finalizar_proceso(uint32_t pid, t_planificacion *kernel_argumentos){
 
+
     t_pcb* pcb_candidato;
     t_pcb* pcb_a_eliminar = NULL;
     pthread_mutex_lock(&kernel_argumentos->planning_mutex);
+
 
     log_debug(kernel_argumentos->logger, "Busco en EXEC");
     if(!queue_is_empty(kernel_argumentos->colas.exec))
