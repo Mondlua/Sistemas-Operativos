@@ -112,8 +112,8 @@ void recibir_instruccion(char* tipo_interfaz)
             free(instruccion);
             continue;
             }
-            char* logica = "1";
-            aviso_segun_cod_op(logica, conexion_kernel, AVISO_OPERACION_VALIDADA);
+            /*char* logica = "1";
+            aviso_segun_cod_op(logica, conexion_kernel, AVISO_OPERACION_VALIDADA);*/
             atender_cod_op(param, instruccion->codigo_operacion);
             free(instruccion->buffer);
             free(instruccion);
@@ -122,8 +122,7 @@ void recibir_instruccion(char* tipo_interfaz)
             }
         }
         else{
-            char* error = "0";
-            aviso_segun_cod_op(error, conexion_kernel, AVISO_OPERACION_INVALIDA);
+            aviso_segun_cod_op(nombre_interfaz, conexion_kernel, AVISO_OPERACION_INVALIDA);
             param = NULL;
             free(instruccion->buffer);
             free(instruccion);

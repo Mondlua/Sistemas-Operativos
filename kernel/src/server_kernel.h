@@ -12,7 +12,6 @@
 #include <utils/mensajesPropios.h>
 #include <commons/collections/list.h>
 #include <semaphore.h>
-//#include <utils/io_operation.h>
 #include <commons/collections/queue.h>
 #include <utils/funcionesUtiles.h>
 #include <utils/planificador.h>
@@ -33,8 +32,8 @@ typedef struct
 
 void atender_cliente(void* void_args);
 int server_escuchar(void *arg);
-int buscar_posicion_interfaz_por_nombre(char* nombre_interfaz);
-interfaz* buscar_posicion_interfaz_por_cliente(int cliente);
+//int buscar_posicion_interfaz_por_nombre(char* nombre_interfaz);
+//interfaz* buscar_posicion_interfaz_por_cliente(int cliente);
 //t_pcb* recibir_pcb(int socket_cliente);
 
 
