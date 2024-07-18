@@ -42,8 +42,8 @@ typedef struct
 } t_cpu_blockeo;
 
 
-t_instruccion* fetch(int conexion, t_pcb* pcb);
-t_decode* decode(t_instruccion* ins);
+char* fetch(int conexion, t_pcb* pcb);
+t_decode* decode(char*);
 t_cpu_blockeo execute(t_decode* deacodeado, t_pcb* pcb, t_log *logger);
 instrucciones obtener_instruccion(char *nombre);
 void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log *logger, int socket_cliente, pthread_mutex_t lock_interrupt);
