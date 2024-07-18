@@ -72,5 +72,9 @@ instruccion_params* deserializar_io_gen_sleep_con_interfaz(t_buffer_ins* buffer)
 
 void mover_a_exit(t_pcb* pcb_desalojado, t_planificacion *kernel_argumentos);
 char* proceso_estado_a_string(t_proceso_estado estado);
+void mover_a_ready(t_pcb* pcb, t_planificacion* kernel_argumentos);
+void mover_a_prioridad(t_pcb* pcb, t_planificacion* kernel_argumentos);
+void logear_cola_ready(t_planificacion* kernel_argumentos);
+void logear_cola_prioridad(t_planificacion* kernel_argumentos);
 
 #endif

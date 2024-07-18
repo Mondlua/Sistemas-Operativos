@@ -137,7 +137,11 @@ bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_a
 {
     // Saco el pcb viejo de EXEC
     pthread_mutex_lock(&kernel_argumentos->planning_mutex);
+
+    pthread_mutex_lock(&kernel_argumentos->colas.mutex_exec);
     t_pcb *pcb_outdated = queue_pop(kernel_argumentos->colas.exec);
+    pthread_mutex_unlock(&kernel_argumentos->colas.mutex_exec);
+
     log_debug(kernel_argumentos->logger, "PID recibido: %d", pcb_desalojado->pid);
     log_debug(kernel_argumentos->logger, "PID que tengo en EXEC: %d", pcb_outdated->pid);
 
@@ -171,10 +175,8 @@ bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_a
     }
     if(pcb_desalojado->motivo_desalojo == 1) // Desalojado por fin de quantum
     {
-        pcb_desalojado->estado = READY;
-        queue_push(kernel_argumentos->colas.ready, pcb_desalojado);
         log_info(kernel_argumentos->logger, "PID: %d - Desalojado por fin de Quantum", pcb_desalojado->pid);
-        log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: EXEC - Estado actual: READY", pcb_desalojado->pid);
+        mover_a_ready(pcb_desalojado, kernel_argumentos);
     }
     if(pcb_desalojado->motivo_desalojo == 2) // Desalojado por IO_BLOCK
     {
@@ -258,9 +260,11 @@ void planificador_largo_plazo(t_planificacion *kernel_argumentos)
         }
         while(cantidad_procesos_actual < kernel_argumentos->config.grado_multiprogramacion && !queue_is_empty(kernel_argumentos->colas.new))
         {
+            pthread_mutex_lock(&kernel_argumentos->colas.mutex_new);
             t_pcb* pcb = queue_pop(kernel_argumentos->colas.new);
-            queue_push(kernel_argumentos->colas.ready, pcb);
-            log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: NEW - Estado actual: READY", pcb->pid);
+            pthread_mutex_unlock(&kernel_argumentos->colas.mutex_new);
+
+            mover_a_ready(pcb, kernel_argumentos);
             cantidad_procesos_actual++;
         }
     }
@@ -513,12 +517,9 @@ void procesar_desbloqueo_factible(char* recurso_solicitado, t_planificacion *ker
         t_pcb *pcb_desbloqueado = list_remove(recurso->block_dictionary, 0);
         log_debug(kernel_argumentos->logger, "Obtuve un PCB de PID: %d", pcb_desbloqueado->pid);
         
-        pthread_mutex_lock(&kernel_argumentos->colas.mutex_ready);
-        queue_push(kernel_argumentos->colas.ready, pcb_desbloqueado);
-        pthread_mutex_unlock(&kernel_argumentos->colas.mutex_ready);
+        mover_a_ready(pcb_desbloqueado, kernel_argumentos);
 
         recurso->cantidad_instancias--;
-        log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: BLOCK - Estado actual: READY", pcb_desbloqueado->pid);
     }
 }
 
@@ -679,22 +680,21 @@ void procesar_entradasalida_terminada(t_queue_block *interfaz, t_planificacion *
     pthread_mutex_unlock(&kernel_argumentos->colas.mutex_block);
 
     log_debug(kernel_argumentos->logger, "PID: %d", pcb_desalojado->pid);
-    pcb_desalojado->estado = READY;
 
     if(pcb_desalojado->quantum != 0)
     {
-        pthread_mutex_lock(&kernel_argumentos->colas.mutex_prioridad);
-        queue_push(kernel_argumentos->colas.prioridad, pcb_desalojado);
-        pthread_mutex_unlock(&kernel_argumentos->colas.mutex_prioridad);
+        mover_a_prioridad(pcb_desalojado, kernel_argumentos);
+        // pthread_mutex_lock(&kernel_argumentos->colas.mutex_prioridad);
+        // queue_push(kernel_argumentos->colas.prioridad, pcb_desalojado);
+        // pthread_mutex_unlock(&kernel_argumentos->colas.mutex_prioridad);
     }
     else
     {
-        pthread_mutex_lock(&kernel_argumentos->colas.mutex_ready);
-        queue_push(kernel_argumentos->colas.ready, pcb_desalojado);
-        pthread_mutex_unlock(&kernel_argumentos->colas.mutex_ready);
+        mover_a_ready(pcb_desalojado, kernel_argumentos);
+        // pthread_mutex_lock(&kernel_argumentos->colas.mutex_ready);
+        // queue_push(kernel_argumentos->colas.ready, pcb_desalojado);
+        // pthread_mutex_unlock(&kernel_argumentos->colas.mutex_ready);
     }
-
-    log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: BLOCK - Estado actual: READY", pcb_desalojado->pid);
     
     if(queue_is_empty(kernel_argumentos->colas.exec))
     {
@@ -713,19 +713,33 @@ void procesar_entradasalida_terminada(t_queue_block *interfaz, t_planificacion *
 t_pcb *planificador_ready_a_exec(t_planificacion *kernel_argumentos)
 {
     
+    pthread_mutex_lock(&kernel_argumentos->colas.mutex_ready);
     t_pcb *proximo_proceso = queue_pop(kernel_argumentos->colas.ready);
+    pthread_mutex_unlock(&kernel_argumentos->colas.mutex_ready);
+
     proximo_proceso->estado = EXEC;
+    pthread_mutex_lock(&kernel_argumentos->colas.mutex_exec);
     queue_push(kernel_argumentos->colas.exec, proximo_proceso);
+    pthread_mutex_unlock(&kernel_argumentos->colas.mutex_exec);
+
     log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: READY - Estado actual: EXEC", proximo_proceso->pid);
+
     return proximo_proceso;
 }
 
 t_pcb *planificador_prioridad_a_exec(t_planificacion *kernel_argumentos)
 {
+    pthread_mutex_lock(&kernel_argumentos->colas.mutex_prioridad);
     t_pcb *proximo_pcb = queue_pop(kernel_argumentos->colas.prioridad);
+    pthread_mutex_unlock(&kernel_argumentos->colas.mutex_prioridad);
+    
     proximo_pcb->estado = EXEC;
+    pthread_mutex_lock(&kernel_argumentos->colas.mutex_exec);
     queue_push(kernel_argumentos->colas.exec, proximo_pcb);
+    pthread_mutex_unlock(&kernel_argumentos->colas.mutex_exec);
+    
     log_info(kernel_argumentos->logger, "PID %d - Estado anterior: READY - Estado actual: EXEC", proximo_pcb->pid);
+    
     return proximo_pcb;
 }
 
@@ -764,4 +778,80 @@ char* proceso_estado_a_string(t_proceso_estado estado)
     {
         return "EXIT";
     }
+}
+
+void mover_a_ready(t_pcb* pcb, t_planificacion* kernel_argumentos)
+{
+    t_proceso_estado aux = pcb->estado;
+    pcb->estado = READY;
+    pthread_mutex_lock(&kernel_argumentos->colas.mutex_ready);
+    queue_push(kernel_argumentos->colas.ready, pcb);
+    pthread_mutex_unlock(&kernel_argumentos->colas.mutex_ready);
+
+    char* estado_anterior = proceso_estado_a_string(aux);
+    log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: %s - Estado actual: READY", pcb->pid, estado_anterior);
+
+    logear_cola_ready(kernel_argumentos);
+}
+
+void mover_a_prioridad(t_pcb* pcb, t_planificacion* kernel_argumentos)
+{
+    t_proceso_estado aux = pcb->estado;
+    pcb->estado = READY;
+    pthread_mutex_lock(&kernel_argumentos->colas.mutex_prioridad);
+    queue_push(kernel_argumentos->colas.prioridad, pcb);
+    pthread_mutex_unlock(&kernel_argumentos->colas.mutex_prioridad);
+
+    char* estado_anterior = proceso_estado_a_string(aux);
+    log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: %s - Estado actual: READY", pcb->pid, estado_anterior);
+
+    logear_cola_prioridad(kernel_argumentos);
+}
+
+void logear_cola_ready(t_planificacion* kernel_argumentos)
+{
+    pthread_mutex_lock(&kernel_argumentos->colas.mutex_ready);
+    int i = 0, tamanio = queue_size(kernel_argumentos->colas.ready);
+    char* lista = string_new();
+    while(i<tamanio)
+    {
+        t_pcb *pcb = queue_pop(kernel_argumentos->colas.ready);
+        char* pid = string_itoa(pcb->pid);
+        string_append(&lista, pid);
+        if(i != tamanio - 1)
+        {
+            string_append(&lista, ", ");
+        }
+        queue_push(kernel_argumentos->colas.ready, pcb);
+        free(pid);
+        i++;
+    }
+    pthread_mutex_unlock(&kernel_argumentos->colas.mutex_ready);
+
+    log_info(kernel_argumentos->logger, "Cola Ready: [%s]", lista);
+    free(lista);
+}
+
+void logear_cola_prioridad(t_planificacion* kernel_argumentos)
+{
+    char* lista_ready = string_new();
+    pthread_mutex_lock(&kernel_argumentos->colas.mutex_prioridad);
+    int tamanio = queue_size(kernel_argumentos->colas.prioridad);
+    int i = 0;
+    while(i<tamanio)
+    {            
+        t_pcb* pcb = queue_pop(kernel_argumentos->colas.prioridad);
+        char* pid = string_itoa(pcb->pid);
+        string_append(&lista_ready, pid);
+        if(i != tamanio - 1)
+        {
+            string_append(&lista_ready, ", ");
+        }
+        free(pid);
+        i++;
+    }
+    pthread_mutex_unlock(&kernel_argumentos->colas.mutex_prioridad);
+
+    log_info(kernel_argumentos->logger, "Cola Ready Prioridad: [%s]", lista_ready);
+    free(lista_ready);
 }
