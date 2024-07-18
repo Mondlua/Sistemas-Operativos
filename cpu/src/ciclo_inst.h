@@ -6,6 +6,7 @@
 #include <utils/io_operation.h>
 #include "main.h"
 #include <math.h>
+//#include "/home/utnso/tp-2024-1c-Operati2/memoria/src/main.h"
 
 typedef struct t_decode {
 instrucciones op_code;
@@ -13,15 +14,16 @@ t_list* registroCpu;
 int valor;
 char* recurso;
 char* interfaz;
+char* archivo;
 bool logicaAFisica;
 instrucciones instrucciones;
 }t_decode;
-
+/*
 typedef struct {
     const char* nombre;
     void* puntero;
     size_t tamano; 
-} registro_mapa;
+} registro_mapa;*/
 
 typedef enum {
     NO_BLOCK,
@@ -46,7 +48,7 @@ t_cpu_blockeo execute(t_decode* deacodeado, t_pcb* pcb, t_log *logger);
 instrucciones obtener_instruccion(char *nombre);
 void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log *logger, int socket_cliente, pthread_mutex_t lock_interrupt);
 void loggear_registros(t_pcb* pcb, t_log* logger);
-char** split_por_bytes(const char* string, size_t bytes, int* cant_partes);
-//t_tabla* buscar_por_pid_return(uint32_t pid); 
+void* obtener_valor_registro(cpu_registros* regs, char* nombre_registro);
+
 
 #endif

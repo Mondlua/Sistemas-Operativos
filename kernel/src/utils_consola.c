@@ -75,11 +75,13 @@ t_queue* cola_pcb(uint32_t num_pid){ //buscar cola en cada estado
     t_queue* buscado = NULL;
     for (t_proceso_estado estado = NEW; estado <= EXIT; estado++)
     {
-        t_queue* cola = cola_de_estado(estado);
-        if (find_queue(num_pid, cola) == 1)
-        {
+        if(!queue_is_empty(cola_de_estado(estado))){
+            if (find_queue(num_pid, cola) == 1  )
+            {
             buscado = cola;
+            }
         }
+        
     }
     if(buscado == NULL){
         //log_error(kernel_log, "No se pudo encontrar el PCB de PID: %u", num_pid);
@@ -146,7 +148,7 @@ void cambiar_a_cola(t_pcb* pcb, t_proceso_estado estado ){
     // log_info(kernel_log, "PID: <%u> - Estado Anterior: <%s> - Estado Actual: <%s>", pcb->pid, estado_a_string(ant), estado_a_string(pcb->estado));
 }
 
-t_queue *cola_de_estado(t_proceso_estado estado)
+t_queue *cola_de_estado(t_planificacion *kernel_argumentos, t_proceso_estado estado)
 {
 
     // switch (estado)
@@ -164,3 +166,4 @@ t_queue *cola_de_estado(t_proceso_estado estado)
     // default:
     //     return 0;
 }
+

@@ -56,6 +56,7 @@ typedef struct t_dir_logica{
 typedef struct t_tabla{
     uint32_t pid;
     t_list* tabla;
+    t_list* instrucciones;
 }t_tabla;
 
 t_log* iniciar_logger(char* ruta, char* emisor);
