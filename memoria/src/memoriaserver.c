@@ -59,7 +59,7 @@ void atender_cliente(void *void_args)
             char* path = split[0];
             uint32_t pid = atoi(split[1]);
 
-            lista_arch = list_create();
+            t_list* lista_arch = list_create();
             lista_arch = abrir_pseudocodigo(path);
             free(path);
 
