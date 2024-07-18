@@ -190,7 +190,6 @@ bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_a
         // Recibir los parametros del io_block
         t_instruccion_params_opcode parametros_solicitud;
         parametros_solicitud = recibir_solicitud_cpu(kernel_argumentos->socket_cpu_dispatch, pcb_desalojado);
-        log_debug(kernel_argumentos->logger, "Solicitud recibida: %s, %d", parametros_solicitud.params->interfaz, parametros_solicitud.params->params.io_gen_sleep_params.unidades_trabajo);
         validar_peticion(parametros_solicitud.params, pcb_desalojado, parametros_solicitud.opcode, kernel_argumentos);
         // mover_a_block(kernel_argumentos, pcb_desalojado, nombre_interfaz);
         //log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: EXEC - Estado actual: BLOCK", pcb_desalojado->pid);
@@ -550,7 +549,7 @@ void validar_peticion(instruccion_params* parametros, t_pcb* pcb, int codigo_op,
         return;
     }
 
-    enviar_instruccion_a_interfaz(interfaz_solicitada, parametros, codigo_op);
+    enviar_instruccion_a_interfaz(interfaz_solicitada, parametros, codigo_op, pcb->pid);
     log_debug(kernel_argumentos->logger, "Instruccion solicitada a la interfaz: %s", interfaz_solicitada->identificador);
     log_debug(kernel_argumentos->logger, "Enviada por el socket: %d", interfaz_solicitada->socket_interfaz);
 
@@ -578,48 +577,16 @@ interfaz* buscar_interfaz_por_nombre(char* nombre_interfaz) {
     // return interfaz_encontrada;
 }
 
-void enviar_instruccion_a_interfaz(t_queue_block* interfaz_destino, instruccion_params* parametros, int codigo_op) {
+void enviar_instruccion_a_interfaz(t_queue_block* interfaz_destino, instruccion_params* parametros, int codigo_op, uint32_t pid) {
     t_paquete_instruccion* instruccion_enviar = malloc(sizeof(t_paquete_instruccion));
 
     instruccion_enviar->codigo_operacion = codigo_op;
-    enviar_instruccion(instruccion_enviar, parametros, interfaz_destino->socket_interfaz);
+    enviar_instruccion(instruccion_enviar, parametros, interfaz_destino->socket_interfaz, pid);
 
     free(parametros);
     free(instruccion_enviar);
 }
 
-instruccion_params* deserializar_io_gen_sleep_con_interfaz(t_buffer_ins* buffer)
-{
-    instruccion_params* parametros = malloc(sizeof(instruccion_params));
-    
-    uint32_t offset = 0;
-    uint32_t interfaz_len;
-    memcpy(&interfaz_len, buffer->stream + offset, sizeof(uint32_t));
-    offset += sizeof(uint32_t);
-    parametros->interfaz = malloc(interfaz_len);
-    memcpy(parametros->interfaz, buffer->stream + offset, interfaz_len);
-    offset += interfaz_len;
-    memcpy(&(parametros->params.io_gen_sleep_params.unidades_trabajo), buffer->stream + offset, sizeof(int));
-    
-    return parametros;
-}
-
-instruccion_params* deserializar_io_stdin_stdout_con_interfaz(t_buffer_ins* buffer)
-{
-    instruccion_params* parametros = malloc(sizeof(instruccion_params));
-    
-    uint32_t offset = 0;
-    uint32_t interfaz_len;
-    memcpy(&interfaz_len, buffer->stream + offset, sizeof(uint32_t));
-    offset += sizeof(uint32_t);
-    parametros->interfaz = malloc(interfaz_len);
-    memcpy(parametros->interfaz, buffer->stream + offset, interfaz_len);
-    offset += interfaz_len;
-    memcpy(&(parametros->params.io_stdin_stdout.registro_direccion), buffer->stream + offset, sizeof(t_dir_fisica));
-    offset += sizeof(t_dir_fisica);
-    memcpy(&(parametros->params.io_stdin_stdout.registro_tamaño), buffer->stream + offset, sizeof(cpu_registros));
-    return parametros;
-}
 
 t_instruccion_params_opcode recibir_solicitud_cpu(int socket_servidor, t_pcb* pcb)
 {
@@ -641,14 +608,21 @@ t_instruccion_params_opcode recibir_solicitud_cpu(int socket_servidor, t_pcb* pc
             param = deserializar_io_gen_sleep_con_interfaz(instruccion->buffer);
             break;
         }
-        case IO_STDIN_READ:{
+        case IO_STDIN_READ:
+        case IO_STDOUT_WRITE:
             param = deserializar_io_stdin_stdout_con_interfaz(instruccion->buffer);
             break;
-        }
-        case IO_STDOUT_WRITE:{
-            param = deserializar_io_stdin_stdout_con_interfaz(instruccion->buffer);
+        case IO_FS_CREATE:
+        case IO_FS_DELETE:
+            param = deserializar_io_fs_create_delete_con_interfaz(instruccion->buffer);
             break;
-        }
+        case IO_FS_TRUNCATE:
+            param = deserializar_io_fs_truncate_con_interfaz(instruccion->buffer);
+            break;
+        case IO_FS_WRITE:
+        case IO_FS_READ:
+            param = deserializar_io_fs_write_read_con_interfaz(instruccion->buffer);
+            break;
          // Otros casos
         default:
             printf("Tipo de operación no válido.\n");
