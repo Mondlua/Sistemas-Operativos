@@ -29,6 +29,6 @@ typedef struct
 
 int server_escuchar(void *arg);
 void atender_cliente(void *void_args);
-
 void eliminar_linea_n(char* linea);
+
 #endif

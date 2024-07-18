@@ -103,21 +103,23 @@ void atender_cliente(void *void_args)
             break;
         }
         case IO_STDIN_READ:{
+        recv(client_socket, &(pid), sizeof(uint32_t), MSG_WAITALL);
             instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
             parametros_io = recibir_registro_direccion_tamanio_con_texto(client_socket);
             usleep(retardo*1000);
             //GUARDAR TEXTO EN REGISTRO_DIRECCION
-            escribir_en_mem(parametros_io->texto, parametros_io->registro_direccion, parametros_io->registro_tamanio);//VER CAMI EMI 
+            escribir_en_mem_io(parametros_io->texto, parametros_io->registro_direccion, parametros_io->registro_tamanio,pid);//VER CAMI EMI 
             enviar_mensaje("OK", client_socket);
             free(parametros_io);
             break;
         }
         case IO_STDOUT_WRITE: {
+            recv(client_socket, &(pid), sizeof(uint32_t), MSG_WAITALL);
             instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
             parametros_io = recibir_registro_direccion_tamanio(client_socket);
             usleep(retardo*1000);
             //BUSCAR EN REGISTRO_DIRECCION Y LEER EL REGISTRO_TAMAÑO
-            char* mensaje = leer_en_mem(parametros_io->registro_tamanio, parametros_io->registro_direccion); 
+            char* mensaje = leer_en_mem_io(parametros_io->registro_tamanio, parametros_io->registro_direccion,pid); 
             //MANDAR RESULTADO A IO
             enviar_mensaje(mensaje, client_socket);
             free(parametros_io);
@@ -125,26 +127,27 @@ void atender_cliente(void *void_args)
 
         }
         case IO_FS_READ:{
+            recv(client_socket, &(pid), sizeof(uint32_t), MSG_WAITALL);
             instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
             parametros_io = recibir_registro_direccion_tamanio_con_texto(client_socket);
             usleep(retardo*1000);
             //GUARDAR TEXTO EN REGISTRO_DIRECCION
-            escribir_en_mem(parametros_io->texto, parametros_io->registro_direccion, parametros_io->registro_tamanio); //VER CAMI EMI
+            escribir_en_mem_io(parametros_io->texto, parametros_io->registro_direccion, parametros_io->registro_tamanio,pid); //VER CAMI EMI
             enviar_mensaje("OK", client_socket);
             free(parametros_io);
             break;
         }
         case IO_FS_WRITE: {
+          recv(client_socket, &(pid), sizeof(uint32_t), MSG_WAITALL);
             instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
             parametros_io = recibir_registro_direccion_tamanio(client_socket);
             usleep(retardo*1000);
             //BUSCAR EN REGISTRO_DIRECCION Y LEER EL REGISTRO_TAMAÑO
-            char* mensaje = leer_en_mem(parametros_io->registro_tamanio, parametros_io->registro_direccion); //Ver 
+            char* mensaje = leer_en_mem_io(parametros_io->registro_tamanio, parametros_io->registro_direccion,pid); //Ver 
             //MANDAR RESULTADO A IO
             enviar_mensaje(mensaje, client_socket);
             free(parametros_io);
             break;
-
         }
         case ACCESO_TABLA:
         {
@@ -296,8 +299,7 @@ void atender_cliente(void *void_args)
             dir_fisica->nro_frame = frame;
             dir_fisica->desplazamiento = desp;
             usleep(retardo*1000);   
-            escribir_en_mem(valor, dir_fisica, tamanio);
-            log_info(logger, "PID: %u - Accion:ESCRIBIR - Direccion fisica: %d - Tamaño %d",pid ,frame+desp,tamanio);
+            escribir_en_mem_cpu(valor, dir_fisica, tamanio, pid);
 
             bitarray_set_bit(escrito, frame);
 
@@ -404,8 +406,6 @@ int server_escuchar(void* arg)
 
     return 0;
 }
-
-
 
 void eliminar_linea_n(char* linea){
     if(linea[strlen(linea)-1] == '\n'){
