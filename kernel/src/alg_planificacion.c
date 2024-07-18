@@ -424,6 +424,7 @@ bool administrador_recursos_wait(t_pcb *pcb_solicitante, char* nombre_recurso, i
     pcb_solicitante->estado = BLOCKED;
     pthread_mutex_lock(&kernel_argumentos->colas.mutex_block);
     list_add(recurso->block_dictionary, pcb_solicitante);
+    kernel_argumentos->colas.cantidad_procesos_block++;
     pthread_mutex_unlock(&kernel_argumentos->colas.mutex_block);
     log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: EXEC - Estado actual: BLOCK", pcb_solicitante->pid);
     log_info(kernel_argumentos->logger, "PID: %d - Bloqueado por: %s", pcb_solicitante->pid, nombre_recurso);
@@ -518,7 +519,8 @@ void procesar_desbloqueo_factible(char* recurso_solicitado, t_planificacion *ker
         log_debug(kernel_argumentos->logger, "Obtuve un PCB de PID: %d", pcb_desbloqueado->pid);
         
         mover_a_ready(pcb_desbloqueado, kernel_argumentos);
-
+        
+        kernel_argumentos->colas.cantidad_procesos_block--;
         recurso->cantidad_instancias--;
     }
 }
@@ -552,7 +554,9 @@ void validar_peticion(instruccion_params* parametros, t_pcb* pcb, int codigo_op,
     log_debug(kernel_argumentos->logger, "Enviada por el socket: %d", interfaz_solicitada->socket_interfaz);
 
     pcb->estado = BLOCKED;
+    pthread_mutex_lock(&kernel_argumentos->colas.mutex_block);
     queue_push(interfaz_solicitada->block_queue, pcb);
+    pthread_mutex_unlock(&kernel_argumentos->colas.mutex_block);
     kernel_argumentos->colas.cantidad_procesos_block++;
     log_info(kernel_argumentos->logger, "PID: %d - Bloqueado por: INTERFAZ", pcb->pid);
     log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: EXEC - Estado actual: BLOCK", pcb->pid);
