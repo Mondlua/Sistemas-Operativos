@@ -1,6 +1,7 @@
 #include "memoriaserver.h"
 
 int retardo;
+t_list* lista_arch;
 
 void atender_cliente(void *void_args)
 {
@@ -276,7 +277,7 @@ void atender_cliente(void *void_args)
             dir_fisica->desplazamiento = desp;
 
 
-            char* leido = leer_en_mem(tamanio, dir_fisica);
+            char* leido = leer_en_mem_cpu(tamanio, dir_fisica,piid);
             log_info(logger, "PID: %u - Accion:LEER - Direccion fisica: %d - Tamaño %d",piid ,frame+desp,tamanio);
 
             enviar_mensaje(leido, client_socket);  
@@ -336,13 +337,13 @@ void atender_cliente(void *void_args)
 
             usleep(retardo*1000);
             
-            char* leido = leer_en_mem(sizeof(char*), dir2);
-            char* cortado = string_substring_until(leido, cantchar);
-            escribir_en_mem(cortado, dir1,sizeof(char*));
+            //char* leido = leer_en_mem_cpu(sizeof(char*), dir2);
+            //char* cortado = string_substring_until(leido, cantchar);
+            //escribir_en_mem_cpu(cortado, dir1,sizeof(char*)); falta mandar pid
 
-            free(leido);
+            //free(leido);
             free(a_escribir);
-            free(cortado);
+            //free(cortado);
             free(dir1);
             free(dir2);
             break;
@@ -366,12 +367,13 @@ void atender_cliente(void *void_args)
 
             break;
         }
-        default:
+        default:{
             log_error(logger, "Algo anduvo mal en el server de %s", server_name);
             log_info(logger, "Cop: %d", cop);
             
             break;
             
+        }
         }
         
     }
@@ -411,5 +413,6 @@ void eliminar_linea_n(char* linea){
     if(linea[strlen(linea)-1] == '\n'){
         linea[strlen(linea)-1]='\0';
     }
+    
 }
 

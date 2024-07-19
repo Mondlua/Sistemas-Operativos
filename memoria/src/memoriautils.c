@@ -29,9 +29,9 @@ void escribir_en_mem_io(char* aescribir, t_dir_fisica* dir_fisica, int tamanio, 
     if(puede_escribir(pid,nro_frame, cant_pags_necesarias)){
         arr=dividir_str_segun_pags(aescribir, cant_pags_necesarias, desplazamiento, resto); 
         memcpy((char*)memoria + (nro_frame * tam_pagina) , arr[0], strlen(arr[0])-1);
-        bitarray_set_bit(escrito, frame_sig);      
+        bitarray_set_bit(escrito, nro_frame);      
         for(int i=1; i<cant_pags_necesarias;i++){
-            int frame_sig=frame_sig_disp(pid, nro_frame)
+            int frame_sig=frame_sig_disp(pid, nro_frame);
             if(i!=cant_pags_necesarias-1){
             memcpy((char*)memoria + (frame_sig * tam_pagina) , arr[i], strlen(arr[i])-1);
             bitarray_set_bit(escrito, frame_sig);
@@ -42,10 +42,10 @@ void escribir_en_mem_io(char* aescribir, t_dir_fisica* dir_fisica, int tamanio, 
             bitarray_set_bit(escrito, frame_sig);
            }
         }
-    log_info(logger, "PID: %u - Accion:ESCRIBIR - Direccion fisica: %d - Tamaño %d",pid ,nro_frame+desplazamiento,tamanio);
+    log_info(memoria_log, "PID: %u - Accion:ESCRIBIR - Direccion fisica: %d - Tamaño %d",pid ,nro_frame+desplazamiento,tamanio);
     }
     else{
-        log_error(logger, "No puede escribir");
+        log_error(memoria_log, "No puede escribir");
     }
         
         
@@ -69,11 +69,11 @@ void escribir_en_mem_cpu(char* aescribir, t_dir_fisica* dir_fisica, int tamanio 
         printf("Escribi en Nro Frame <%d> y Desp <%d>: <%u>\n", nro_frame, desplazamiento, escribir);
     }
 
-    log_info(logger, "PID: %u - Accion:ESCRIBIR - Direccion fisica: %d - Tamaño %d",pid ,nro_frame+desplazamiento,tamanio);
+    log_info(memoria_log, "PID: %u - Accion:ESCRIBIR - Direccion fisica: %d - Tamaño %d",pid ,nro_frame+desplazamiento,tamanio);
     }
     else
     {
-        log_error(logger, "No puede escribir"); //escribir bien
+        log_error(memoria_log, "No puede escribir"); //escribir bien
     }
 }
 
@@ -161,7 +161,7 @@ char* leer_en_mem_cpu(int tamanio, t_dir_fisica* dir_fisica, uint32_t pid){
         memcpy(&leo, espacio_de_mem, tamanio);
         leido = int_to_char(leo);
     }
-    log_info(logger, "PID: %u - Accion:LEER - Direccion fisica: %d - Tamaño %d",pid ,nro_frame+desplazamiento,tamanio);
+    log_info(memoria_log, "PID: %u - Accion:LEER - Direccion fisica: %d - Tamaño %d",pid ,nro_frame+desplazamiento,tamanio);
 
     return leido;
 }
@@ -189,7 +189,7 @@ char* leer_en_mem_io(int tamanio, t_dir_fisica* dir_fisica, uint32_t pid){
    
     for (int i = 1; i <cant_pags_necesarias ; i++) {
         if(i== cant_pags_necesarias-1){
-        void* espacio_de_mem = (char*)memoria + (frame * tam_pagina);
+        void* espacio_de_mem = (char*)memoria + (nro_frame * tam_pagina);
         nro_frame = frame_sig_leer(pid, nro_frame);
         char* leeo;
         int tam_ultimo=tamanio-(tam_pagina-desplazamiento)-(cant_pags_necesarias-2)*tam_pagina;
@@ -205,7 +205,7 @@ char* leer_en_mem_io(int tamanio, t_dir_fisica* dir_fisica, uint32_t pid){
         string_append(leido, leeo);
        }
     }
-    log_info(logger, "PID: %u - Accion:LEER - Direccion fisica: %d - Tamaño %d",pid ,nro_frame+desplazamiento,tamanio);
+    log_info(memoria_log, "PID: %u - Accion:LEER - Direccion fisica: %d - Tamaño %d",pid ,nro_frame+desplazamiento,tamanio);
 
     return leido;
 }
