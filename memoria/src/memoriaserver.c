@@ -184,17 +184,18 @@ void atender_cliente(void *void_args)
             int cant_pags;
             if(list_size(tabla_pid->tabla) != 0){
             cant_pags = list_size(tabla_pid->tabla);
-            int tamanio_pid = cant_pags * tam_pagina;
+            int tamanio_pid = cant_pags * tam_pagina;   
             if(tamanio > tamanio_pid){
             //AMPLIAR PROCESO
-                int bytes_a_ampliar = tamanio - tamanio_pid;
+                int bytes_a_ampliar = tamanio- tamanio_pid;
                 int cantframes_a_ocupar=  bytes_a_ampliar/tam_pagina;
                 size_t count = 0;
-                for (size_t i = 0; i < bitarray->size; i++) {
+                for (int i = 0; i < bitarray->size; i++) {
                     if (bitarray_test_bit(bitarray, i) == 0) {
                         count++;
                     }
                 }
+                printf("el count quedo en %d", count);
                 if(count>=cantframes_a_ocupar){
                     int frames_ocupados=0;
                     for (int i = 0; i < bitarray->size; i++) {
@@ -241,7 +242,7 @@ void atender_cliente(void *void_args)
                     if (bitarray_test_bit(bitarray, i) == 0) {
                         count++;
                     }
-
+                }               
                 if(count>=cantframes_a_ocupar){
                    
                     int frames_ocupados=0;
@@ -257,9 +258,9 @@ void atender_cliente(void *void_args)
                        }
                     }
                 
-            }
-            }
-            log_info(logger, "PID: <%u> - Tamaño Actual: <%d> - Tamaño a Ampliar: <%d>", pid, 0, tamanio); 
+                }
+            
+            log_info(logger, "PID: <%u> - Tamaño Actual: <%d> - Tamaño a Ampliar: <%d>", pid, 0, list_size(tabla_pid->tabla)*tam_pagina); 
             }
            free(mensaje);
             break;
