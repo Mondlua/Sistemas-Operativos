@@ -60,7 +60,7 @@ void atender_cliente(void *void_args)
             char* path = split[0];
             uint32_t pid = atoi(split[1]);
 
-            lista_arch = list_create();
+            t_list* lista_arch = list_create();
             lista_arch = abrir_pseudocodigo(path);
             free(path);
 
@@ -104,21 +104,24 @@ void atender_cliente(void *void_args)
             break;
         }
         case IO_STDIN_READ:{
+
+            recv(client_socket, &(pid), sizeof(uint32_t), MSG_WAITALL);
             instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
             parametros_io = recibir_registro_direccion_tamanio_con_texto(client_socket);
             usleep(retardo*1000);
             //GUARDAR TEXTO EN REGISTRO_DIRECCION
-            escribir_en_mem(parametros_io->texto, parametros_io->registro_direccion, parametros_io->registro_tamanio);//VER CAMI EMI 
+            escribir_en_mem_io(parametros_io->texto, parametros_io->registro_direccion, parametros_io->registro_tamanio,pid);//VER CAMI EMI 
             enviar_mensaje("OK", client_socket);
             free(parametros_io);
             break;
         }
         case IO_STDOUT_WRITE: {
+            recv(client_socket, &(pid), sizeof(uint32_t), MSG_WAITALL);
             instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
             parametros_io = recibir_registro_direccion_tamanio(client_socket);
             usleep(retardo*1000);
             //BUSCAR EN REGISTRO_DIRECCION Y LEER EL REGISTRO_TAMAÑO
-            char* mensaje = leer_en_mem(parametros_io->registro_tamanio, parametros_io->registro_direccion); 
+            char* mensaje = leer_en_mem_io(parametros_io->registro_tamanio, parametros_io->registro_direccion,pid); 
             //MANDAR RESULTADO A IO
             enviar_mensaje(mensaje, client_socket);
             free(parametros_io);
@@ -126,26 +129,27 @@ void atender_cliente(void *void_args)
 
         }
         case IO_FS_READ:{
+            recv(client_socket, &(pid), sizeof(uint32_t), MSG_WAITALL);
             instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
             parametros_io = recibir_registro_direccion_tamanio_con_texto(client_socket);
             usleep(retardo*1000);
             //GUARDAR TEXTO EN REGISTRO_DIRECCION
-            escribir_en_mem(parametros_io->texto, parametros_io->registro_direccion, parametros_io->registro_tamanio); //VER CAMI EMI
+            escribir_en_mem_io(parametros_io->texto, parametros_io->registro_direccion, parametros_io->registro_tamanio,pid); //VER CAMI EMI
             enviar_mensaje("OK", client_socket);
             free(parametros_io);
             break;
         }
         case IO_FS_WRITE: {
+            recv(client_socket, &(pid), sizeof(uint32_t), MSG_WAITALL);
             instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
             parametros_io = recibir_registro_direccion_tamanio(client_socket);
             usleep(retardo*1000);
             //BUSCAR EN REGISTRO_DIRECCION Y LEER EL REGISTRO_TAMAÑO
-            char* mensaje = leer_en_mem(parametros_io->registro_tamanio, parametros_io->registro_direccion); //Ver 
+            char* mensaje = leer_en_mem_io(parametros_io->registro_tamanio, parametros_io->registro_direccion,pid); //Ver 
             //MANDAR RESULTADO A IO
             enviar_mensaje(mensaje, client_socket);
             free(parametros_io);
             break;
-
         }
         case ACCESO_TABLA:
         {
@@ -206,22 +210,23 @@ void atender_cliente(void *void_args)
                 log_info(logger, "PID: <%u> - Tamaño Actual: <%d> - Tamaño a Ampliar: <%d>", pid, tamanio_pid, tamanio); 
                 }
                 else{
-                    log_error(logger, "Out Of Memory");
-                    // mandarle mensaje al cpu en el case de resize para que envie el contexto al kernel
-                    //INTERRUPCION OUT OF MEMORY
+                log_error(logger, "Out Of Memory");
+                   
                 } 
             }     
             else{
                 //REDUCIR PROCESO
                
-                int bytes_a_reducir = tamanio - tamanio_pid;
+                int bytes_a_reducir = tamanio_pid- tamanio;
                 int cantframes_a_reducir=  bytes_a_reducir/tam_pagina;
-                int cant_pags_nueva = cant_pags - cantframes_a_reducir;
+                int cant_pags_reducir = cant_pags - cantframes_a_reducir;
                                 
-                for(int i=(cant_pags-1); i>cant_pags_nueva; i--){
+                for(int i=(cant_pags-1); i>cant_pags_reducir; i--){
                     int frame = list_get(tabla_pid->tabla, i);
                     list_remove(tabla_pid->tabla, i);
                     bitarray_clean_bit(bitarray,frame);
+                    bitarray_clean_bit(escrito,frame);
+
                 }
                 log_info(logger,"PID: <%d> - Tamaño Actual: <%d> - Tamaño a Reducir: <%d>", pid,tamanio_pid, tamanio);
             }
@@ -253,7 +258,6 @@ void atender_cliente(void *void_args)
             log_info(logger, "PID: <%u> - Tamaño Actual: <%d> - Tamaño a Ampliar: <%d>", pid, 0, tamanio); 
             }
            free(mensaje);
-           //free(split);
             break;
         }
         case PED_LECTURA:
@@ -274,7 +278,7 @@ void atender_cliente(void *void_args)
             dir_fisica->desplazamiento = desp;
 
 
-            char* leido = leer_en_mem(tamanio, dir_fisica);
+            char* leido = leer_en_mem_cpu(tamanio, dir_fisica,piid);
             log_info(logger, "PID: %u - Accion:LEER - Direccion fisica: %d - Tamaño %d",piid ,frame+desp,tamanio);
 
             enviar_mensaje(leido, client_socket);  
@@ -297,8 +301,7 @@ void atender_cliente(void *void_args)
             dir_fisica->nro_frame = frame;
             dir_fisica->desplazamiento = desp;
             usleep(retardo*1000);   
-            escribir_en_mem(valor, dir_fisica, tamanio);
-            log_info(logger, "PID: %u - Accion:ESCRIBIR - Direccion fisica: %d - Tamaño %d",pid ,frame+desp,tamanio);
+            escribir_en_mem_cpu(valor, dir_fisica, tamanio, pid);
 
             bitarray_set_bit(escrito, frame);
 
@@ -318,13 +321,10 @@ void atender_cliente(void *void_args)
             int frame2;
             int desp2;
             int cantchar;
-
-            char* a_escribir = malloc(sizeof(frame1)+ sizeof(desp1)+sizeof(frame2)+ sizeof(desp2)+ sizeof(cantchar)); 
+            int pid;
+            char* a_escribir = malloc(sizeof(frame1)+ sizeof(desp1)+sizeof(frame2)+ sizeof(desp2)+ sizeof(cantchar)+sizeof(pid)); 
             a_escribir=recibir_pedido(client_socket);
-
-            log_info(logger, "Me llego el string a escribir: <%s>\n ", a_escribir);
-
-            sscanf(a_escribir, "%d/%d/%d/%d/%d", &frame1,&desp1,&frame2,&desp2,&cantchar);
+            sscanf(a_escribir, "%d/%d/%d/%d/%d/%u", &frame1,&desp1,&frame2,&desp2,&cantchar,&pid);
          
             t_dir_fisica* dir1=malloc(sizeof(t_dir_fisica*)) ;//direc
             t_dir_fisica* dir2= malloc(sizeof(t_dir_fisica*)); //stri
@@ -334,14 +334,8 @@ void atender_cliente(void *void_args)
             dir2->desplazamiento=desp2;
 
             usleep(retardo*1000);
-            
-            char* leido = leer_en_mem(sizeof(char*), dir2);
-            char* cortado = string_substring_until(leido, cantchar);
-            escribir_en_mem(cortado, dir1,sizeof(char*));
-
-            free(leido);
             free(a_escribir);
-            free(cortado);
+
             free(dir1);
             free(dir2);
             break;
@@ -365,12 +359,13 @@ void atender_cliente(void *void_args)
 
             break;
         }
-        default:
+        default:{
             log_error(logger, "Algo anduvo mal en el server de %s", server_name);
             log_info(logger, "Cop: %d", cop);
             
             break;
             
+        }
         }
         
     }
@@ -406,11 +401,10 @@ int server_escuchar(void* arg)
     return 0;
 }
 
-
-
 void eliminar_linea_n(char* linea){
     if(linea[strlen(linea)-1] == '\n'){
         linea[strlen(linea)-1]='\0';
     }
+    
 }
 

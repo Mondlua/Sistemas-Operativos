@@ -25,12 +25,10 @@ void aviso_segun_cod_op(char* mensaje, int socket_cliente, int codigo_operacion)
 }
 
 
-int recibir_error_oi(int socket){
+char* recibir_error_oi(int socket){
     int size;
     char* buffer = recibir_buffer(&size, socket);
-    int logica = atoi(buffer);
-    free(buffer);
-    return logica;
+    return buffer;
 }
 
 int recibir_op_validada(int socket){

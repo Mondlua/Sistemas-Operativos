@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <semaphore.h>
 #include <commons/string.h>
-#include <utils/io_operation.h>
+#include "io.h"
 #include <utils/planificador.h>
 
 extern sem_t grado_planificiacion;
@@ -69,10 +69,12 @@ void agregar_a_cola_interfaz(t_planificacion* kernel_argumentos, instruccion_par
 void verificar_potencial_envio(t_planificacion* kernel_argumentos, t_queue_block* interfaz);
 
 t_instruccion_params_opcode recibir_solicitud_cpu(int socket_servidor, t_pcb* pcb);
+/*
 instruccion_params* deserializar_io_gen_sleep_con_interfaz(t_buffer_ins* buffer);
 instruccion_params* deserializar_io_fs_create_delete_con_interfaz(t_buffer_ins* buffer);
 instruccion_params* deserializar_io_fs_truncate_con_interfaz(t_buffer_ins* buffer);
-instruccion_params* deserializar_io_fs_write_read_con_interfaz(t_buffer_ins* buffer);
+instruccion_params* deserializar_io_fs_write_read_con_interfaz(t_buffer_ins* buffer);*/
+
 
 void mover_a_exit(t_pcb* pcb_desalojado, t_planificacion *kernel_argumentos);
 char* proceso_estado_a_string(t_proceso_estado estado);
