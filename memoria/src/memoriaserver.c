@@ -1,6 +1,7 @@
 #include "memoriaserver.h"
 
 int retardo;
+t_list* lista_arch;
 
 void atender_cliente(void *void_args)
 {

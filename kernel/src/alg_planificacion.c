@@ -125,7 +125,7 @@ void enviar_interrupcion(union sigval sv)
         return;
     }
     
-    log_debug(kernel_argumentos->logger, "");
+    log_debug(kernel_argumentos->logger, "No se envia interrupcion al no haber nada en EXEC");
 }
 
 void planificador_planificar(t_planificacion *kernel_argumentos)
@@ -138,18 +138,18 @@ bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_a
     // Saco el pcb viejo de EXEC
     pthread_mutex_lock(&kernel_argumentos->planning_mutex);
 
+    if(queue_is_empty(kernel_argumentos->colas.exec))
+    {
+        log_debug(kernel_argumentos->logger, "El proceso recibido fue terminado por el usuario");
+        return true;
+    }
+
     pthread_mutex_lock(&kernel_argumentos->colas.mutex_exec);
-    t_pcb *pcb_outdated = queue_pop(kernel_argumentos->colas.exec);
+    t_pcb* pcb_outdated = queue_pop(kernel_argumentos->colas.exec);
     pthread_mutex_unlock(&kernel_argumentos->colas.mutex_exec);
 
     log_debug(kernel_argumentos->logger, "PID recibido: %d", pcb_desalojado->pid);
     log_debug(kernel_argumentos->logger, "PID que tengo en EXEC: %d", pcb_outdated->pid);
-
-    if(pcb_outdated == NULL)
-    {
-        log_debug(kernel_argumentos->logger, "El proceso fue terminado por el usuario");
-        return true;
-    }
     
     if(pcb_desalojado->pid != pcb_outdated->pid)
     {   
@@ -180,7 +180,6 @@ bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_a
     }
     if(pcb_desalojado->motivo_desalojo == 2) // Desalojado por IO_BLOCK
     {
-        recibir_solicitud_cpu(conexion_cpu_dispatch, pcb_desalojado);
         int milisegundos_restantes = frenar_timer(kernel_argumentos->timer_quantum);
         if(kernel_argumentos->algo_planning == VRR)
         {
@@ -190,7 +189,7 @@ bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_a
         // Recibir los parametros del io_block
         t_instruccion_params_opcode parametros_solicitud;
         parametros_solicitud = recibir_solicitud_cpu(kernel_argumentos->socket_cpu_dispatch, pcb_desalojado);
-        log_debug(kernel_argumentos->logger, "Solicitud recibida: %s, %d", parametros_solicitud.params->interfaz, parametros_solicitud.params->params.io_gen_sleep_params.unidades_trabajo);
+        log_debug(kernel_argumentos->logger, "Solicitud recibida: %s, %d", parametros_solicitud.params->interfaz, parametros_solicitud.params->params.io_gen_sleep.unidades_trabajo);
         validar_peticion(parametros_solicitud.params, pcb_desalojado, parametros_solicitud.opcode, kernel_argumentos);
         // mover_a_block(kernel_argumentos, pcb_desalojado, nombre_interfaz);
         //log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: EXEC - Estado actual: BLOCK", pcb_desalojado->pid);
@@ -303,6 +302,9 @@ t_planificacion *inicializar_t_planificacion(t_config *kernel_config, t_log *ker
     pthread_mutex_init(&planificador->colas.mutex_new, NULL);
     pthread_mutex_init(&planificador->colas.mutex_prioridad, NULL);
     pthread_mutex_init(&planificador->colas.mutex_ready, NULL);
+
+    planificador->parametros_en_espera = dictionary_create();
+    planificador->recursos_tomados = dictionary_create(); 
 
     return planificador;
 }
@@ -550,9 +552,17 @@ void validar_peticion(instruccion_params* parametros, t_pcb* pcb, int codigo_op,
         return;
     }
 
-    enviar_instruccion_a_interfaz(interfaz_solicitada, parametros, codigo_op);
-    log_debug(kernel_argumentos->logger, "Instruccion solicitada a la interfaz: %s", interfaz_solicitada->identificador);
-    log_debug(kernel_argumentos->logger, "Enviada por el socket: %d", interfaz_solicitada->socket_interfaz);
+    if(queue_is_empty(interfaz_solicitada->block_queue))
+    {
+        enviar_instruccion_a_interfaz(interfaz_solicitada, parametros, codigo_op, pcb->pid);
+        log_debug(kernel_argumentos->logger, "Instruccion solicitada a la interfaz: %s", interfaz_solicitada->identificador);
+        log_debug(kernel_argumentos->logger, "Enviada por el socket: %d", interfaz_solicitada->socket_interfaz);
+    }
+    else
+    {
+        agregar_a_cola_interfaz(kernel_argumentos, parametros, codigo_op, pcb);
+        log_debug(kernel_argumentos->logger, "Se agrega el proceso a la cola correspondiente a la interfaz solicitada");
+    }
 
     pcb->estado = BLOCKED;
     pthread_mutex_lock(&kernel_argumentos->colas.mutex_block);
@@ -561,7 +571,16 @@ void validar_peticion(instruccion_params* parametros, t_pcb* pcb, int codigo_op,
     kernel_argumentos->colas.cantidad_procesos_block++;
     log_info(kernel_argumentos->logger, "PID: %d - Bloqueado por: INTERFAZ", pcb->pid);
     log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: EXEC - Estado actual: BLOCK", pcb->pid);
+}
 
+void agregar_a_cola_interfaz(t_planificacion* kernel_argumentos, instruccion_params* parametros, int op_code, t_pcb* pcb)
+{
+    char* pid = string_itoa(pcb->pid);
+    t_instruccion_params_opcode* param = malloc(sizeof(t_instruccion_params_opcode));
+    param->opcode = 0;
+    param->params = parametros;
+    dictionary_put(kernel_argumentos->parametros_en_espera, pid, parametros);
+    //free(pid);
 }
 
 interfaz* buscar_interfaz_por_nombre(char* nombre_interfaz) {
@@ -578,11 +597,11 @@ interfaz* buscar_interfaz_por_nombre(char* nombre_interfaz) {
     // return interfaz_encontrada;
 }
 
-void enviar_instruccion_a_interfaz(t_queue_block* interfaz_destino, instruccion_params* parametros, int codigo_op) {
+void enviar_instruccion_a_interfaz(t_queue_block* interfaz_destino, instruccion_params* parametros, int codigo_op, uint32_t pid) {
     t_paquete_instruccion* instruccion_enviar = malloc(sizeof(t_paquete_instruccion));
 
     instruccion_enviar->codigo_operacion = codigo_op;
-    enviar_instruccion(instruccion_enviar, parametros, interfaz_destino->socket_interfaz);
+    enviar_instruccion(instruccion_enviar, parametros, interfaz_destino->socket_interfaz, pid);
 
     free(parametros);
     free(instruccion_enviar);
@@ -599,7 +618,7 @@ instruccion_params* deserializar_io_gen_sleep_con_interfaz(t_buffer_ins* buffer)
     parametros->interfaz = malloc(interfaz_len);
     memcpy(parametros->interfaz, buffer->stream + offset, interfaz_len);
     offset += interfaz_len;
-    memcpy(&(parametros->params.io_gen_sleep_params.unidades_trabajo), buffer->stream + offset, sizeof(int));
+    memcpy(&(parametros->params.io_gen_sleep.unidades_trabajo), buffer->stream + offset, sizeof(int));
     
     return parametros;
 }
@@ -615,9 +634,84 @@ instruccion_params* deserializar_io_stdin_stdout_con_interfaz(t_buffer_ins* buff
     parametros->interfaz = malloc(interfaz_len);
     memcpy(parametros->interfaz, buffer->stream + offset, interfaz_len);
     offset += interfaz_len;
-    memcpy(&(parametros->params.io_stdin_stdout.registro_direccion), buffer->stream + offset, sizeof(t_dir_fisica));
+    memcpy(&(parametros->registro_direccion), buffer->stream + offset, sizeof(t_dir_fisica));
     offset += sizeof(t_dir_fisica);
-    memcpy(&(parametros->params.io_stdin_stdout.registro_tamaño), buffer->stream + offset, sizeof(cpu_registros));
+    memcpy(&(parametros->registro_tamanio), buffer->stream + offset, sizeof(cpu_registros));
+    return parametros;
+}
+
+instruccion_params* deserializar_io_fs_create_delete_con_interfaz(t_buffer_ins* buffer) 
+{
+    instruccion_params* parametros = malloc(sizeof(instruccion_params));
+    
+    uint32_t offset = 0;
+    uint32_t interfaz_len;
+    memcpy(&interfaz_len, buffer->stream + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    parametros->interfaz = malloc(interfaz_len);
+    memcpy(parametros->interfaz, buffer->stream + offset, interfaz_len);
+    offset += interfaz_len;
+    
+    uint32_t archivo_len;
+    memcpy(&archivo_len, buffer->stream + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    parametros->params.io_fs.nombre_archivo = malloc(archivo_len);
+    memcpy(parametros->params.io_fs.nombre_archivo, buffer->stream + offset, archivo_len);
+    
+    return parametros;
+}
+
+instruccion_params* deserializar_io_fs_truncate_con_interfaz(t_buffer_ins* buffer) 
+{
+    instruccion_params* parametros = malloc(sizeof(instruccion_params));
+    
+    uint32_t offset = 0;
+    uint32_t interfaz_len;
+    memcpy(&interfaz_len, buffer->stream + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    parametros->interfaz = malloc(interfaz_len);
+    memcpy(parametros->interfaz, buffer->stream + offset, interfaz_len);
+    offset += interfaz_len;
+    
+    uint32_t archivo_len;
+    memcpy(&archivo_len, buffer->stream + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    parametros->params.io_fs.nombre_archivo = malloc(archivo_len);
+    memcpy(parametros->params.io_fs.nombre_archivo, buffer->stream + offset, archivo_len);
+    offset += archivo_len;
+    
+    memcpy(&(parametros->registro_tamanio), buffer->stream + offset, sizeof(uint32_t));
+    
+    return parametros;
+}
+
+instruccion_params* deserializar_io_fs_write_read_con_interfaz(t_buffer_ins* buffer) 
+{
+    instruccion_params* parametros = malloc(sizeof(instruccion_params));
+    
+    uint32_t offset = 0;
+    uint32_t interfaz_len;
+    memcpy(&interfaz_len, buffer->stream + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    parametros->interfaz = malloc(interfaz_len);
+    memcpy(parametros->interfaz, buffer->stream + offset, interfaz_len);
+    offset += interfaz_len;
+    
+    uint32_t archivo_len;
+    memcpy(&archivo_len, buffer->stream + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    parametros->params.io_fs.nombre_archivo = malloc(archivo_len);
+    memcpy(parametros->params.io_fs.nombre_archivo, buffer->stream + offset, archivo_len);
+    offset += archivo_len;
+    
+    memcpy(&(parametros->registro_direccion), buffer->stream + offset, sizeof(t_dir_fisica));
+    offset += sizeof(t_dir_fisica);
+    
+    memcpy(&(parametros->registro_tamanio), buffer->stream + offset, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    
+    memcpy(&(parametros->params.io_fs.registro_puntero_archivo), buffer->stream + offset, sizeof(off_t));
+    
     return parametros;
 }
 
@@ -641,15 +735,28 @@ t_instruccion_params_opcode recibir_solicitud_cpu(int socket_servidor, t_pcb* pc
             param = deserializar_io_gen_sleep_con_interfaz(instruccion->buffer);
             break;
         }
-        case IO_STDIN_READ:{
-            param = deserializar_io_stdin_stdout_con_interfaz(instruccion->buffer);
-            break;
-        }
+        case IO_STDIN_READ:
         case IO_STDOUT_WRITE:{
             param = deserializar_io_stdin_stdout_con_interfaz(instruccion->buffer);
             break;
         }
-         // Otros casos
+        case IO_FS_CREATE:
+        case IO_FS_DELETE:
+        {
+            param = deserializar_io_fs_create_delete_con_interfaz(instruccion->buffer);
+            break;
+        }
+        case IO_FS_TRUNCATE:
+        {
+            param = deserializar_io_fs_truncate_con_interfaz(instruccion->buffer);
+            break;
+        }
+        case IO_FS_WRITE:
+        case IO_FS_READ:
+        {
+            param = deserializar_io_fs_write_read_con_interfaz(instruccion->buffer);
+            break;
+        }
         default:
             printf("Tipo de operación no válido.\n");
             break;
@@ -701,6 +808,8 @@ void procesar_entradasalida_terminada(t_queue_block *interfaz, t_planificacion *
         // pthread_mutex_unlock(&kernel_argumentos->colas.mutex_ready);
     }
     
+    verificar_potencial_envio(kernel_argumentos, interfaz);
+
     if(queue_is_empty(kernel_argumentos->colas.exec))
     {
         if(pthread_mutex_trylock(&kernel_argumentos->planning_mutex) == 0)
@@ -710,6 +819,24 @@ void procesar_entradasalida_terminada(t_queue_block *interfaz, t_planificacion *
     }
 }
 
+void verificar_potencial_envio(t_planificacion* kernel_argumentos, t_queue_block* interfaz)
+{
+    if(queue_is_empty(interfaz->block_queue))
+    {
+        return;
+    }
+
+    t_pcb* pcb = queue_peek(interfaz->block_queue);
+    char* pid = string_itoa(pcb->pid);
+
+    t_instruccion_params_opcode* parametros = dictionary_get(kernel_argumentos->parametros_en_espera, pid);
+
+    enviar_instruccion_a_interfaz(interfaz, parametros->params, parametros->opcode, pcb->pid);
+    log_debug(kernel_argumentos->logger, "Se envia una solicitud de instruccion de un proceso que estaba en espera (%d), a la interfaz: %s", pcb->pid, interfaz->identificador);
+
+    free(pid);
+    free(parametros);
+}
 
 // -------- RECEPCION DE INTERFACES --------
 
@@ -853,6 +980,7 @@ void logear_cola_prioridad(t_planificacion* kernel_argumentos)
             string_append(&lista_ready, ", ");
         }
         free(pid);
+        queue_push(kernel_argumentos->colas.prioridad, pcb);
         i++;
     }
     pthread_mutex_unlock(&kernel_argumentos->colas.mutex_prioridad);

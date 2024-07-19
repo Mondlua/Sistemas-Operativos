@@ -33,8 +33,8 @@ typedef struct
 
 void atender_cliente(void* void_args);
 int server_escuchar(void *arg);
+t_queue_block* buscar_interfaz_por_socket(t_planificacion* kernel_argumentos, int socket);
 int buscar_posicion_interfaz_por_nombre(char* nombre_interfaz);
-interfaz* buscar_posicion_interfaz_por_cliente(int cliente);
 //t_pcb* recibir_pcb(int socket_cliente);
 
 

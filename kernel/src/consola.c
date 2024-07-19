@@ -48,7 +48,7 @@ void funciones(char* leido, t_planificacion *kernel_argumentos) {
 }
 
 void ejecutar_script(char* path, t_planificacion *kernel_argumentos){
-    char* complemento = getcwd(NULL, 0); 
+    char* complemento = "/home/cardo"; 
     size_t len_path = strlen(path);
     size_t len_complemento = strlen(complemento);
     size_t len_total = len_path + len_complemento + 2;
@@ -102,8 +102,17 @@ void iniciar_proceso(char* path, t_planificacion *kernel_argumentos){
 
     char* mensaje_enviar = malloc(sizeof(uint32_t)+strlen(path)+2);
     uint32_t pid = pcb->pid;
-    sprintf(mensaje_enviar, "%u/%s", pid,path);  
+    // sprintf(mensaje_enviar, "%u/%s", pid,path);  
 
+    char* pid_str = int_to_char(pid);
+
+    strcpy(mensaje_enviar, path);
+    strcat(mensaje_enviar, "$");
+    strcat(mensaje_enviar, pid_str);
+    enviar_mensaje(mensaje_enviar, kernel_argumentos->socket_memoria);
+
+    free(pid_str);
+    free(mensaje_enviar);
     /*char *pid_str = int_to_char(pcb->pid);
     size_t len = strlen(path) + strlen(pid_str) + 2;
     char *pathpid = malloc(len);
@@ -120,11 +129,9 @@ void iniciar_proceso(char* path, t_planificacion *kernel_argumentos){
 
 void finalizar_proceso(uint32_t pid, t_planificacion *kernel_argumentos){
 
-
     t_pcb* pcb_candidato;
     t_pcb* pcb_a_eliminar = NULL;
     pthread_mutex_lock(&kernel_argumentos->planning_mutex);
-
 
     log_debug(kernel_argumentos->logger, "Busco en EXEC");
     if(!queue_is_empty(kernel_argumentos->colas.exec))
@@ -136,6 +143,9 @@ void finalizar_proceso(uint32_t pid, t_planificacion *kernel_argumentos){
             pcb_a_eliminar = queue_pop(kernel_argumentos->colas.exec);
             eliminar_proceso(pcb_a_eliminar, kernel_argumentos);
             pthread_mutex_unlock(&kernel_argumentos->planning_mutex);
+            log_debug(kernel_argumentos->logger, "Sali del mutex");
+            enviar_int_a_interrupt(kernel_argumentos->socket_cpu_interrupt, pid);
+            log_debug(kernel_argumentos->logger, "Interrupcion enviada al PID: %d", pid);
             return;
         }
     }
