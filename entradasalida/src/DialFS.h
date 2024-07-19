@@ -24,6 +24,7 @@ typedef struct
 }Archivo;
 
 
+extern t_log* entradasalida_log;
 extern int block_size;
 extern int block_count;
 extern int tiempo_unidad_trabajo;
@@ -33,7 +34,7 @@ extern char* path_base_dialfs;
 void inicio_filesystem();
 void crear_archivo(char* nombre);
 void borrar_archivo(char* nombre);
-void truncar_archivo(char* nombre, uint32_t tamanio);
+void truncar_archivo(char* nombre, uint32_t tamanio, uint32_t pid);
 void escribir_archivo(char* nombre, off_t puntero, char* a_escribir, uint32_t tamanio);
 char* leer_archivo(char* nombre, off_t puntero, uint32_t tamanio);
 
