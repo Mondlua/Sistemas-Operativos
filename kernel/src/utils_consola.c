@@ -22,14 +22,14 @@ t_pcb *crear_nuevo_pcb(uint32_t *pid_contador, t_planificacion *kernel_argumento
     
     return nuevo_pcb;
 }
-
+/*
 void inicializar_colas_estados()
 {
-    // colaNew = queue_create();
-    // colaReady = queue_create();
-    // colaExec = queue_create();
-    // colaBlocked = queue_create();
-    // colaExit = queue_create();
+    colaNew = queue_create();
+    colaReady = queue_create();
+    colaExec = queue_create();
+    colaBlocked = queue_create();
+    colaExit = queue_create();
 }
 
 void liberar_pcb(t_pcb *pcb)
@@ -68,7 +68,7 @@ void mostrar_pids_en_estado(t_proceso_estado estado)
     //     //log_warning(kernel_log, "La COLA %s esta VACIA", estado_a_string(estado));
     // }
 }
-
+/*
 t_queue* cola_pcb(uint32_t num_pid){ //buscar cola en cada estado
 
     // t_queue* buscado = NULL;
@@ -136,6 +136,7 @@ t_pcb* buscar_pcb(uint32_t num_pid){
     // return buscado;
 }
 
+
 void cambiar_a_cola(t_pcb* pcb, t_proceso_estado estado ){
     // t_proceso_estado ant = pcb->estado;
     // //t_queue* colaAnt = cola_de_estado(pcb->estado);
@@ -145,6 +146,7 @@ void cambiar_a_cola(t_pcb* pcb, t_proceso_estado estado ){
     // queue_push(colaNueva, pcb);
     // // log_info(kernel_log, "PID: <%u> - Estado Anterior: <%s> - Estado Actual: <%s>", pcb->pid, estado_a_string(ant), estado_a_string(pcb->estado));
 }
+
 
 // t_queue *cola_de_estado(t_planificacion *kernel_argumentos, t_proceso_estado estado)
 // {
@@ -164,4 +166,25 @@ void cambiar_a_cola(t_pcb* pcb, t_proceso_estado estado ){
 //     // default:
 //     //     return 0;
 // }
+
+
+t_queue *cola_de_estado(t_proceso_estado estado)
+{
+
+    switch (estado)
+    {
+   case 0:
+      return colaNew;
+     case 1:
+   return colaReady;
+    case 2:
+       return colaExec;
+     case 3:
+        return colaBlocked;
+     case 4:
+         return colaExit;
+     default:
+         return 0;
+}
+*/
 

@@ -190,6 +190,7 @@ bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_a
         t_instruccion_params_opcode parametros_solicitud;
         parametros_solicitud = recibir_solicitud_cpu(kernel_argumentos->socket_cpu_dispatch, pcb_desalojado);
         log_debug(kernel_argumentos->logger, "Solicitud recibida: %s, %d", parametros_solicitud.params->interfaz, parametros_solicitud.params->params.io_gen_sleep.unidades_trabajo);
+
         validar_peticion(parametros_solicitud.params, pcb_desalojado, parametros_solicitud.opcode, kernel_argumentos);
         // mover_a_block(kernel_argumentos, pcb_desalojado, nombre_interfaz);
         //log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: EXEC - Estado actual: BLOCK", pcb_desalojado->pid);
@@ -564,6 +565,7 @@ void validar_peticion(instruccion_params* parametros, t_pcb* pcb, int codigo_op,
         log_debug(kernel_argumentos->logger, "Se agrega el proceso a la cola correspondiente a la interfaz solicitada");
     }
 
+
     pcb->estado = BLOCKED;
     pthread_mutex_lock(&kernel_argumentos->colas.mutex_block);
     queue_push(interfaz_solicitada->block_queue, pcb);
@@ -607,6 +609,7 @@ void enviar_instruccion_a_interfaz(t_queue_block* interfaz_destino, instruccion_
     free(instruccion_enviar);
 }
 
+/*
 instruccion_params* deserializar_io_gen_sleep_con_interfaz(t_buffer_ins* buffer)
 {
     instruccion_params* parametros = malloc(sizeof(instruccion_params));
@@ -714,6 +717,7 @@ instruccion_params* deserializar_io_fs_write_read_con_interfaz(t_buffer_ins* buf
     
     return parametros;
 }
+*/
 
 t_instruccion_params_opcode recibir_solicitud_cpu(int socket_servidor, t_pcb* pcb)
 {
@@ -736,27 +740,21 @@ t_instruccion_params_opcode recibir_solicitud_cpu(int socket_servidor, t_pcb* pc
             break;
         }
         case IO_STDIN_READ:
-        case IO_STDOUT_WRITE:{
+        case IO_STDOUT_WRITE:
             param = deserializar_io_stdin_stdout_con_interfaz(instruccion->buffer);
             break;
-        }
         case IO_FS_CREATE:
         case IO_FS_DELETE:
-        {
             param = deserializar_io_fs_create_delete_con_interfaz(instruccion->buffer);
             break;
-        }
         case IO_FS_TRUNCATE:
-        {
             param = deserializar_io_fs_truncate_con_interfaz(instruccion->buffer);
             break;
-        }
         case IO_FS_WRITE:
         case IO_FS_READ:
-        {
             param = deserializar_io_fs_write_read_con_interfaz(instruccion->buffer);
             break;
-        }
+
         default:
             printf("Tipo de operación no válido.\n");
             break;

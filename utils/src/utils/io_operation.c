@@ -315,7 +315,7 @@ void enviar_instruccion_a_Kernel(t_paquete_instruccion* instruccion, instruccion
 //  DE IO A MEMORIA
 
 
-void enviar_instruccion_IO_Mem(t_paquete_instruccion* instruccion, instruccion_params* parametros, int socket_cliente) {
+void enviar_instruccion_IO_Mem(t_paquete_instruccion* instruccion, instruccion_params* parametros, int socket_cliente, uint32_t pid) {
     t_buffer_ins* buffer = NULL;
     
     switch (instruccion->codigo_operacion) {
@@ -342,12 +342,14 @@ void enviar_instruccion_IO_Mem(t_paquete_instruccion* instruccion, instruccion_p
     }
     
     instruccion->buffer = buffer;
-    size_t total_size = sizeof(instrucciones) + sizeof(uint32_t) + buffer->size;
-    void* a_enviar = malloc(total_size);
+    size_t total_size = sizeof(instrucciones) + sizeof(uint32_t) *2 + buffer->size;
+    void* a_enviar = malloc(total_size); 
     size_t offset = 0;
     
     memcpy(a_enviar + offset, &(instruccion->codigo_operacion), sizeof(instrucciones));
     offset += sizeof(instrucciones);
+    memcpy(a_enviar + offset, &(pid), sizeof(uint32_t));
+    offset += sizeof(uint32_t);
     memcpy(a_enviar + offset, &(buffer->size), sizeof(uint32_t));
     offset += sizeof(uint32_t);
     memcpy(a_enviar + offset, buffer->stream, buffer->size);
