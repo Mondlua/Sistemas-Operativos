@@ -236,17 +236,21 @@ void atender_cliente(void *void_args)
                 int cant_pags = tamanio/tam_pagina;
                 int cantframes_a_ocupar=  cant_pags;
                 size_t count = 0;
+                
                 for (size_t i = 0; i < bitarray->size; i++) {
                     if (bitarray_test_bit(bitarray, i) == 0) {
                         count++;
                     }
+
                 if(count>=cantframes_a_ocupar){
+                   
                     int frames_ocupados=0;
                     for (int i = 0; i < bitarray->size; i++) {
                          if (bitarray_test_bit(bitarray, i) == 0) {
                             bitarray_set_bit(bitarray, i);
                             list_add(tabla_pid->tabla, i);
                             frames_ocupados++;
+
                         }
                          if (frames_ocupados == cantframes_a_ocupar) {
                             break;

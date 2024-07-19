@@ -460,12 +460,11 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
 
             log_info(cpu_log, "PID: %d - Ejecutando: RESIZE %d", pcb->pid, tamanio_resize);
 
-            char* tamanio = int_to_char(tamanio_resize);
-            char* pid_char = int_to_char(pcb->pid);
-            char* mensaje1 = strcat(pid_char,"/");
-            char* mensaje = strcat(mensaje1,tamanio);
-            //enviar_pedido_resize_tampid(conexion_memoria_cpu, mensaje); TODO: agregar esto
-
+        
+            char* mensaje = malloc(sizeof(tamanio_resize)+sizeof(pcb->pid));
+            sprintf(mensaje, "%d/%u", tamanio_resize,pcb->pid);      //ver de implementar en demas    
+            enviar_a_mem(conexion_memoria_cpu, mensaje,CPU_RESIZE);
+           
 
             break;
         }
