@@ -85,10 +85,9 @@ instrucciones obtener_instruccion(char *nombre) {
 
 t_decode* decode(char* buffer){
 
-    //char* buffer; //= (char*) instruccion->buffer->stream;
     eliminar_linea_n(buffer);
     char** arrayIns = string_split(buffer," ");
-    printf("Instruccion: %s.\n", arrayIns[0]);
+    //printf("Instruccion: %s.\n", arrayIns[0]);
 
     instrucciones ins = obtener_instruccion(arrayIns[0]);
     t_decode* decode = malloc(sizeof(t_decode));
@@ -170,19 +169,20 @@ t_decode* decode(char* buffer){
         case IO_STDIN_READ:{
         char* interfaz = strdup(arrayIns[1]);
         decode->interfaz = interfaz;
-        char* registro_direccion = arrayIns[2];
+        char* registro_direccion = strdup(arrayIns[2]);
         list_add(decode->registroCpu, registro_direccion);
-        char* registro_tamaño = arrayIns[3];
-        list_add(decode->registroCpu, registro_tamaño);  
+        char* registro_tamanio = strdup(arrayIns[3]);
+        list_add(decode->registroCpu, registro_tamanio); 
+        log_info(cpu_log, " >>> %s y %s", registro_direccion, registro_tamanio); ;
         break;
         }
         case IO_STDOUT_WRITE:{
         char* interfaz = strdup(arrayIns[1]);
         decode->interfaz = interfaz;
-        char* registro_direccion = arrayIns[2];
+        char* registro_direccion = strdup(arrayIns[2]);
         list_add(decode->registroCpu, registro_direccion);
-        char* registro_tamaño = arrayIns[3];
-        list_add(decode->registroCpu, registro_tamaño);  
+        char* registro_tamanio = strdup(arrayIns[3]);
+        list_add(decode->registroCpu, registro_tamanio);  
         break;
         }
         case IO_FS_CREATE:{
@@ -204,8 +204,8 @@ t_decode* decode(char* buffer){
         decode->interfaz = interfaz;
         char* archivo = strdup(arrayIns[2]);
         decode->archivo = archivo;
-        char* registroTamaño = strdup(arrayIns[3]);
-        list_add(decode->registroCpu, registroTamaño);
+        char* registroTamanio = strdup(arrayIns[3]);
+        list_add(decode->registroCpu, registroTamanio);
         break;
         }
         case IO_FS_WRITE:{
@@ -215,8 +215,8 @@ t_decode* decode(char* buffer){
         decode->archivo = archivo;
         char* registroDireccion = strdup(arrayIns[3]);
         list_add(decode->registroCpu, registroDireccion);
-        char* registroTamaño = strdup(arrayIns[4]);
-        list_add(decode->registroCpu, registroTamaño);
+        char* registroTamanio = strdup(arrayIns[4]);
+        list_add(decode->registroCpu, registroTamanio);
         char* registroPuntero = strdup(arrayIns[5]);
         list_add(decode->registroCpu, registroPuntero);
         break;
@@ -228,8 +228,8 @@ t_decode* decode(char* buffer){
         decode->archivo = archivo;
         char* registroDireccion = strdup(arrayIns[3]);
         list_add(decode->registroCpu, registroDireccion);
-        char* registroTamaño = strdup(arrayIns[4]);
-        list_add(decode->registroCpu, registroTamaño);
+        char* registroTamanio = strdup(arrayIns[4]);
+        list_add(decode->registroCpu, registroTamanio);
         char* registroPuntero = strdup(arrayIns[5]);
         list_add(decode->registroCpu, registroPuntero);
         break;
@@ -409,9 +409,6 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
                 instrucciones ins= decode->instrucciones;
 
                 pcb->registros->PC= valor;
-
-               // asignar_registro(pcb->registros, "PC", valor );
-
             }
             break;
         }
@@ -427,7 +424,7 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
         }
         case COPY_STRING:{
             int bytes = decode->valor;
-            int cant_char = bytes / sizeof(char*);
+            int cant_char = bytes / sizeof(char); //ver
             uint32_t string_apuntado =obtener_valor_registro(pcb->registros, "SI");
             uint32_t dir_apunt=obtener_valor_registro(pcb->registros, "DI");
             t_dir_fisica* dirstring= mmu(string_apuntado, pcb->pid);
@@ -479,15 +476,16 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
 
             instruccion_params* parametros =  malloc(sizeof(instruccion_params));
             parametros->interfaz = strdup(decode->interfaz);
-            char* registro_direccion = (char*)list_get(decode->registroCpu, 0);
-            char* registro_tamaño = (char*)list_get(decode->registroCpu, 1);
+            char* registro_direccion = list_get(decode->registroCpu, 0);
+            char* registro_tamanio = list_get(decode->registroCpu, 1);
 
-            log_info(cpu_log, "PID: %d - Ejecutando IO_STDIN_READ %s %s %s", pcb->pid, parametros->interfaz, registro_direccion, registro_tamaño);
+            log_info(cpu_log, "PID: %u - Ejecutando IO_STDIN_READ %s %s %s", pcb->pid, parametros->interfaz,registro_direccion, registro_tamanio);
 
-            int dir_logica =(int)obtener_valor_registro(pcb->registros, registro_direccion);
-            t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
+            int dir_logica=(int)obtener_valor_registro(pcb->registros, registro_direccion);
+            t_dir_fisica* dir_fisica =  mmu(dir_logica, pcb->pid);
+            parametros->registro_direccion =  malloc(sizeof(t_dir_fisica));
             parametros->registro_direccion = dir_fisica;
-            parametros->registro_tamanio = (uint32_t)obtener_valor_registro(pcb->registros, registro_tamaño);
+            parametros->registro_tamanio = (uint32_t)obtener_valor_registro(pcb->registros, registro_tamanio); //chequear
             ret.io_opcode = IO_STDIN_READ;
             ret.blockeo = IO_BLOCK;
             ret.instrucciones = parametros;
@@ -498,14 +496,14 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             instruccion_params* parametros =  malloc(sizeof(instruccion_params));
             parametros->interfaz = strdup(decode->interfaz);
             char* registro_direccion = (char*)list_get(decode->registroCpu, 0);
-            char* registro_tamaño = (char*)list_get(decode->registroCpu, 1);
+            char* registro_tamanio = (char*)list_get(decode->registroCpu, 1);
 
-            log_info(cpu_log, "PID: %d - Ejecutando IO_STDOUT_WRITE %s %s %s", pcb->pid, parametros->interfaz, registro_direccion, registro_tamaño);
+            log_info(cpu_log, "PID: %d - Ejecutando IO_STDOUT_WRITE %s %s %s", pcb->pid, parametros->interfaz, registro_direccion, registro_tamanio);
 
             int dir_logica =(int)obtener_valor_registro(pcb->registros, registro_direccion);
             t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
             parametros->registro_direccion = dir_fisica;
-            parametros->registro_tamanio = (uint32_t)obtener_valor_registro(pcb->registros, registro_tamaño);
+            parametros->registro_tamanio = (uint32_t)obtener_valor_registro(pcb->registros, registro_tamanio);
             
             ret.io_opcode = IO_STDOUT_WRITE;
             ret.blockeo = IO_BLOCK;
