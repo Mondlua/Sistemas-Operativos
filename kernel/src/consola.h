@@ -9,6 +9,7 @@
 #include<readline/readline.h>
 #include "utils_consola.h"
 #include <utils/planificador.h>
+#include <utils/mensajesPropios.h>
 //#include "main.h"
 //#include "alg_planificacion.h"
 

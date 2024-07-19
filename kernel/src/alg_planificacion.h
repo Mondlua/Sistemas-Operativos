@@ -15,7 +15,6 @@
 
 extern sem_t grado_planificiacion;
 extern sem_t cola_ready;
-extern int conexion_cpu_dispatch;
 
 typedef struct
 {
@@ -63,12 +62,19 @@ void agregar_recurso_a_lista_global(uint32_t pid, char* nombre_recurso, t_planif
 void eliminar_recurso_de_lista_global(uint32_t pid, char* recurso_afectado, t_planificacion* kernel_argumentos);
 
 void validar_peticion(instruccion_params* parametros, t_pcb* pcb, int codigo_op, t_planificacion* kernel_argumentos);
-void enviar_instruccion_a_interfaz(t_queue_block* interfaz_destino, instruccion_params* parametros, int cod_op, uint32_t pid);
+void enviar_instruccion_a_interfaz(t_queue_block* interfaz_destino, instruccion_params* parametros, int codigo_op, uint32_t pid);
 interfaz* buscar_interfaz_por_nombre(char* nombre_interfaz);
 void pcb_a_exit_por_sol_invalida(t_queue_block* interfaz, t_planificacion *kernel_argumentos);
-
+void agregar_a_cola_interfaz(t_planificacion* kernel_argumentos, instruccion_params* parametros, int op_code, t_pcb* pcb);
+void verificar_potencial_envio(t_planificacion* kernel_argumentos, t_queue_block* interfaz);
 
 t_instruccion_params_opcode recibir_solicitud_cpu(int socket_servidor, t_pcb* pcb);
+/*
+instruccion_params* deserializar_io_gen_sleep_con_interfaz(t_buffer_ins* buffer);
+instruccion_params* deserializar_io_fs_create_delete_con_interfaz(t_buffer_ins* buffer);
+instruccion_params* deserializar_io_fs_truncate_con_interfaz(t_buffer_ins* buffer);
+instruccion_params* deserializar_io_fs_write_read_con_interfaz(t_buffer_ins* buffer);*/
+
 
 void mover_a_exit(t_pcb* pcb_desalojado, t_planificacion *kernel_argumentos);
 char* proceso_estado_a_string(t_proceso_estado estado);

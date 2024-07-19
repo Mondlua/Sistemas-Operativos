@@ -117,9 +117,9 @@ void recibir_instruccion(char* tipo_interfaz)
             atender_cod_op(param, instruccion->codigo_operacion, pid);
             free(instruccion->buffer);
             free(instruccion);
-            if (param != NULL) {
-            free(param);
-            }
+            // if (param != NULL) {
+            // free(param);
+            // }
         }
         else{
             aviso_segun_cod_op(nombre_interfaz, conexion_kernel, AVISO_OPERACION_INVALIDA);
@@ -141,6 +141,7 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code, uint3
         int unidades_trabajo_recibidas = parametros->params.io_gen_sleep.unidades_trabajo;
         result = unidades_trabajo_recibidas * tiempo_unidad_trabajo * 1000; 
         usleep(result);
+        log_debug(entradasalida_log, "Termine de dormir %dms", result);
         break;
     }
     case IO_STDIN_READ:{

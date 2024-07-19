@@ -1,7 +1,6 @@
 #include "io.h"
 
 
-// RECIBIR DE CPU
 
 instruccion_params* deserializar_io_gen_sleep_con_interfaz(t_buffer_ins* buffer) {
     instruccion_params* parametros = malloc(sizeof(instruccion_params));
@@ -106,3 +105,4 @@ instruccion_params* deserializar_io_fs_write_read_con_interfaz(t_buffer_ins* buf
     
     return parametros;
 }
+
