@@ -69,10 +69,10 @@ void virtual_round_robin(t_planificacion *kernel_argumentos)
     if(queue_size(kernel_argumentos->colas.exec) == 0 && queue_size(kernel_argumentos->colas.prioridad) >= 1)
     {
         t_pcb *proximo_pcb = planificador_prioridad_a_exec(kernel_argumentos);
-        proximo_pcb->estado = EXEC;
+        // proximo_pcb->estado = EXEC;
 
-        int quantum_restante = kernel_argumentos->config.quantum - proximo_pcb->quantum;
-        iniciar_timer(kernel_argumentos->timer_quantum, quantum_restante);
+        // int quantum_restante = kernel_argumentos->config.quantum - proximo_pcb->quantum;
+        iniciar_timer(kernel_argumentos->timer_quantum, proximo_pcb->quantum);
 
         enviar_pcb(proximo_pcb, kernel_argumentos->socket_cpu_dispatch);
         return;
@@ -80,7 +80,7 @@ void virtual_round_robin(t_planificacion *kernel_argumentos)
     if(queue_size(kernel_argumentos->colas.exec) == 0 && queue_size(kernel_argumentos->colas.ready) >= 1)
     {
         t_pcb *proximo_pcb = planificador_ready_a_exec(kernel_argumentos);
-        proximo_pcb->estado = EXEC;
+        // proximo_pcb->estado = EXEC;
 
         iniciar_timer(kernel_argumentos->timer_quantum, kernel_argumentos->config.quantum);
 
@@ -420,6 +420,8 @@ bool administrador_recursos_wait(t_pcb *pcb_solicitante, char* nombre_recurso, i
         }
         enviar_pcb(pcb_solicitante, kernel_argumentos->socket_cpu_dispatch);
         pthread_mutex_unlock(&kernel_argumentos->planning_mutex);
+
+        agregar_recurso_a_lista_global(pcb_solicitante->pid, nombre_recurso, kernel_argumentos);
         return false;
     }
 
@@ -444,7 +446,7 @@ bool administrador_recursos_signal(t_pcb *pcb_desalojado, char* recurso_solicita
     // Si existe, se le suma 1 al indice correspondiente y se lo devuelve a EXEC.
     // Si hay procesos esperando, se mueve uno de BLOCK a READY
     t_queue_block *recurso = dictionary_get(kernel_argumentos->colas.lista_block, recurso_solicitado);
-    log_debug(kernel_argumentos->logger, "Recurso obtenido del diccionario: %s", recurso->identificador);
+    log_debug(kernel_argumentos->logger, "Recurso obtenido del diccionario: %s. Se procesa un SIGNAL", recurso->identificador);
 
     if(recurso == NULL)
     {
@@ -455,6 +457,7 @@ bool administrador_recursos_signal(t_pcb *pcb_desalojado, char* recurso_solicita
     }
 
     recurso->cantidad_instancias++;
+    eliminar_recurso_de_lista_global(pcb_desalojado->pid, recurso_solicitado, kernel_argumentos);
 
     procesar_desbloqueo_factible(recurso_solicitado, kernel_argumentos);
     log_debug(kernel_argumentos->logger, "Desbloqueo procesado.");
@@ -490,19 +493,30 @@ void agregar_recurso_a_lista_global(uint32_t pid, char* nombre_recurso, t_planif
 
 void eliminar_recurso_de_lista_global(uint32_t pid, char* recurso_afectado, t_planificacion* kernel_argumentos)
 {
-
     char* pid_proceso = string_itoa(pid);
     t_list* lista_proceso = dictionary_get(kernel_argumentos->recursos_tomados, pid_proceso);
     if(lista_proceso != NULL)
     {
         int i = 0, tamanio = list_size(lista_proceso);
+        printf("Tamanio de la lista: %d\n", tamanio);
+        char*  nombre_recurso;
         while(i<tamanio)
         {
-            char* nombre_recurso = list_get(lista_proceso, i);
+            printf("i=%d\n", i);
+            nombre_recurso = list_remove(lista_proceso, 0);
+            
+            printf("Recurso: %s\n", nombre_recurso);
             if(string_equals_ignore_case(nombre_recurso, recurso_afectado))
             {
-                list_remove_and_destroy_element(lista_proceso, i, free);
+                log_debug(kernel_argumentos->logger, "%s liberado de la lista global para el proceso %d!", nombre_recurso, pid);
+                free(nombre_recurso);
+                return;
             }
+            else
+            {
+                list_add(lista_proceso, nombre_recurso);
+            }
+            
             i++;
         }
     }
@@ -524,8 +538,13 @@ void procesar_desbloqueo_factible(char* recurso_solicitado, t_planificacion *ker
         mover_a_ready(pcb_desbloqueado, kernel_argumentos);
         
         kernel_argumentos->colas.cantidad_procesos_block--;
+        log_debug(kernel_argumentos->logger, "Cantidad de procesos en block: %d", kernel_argumentos->colas.cantidad_procesos_block);
         recurso->cantidad_instancias--;
+        log_debug(kernel_argumentos->logger, "Cantidad de instancias disponibles para el recurso %s: %d", recurso->identificador, recurso->cantidad_instancias);
+        return;
     }
+
+    log_debug(kernel_argumentos->logger, "No hay procesos bloqueados por el recurso: %s", recurso->identificador);
 }
 
 // -------- ADMINISTRACION DE INTERFACES --------
