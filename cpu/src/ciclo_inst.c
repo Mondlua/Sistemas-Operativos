@@ -478,8 +478,10 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             int d2=dir_apuntada->desplazamiento;
             int d3=dirstring->nro_frame;
             int d4=dirstring->desplazamiento;
-            char* mensaje = malloc(sizeof(d1)+sizeof(d2)+sizeof(d3)+sizeof(d4)+sizeof(cant_char));
-            sprintf(mensaje, "%d/%d/%d/%d/%d", d1,d2,d3,d4,cant_char);      //ver de implementar en demas    
+            uint32_t pid=pcb->pid;
+
+            char* mensaje = malloc(sizeof(d1)+sizeof(d2)+sizeof(d3)+sizeof(d4)+sizeof(cant_char)+sizeof(pid));
+            sprintf(mensaje, "%d/%d/%d/%d/%d/%u", d1,d2,d3,d4,cant_char,pid);      //ver de implementar en demas    
             enviar_a_mem(conexion_memoria_cpu, mensaje,CPY_STRING);
            
             break;

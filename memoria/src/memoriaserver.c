@@ -320,13 +320,13 @@ void atender_cliente(void *void_args)
             int frame2;
             int desp2;
             int cantchar;
-
-            char* a_escribir = malloc(sizeof(frame1)+ sizeof(desp1)+sizeof(frame2)+ sizeof(desp2)+ sizeof(cantchar)); 
+            int pid;
+            char* a_escribir = malloc(sizeof(frame1)+ sizeof(desp1)+sizeof(frame2)+ sizeof(desp2)+ sizeof(cantchar)+sizeof(pid)); 
             a_escribir=recibir_pedido(client_socket);
 
             log_info(logger, "Me llego el string a escribir: <%s>\n ", a_escribir);
 
-            sscanf(a_escribir, "%d/%d/%d/%d/%d", &frame1,&desp1,&frame2,&desp2,&cantchar);
+            sscanf(a_escribir, "%d/%d/%d/%d/%d/%u", &frame1,&desp1,&frame2,&desp2,&cantchar,&pid);
          
             t_dir_fisica* dir1=malloc(sizeof(t_dir_fisica*)) ;//direc
             t_dir_fisica* dir2= malloc(sizeof(t_dir_fisica*)); //stri
