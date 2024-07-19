@@ -209,22 +209,23 @@ void atender_cliente(void *void_args)
                 log_info(logger, "PID: <%u> - Tamaño Actual: <%d> - Tamaño a Ampliar: <%d>", pid, tamanio_pid, tamanio); 
                 }
                 else{
-                    log_error(logger, "Out Of Memory");
-                    // mandarle mensaje al cpu en el case de resize para que envie el contexto al kernel
-                    //INTERRUPCION OUT OF MEMORY
+                log_error(logger, "Out Of Memory");
+                   
                 } 
             }     
             else{
                 //REDUCIR PROCESO
                
-                int bytes_a_reducir = tamanio - tamanio_pid;
+                int bytes_a_reducir = tamanio_pid- tamanio;
                 int cantframes_a_reducir=  bytes_a_reducir/tam_pagina;
-                int cant_pags_nueva = cant_pags - cantframes_a_reducir;
+                int cant_pags_reducir = cant_pags - cantframes_a_reducir;
                                 
-                for(int i=(cant_pags-1); i>cant_pags_nueva; i--){
+                for(int i=(cant_pags-1); i>cant_pags_reducir; i--){
                     int frame = list_get(tabla_pid->tabla, i);
                     list_remove(tabla_pid->tabla, i);
                     bitarray_clean_bit(bitarray,frame);
+                    bitarray_clean_bit(escrito,frame);
+
                 }
                 log_info(logger,"PID: <%d> - Tamaño Actual: <%d> - Tamaño a Reducir: <%d>", pid,tamanio_pid, tamanio);
             }
@@ -256,7 +257,6 @@ void atender_cliente(void *void_args)
             log_info(logger, "PID: <%u> - Tamaño Actual: <%d> - Tamaño a Ampliar: <%d>", pid, 0, tamanio); 
             }
            free(mensaje);
-           //free(split);
             break;
         }
         case PED_LECTURA:
@@ -323,9 +323,6 @@ void atender_cliente(void *void_args)
             int pid;
             char* a_escribir = malloc(sizeof(frame1)+ sizeof(desp1)+sizeof(frame2)+ sizeof(desp2)+ sizeof(cantchar)+sizeof(pid)); 
             a_escribir=recibir_pedido(client_socket);
-
-            log_info(logger, "Me llego el string a escribir: <%s>\n ", a_escribir);
-
             sscanf(a_escribir, "%d/%d/%d/%d/%d/%u", &frame1,&desp1,&frame2,&desp2,&cantchar,&pid);
          
             t_dir_fisica* dir1=malloc(sizeof(t_dir_fisica*)) ;//direc
@@ -336,14 +333,8 @@ void atender_cliente(void *void_args)
             dir2->desplazamiento=desp2;
 
             usleep(retardo*1000);
-            
-            //char* leido = leer_en_mem_cpu(sizeof(char*), dir2);
-            //char* cortado = string_substring_until(leido, cantchar);
-            //escribir_en_mem_cpu(cortado, dir1,sizeof(char*)); falta mandar pid
-
-            //free(leido);
             free(a_escribir);
-            //free(cortado);
+
             free(dir1);
             free(dir2);
             break;

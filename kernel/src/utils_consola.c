@@ -22,14 +22,14 @@ t_pcb *crear_nuevo_pcb(uint32_t *pid_contador, t_planificacion *kernel_argumento
     
     return nuevo_pcb;
 }
-
+/*
 void inicializar_colas_estados()
 {
-    // colaNew = queue_create();
-    // colaReady = queue_create();
-    // colaExec = queue_create();
-    // colaBlocked = queue_create();
-    // colaExit = queue_create();
+    colaNew = queue_create();
+    colaReady = queue_create();
+    colaExec = queue_create();
+    colaBlocked = queue_create();
+    colaExit = queue_create();
 }
 
 void liberar_pcb(t_pcb *pcb)
@@ -151,19 +151,19 @@ void cambiar_a_cola(t_pcb* pcb, t_proceso_estado estado ){
 t_queue *cola_de_estado(t_planificacion *kernel_argumentos, t_proceso_estado estado)
 {
 
-    // switch (estado)
-    // {
-    // case 0:
-    //     return colaNew;
-    // case 1:
-    //     return colaReady;
-    // case 2:
-    //     return colaExec;
-    // case 3:
-    //     return colaBlocked;
-    // case 4:
-    //     return colaExit;
-    // default:
-    //     return 0;
+    switch (estado)
+    {
+   case 0:
+      return colaNew;
+     case 1:
+   return colaReady;
+    case 2:
+       return colaExec;
+     case 3:
+        return colaBlocked;
+     case 4:
+         return colaExit;
+     default:
+         return 0;
 }
-
+*/
