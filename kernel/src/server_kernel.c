@@ -16,17 +16,15 @@ void atender_cliente(void *void_args)
 
         if (cop == -1)
         {
-            t_queue_block* interfaz_desconectada = dictionary_remove(args->planificador->colas.lista_block, client_socket);
 
+            t_queue_block* interfaz_desconectada = buscar_interfaz_por_socket(args->planificador, client_socket);
             if(interfaz_desconectada == NULL)
             {
-                log_error(logger, "Se ha desconectado una interfaz desconocida: %s", interfaz_desconectada->identificador);
+                log_info(logger, "DISCONECT!");
+                return;
             }
+            cop = AVISO_DESCONEXION;
 
-            log_debug(logger, "Se deconecta la interfaz: %s", interfaz_desconectada->identificador);
-            queue_destroy(interfaz_desconectada->block_queue);
-            free(interfaz_desconectada);
-            return;
         }
 
         switch (cop) 
@@ -56,6 +54,27 @@ void atender_cliente(void *void_args)
             break;
         }
 
+        case AVISO_DESCONEXION:
+        {
+            //char* interfaz_recibida = recibir_desconexion(client_socket, logger);
+
+            t_queue_block* interfaz_desconectada = buscar_interfaz_por_socket(args->planificador, client_socket);
+
+            if(interfaz_desconectada == NULL)
+            {
+                log_error(logger, "Se ha desconectado una interfaz desconocida");
+            }
+
+            log_debug(logger, "Se deconecta la interfaz: %s", interfaz_desconectada->identificador);
+            queue_destroy(interfaz_desconectada->block_queue);
+            list_destroy(interfaz_desconectada->block_dictionary);
+            free(interfaz_desconectada->identificador);
+            free(interfaz_desconectada);
+
+            return;
+         
+        }
+
         case AVISO_OPERACION_INVALIDA:
         {
             char* nombre_interfaz = recibir_error_oi(client_socket); // TODO: Pedir a Zoe que esto devuelva el nombre de la interfaz
@@ -68,7 +87,7 @@ void atender_cliente(void *void_args)
         }
         /*case AVISO_OPERACION_VALIDADA:
         {
-            logica_int = recibir_op_validada(client_socket);
+            int logica_int = recibir_op_validada(client_socket);
             log_debug(logger, "La ultima operacion solicitada ha sido validada");
             break;
         }*/
@@ -121,4 +140,22 @@ int server_escuchar(void* arg)
 }
 /* PROTOCOLO */
 
+t_queue_block* buscar_interfaz_por_socket(t_planificacion* kernel_argumentos, int socket)
+{
+    t_queue_block* ret = NULL;
+    t_list* lista = dictionary_elements(kernel_argumentos->colas.lista_block);
+
+    int i = 0, tamanio = list_size(lista);
+    while(i < tamanio)
+    {
+        t_queue_block* candidato = list_get(lista, i);
+        if(candidato->socket_interfaz == socket)
+        {
+            ret = candidato;
+        }
+        i++;
+    }
+    
+    return ret;
+}
 
