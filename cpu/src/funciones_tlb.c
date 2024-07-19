@@ -28,16 +28,16 @@ t_dir_fisica* mmu(int dir_logica, uint32_t pid){
     int desplazamiento = dir_logica - numero_pagina * tam_pag;
     int frame = buscar_tlb(pid, numero_pagina);
    if (frame != -1) {  // HIT
-        log_info(cpu_log, "TLB Hit: “PID: <%i> - TLB HIT - Pagina: <%i>", pid, numero_pagina);
+        log_info(cpu_log, "TLB Hit: “PID: <%i>  - Pagina: <%i>", pid, numero_pagina);
     } else {  // MISS
-        log_info(cpu_log, "TLB Miss: “PID: <%i> - TLB MISS - Pagina: <%i>", pid, numero_pagina);
+        log_info(cpu_log, "TLB Miss: “PID: <%i>  - Pagina: <%i>", pid, numero_pagina);
 
         char* mensaje = malloc(sizeof(pid)+sizeof(numero_pagina));
         sprintf(mensaje, "%u/%d", pid, numero_pagina); 
         enviar_a_mem(conexion_memoria_cpu, mensaje, FRAME);
 
         frame = recibir_frame(conexion_memoria_cpu);
-        log_info(cpu_log, "Obtener Marco: “PID: <%i> - OBTENER MARCO - Página: <%i> - Marco: <%i>", pid, numero_pagina, frame);
+        log_info(cpu_log, "Obtener Marco: “PID: <%i>  - Página: <%i> - Marco: <%i>", pid, numero_pagina, frame);
         if (string_equals_ignore_case(algoritmo, "FIFO")) {
             remplazo_fifo(pid, numero_pagina, frame);
         } else if (string_equals_ignore_case(algoritmo, "LRU")) {

@@ -327,15 +327,9 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
 
             log_info(logger, "PID: %d - Ejecutando: MOV_IN %s %s", pcb->pid, registro_datos, registro_direccion);        
 
-            char* tam = strcat(int_to_char(tamanio), "/");
-            char* tamframe = strcat(tam, int_to_char(num_frame));
-            char* tamframe1 = strcat(tamframe, "/");
-            char* enviar = strcat(tamframe1, int_to_char(desplazamiento));
-            //enviar_pedido_lectura(conexion_memoria_cpu, enviar);
-
-
             int i = recibir_operacion(conexion_memoria_cpu);
             char* leido = recibir_mensaje(conexion_memoria_cpu, cpu_log);
+            log_info(logger, "MOV_IN %s %s: La lectura fue <%s>", registro_datos, registro_direccion, leido); 
             asignar_registro(pcb->registros, registro_datos, atoi(leido));
             free(leido);
             
@@ -347,11 +341,11 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             char* registro_direccion = list_get(decode->registroCpu,0);
             uint8_t dir_logica = (uint8_t) obtener_valor_registro(pcb->registros, registro_direccion);
 
-            log_info(logger, "PID: %d - Ejecutando: MOV_OUT %s %s", pcb->pid, registro_datos, registro_direccion);        
+            log_info(logger, "PID: %d - Ejecutando: MOV_OUT %s %s", pcb->pid, registro_direccion, registro_datos);        
 
             uint8_t valor = (uint8_t) obtener_valor_registro(pcb->registros, registro_datos);
             int tamanio;
-          //  printf ("num a escribir %d\n", valor);
+    
             if(obtener_tipo_registro(registro_datos) == 8){
                 tamanio =1;
             }
@@ -373,44 +367,11 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
                 int tam_mensaje = sizeof(tamanio)+sizeof(aescribir)+sizeof(num_frame)+sizeof(desplazamiento)+sizeof(pcb->pid); 
                 char* mensaje = malloc(tam_mensaje);
                 sprintf(mensaje, "%d/%s/%d/%d/%d", tamanio,aescribir,num_frame,desplazamiento,pcb->pid);     
-                
+                log_info(cpu_log, "ESCRIBIR: en Frame <%d> y Desp <%d>:<%s>", num_frame, desplazamiento, aescribir);
                 enviar_a_mem(conexion_memoria_cpu, mensaje,PED_ESCRITURA);
                 int i = recibir_operacion(conexion_memoria_cpu);
                 char* frame_siguiente = recibir_mensaje(conexion_memoria_cpu,cpu_log);
-            }/*
-            else{
-                printf("Entre al move out con mas de una pagina\n");
-
-                int cant_partes; 
-                char** parts = split_por_bytes(aescribir, tam_pag, &cant_partes); 
-
-                t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
-
-                for (int i = 0; i < cant_partes; i++) {
-                    printf("Parte %d: %s\n en %d", i + 1, parts[i], int_to_char(parts[i]));
-
-                    int num_frame = dir_fisica->nro_frame;
-                    int desplazamiento = dir_fisica->desplazamiento;
-                    
-                    char* valorr= strcat(parts[i], "/");
-                    char* tamframe = strcat(valorr, int_to_char(num_frame));
-                    char* tamframe1 = strcat(tamframe, "/");
-                    char* enviar1 = strcat(tamframe1, int_to_char(desplazamiento));
-                    char* enviar2 = strcat(enviar1, "/");
-                    char* enviar = strcat(enviar2, int_to_char(pcb->pid));
-
-                    enviar_pedido_escritura(conexion_memoria_cpu, enviar);
-                    int i = recibir_operacion(conexion_memoria_cpu);
-                    char* frame_siguiente = recibir_mensaje(conexion_memoria_cpu,cpu_log);
-                    
-                    dir_fisica->nro_frame = frame_siguiente;
-                    dir_fisica->desplazamiento = 0;
-
-                    free(parts[i]); 
-                }
-
-                free(parts); 
-            }*/
+            }
             break; 
         }
         case SUM:{
@@ -456,13 +417,9 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
         }
         case RESIZE:{
             int tamanio_resize = decode->valor;
-
-
-            log_info(cpu_log, "PID: %d - Ejecutando: RESIZE %d", pcb->pid, tamanio_resize);
-
-        
+            log_info(cpu_log, "PID: %d - Ejecutando: RESIZE %d", pcb->pid, tamanio_resize);     
             char* mensaje = malloc(sizeof(tamanio_resize)+sizeof(pcb->pid));
-            sprintf(mensaje, "%d/%u", tamanio_resize,pcb->pid);      //ver de implementar en demas    
+            sprintf(mensaje, "%d/%u", tamanio_resize,pcb->pid);       
             enviar_a_mem(conexion_memoria_cpu, mensaje,CPU_RESIZE);
            
 
@@ -652,27 +609,6 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
     return ret;
 }
 
-/*
-char** split_por_bytes(const char* string, size_t bytes, int* cant_partes) {
-    size_t string_len = strlen(string);
-    *cant_partes = (string_len + bytes - 1) / bytes; // Calcula la cantidad de partes
-    int resto = string_len % bytes; // Calcula el resto para la última parte
-
-    printf("Cant partes: %d\n", *cant_partes);
-
-    char** partes = (char**)malloc((*cant_partes) * sizeof(char*));
-
-    // Iterar sobre las partes
-    for (int i = 0; i < *cant_partes; i++) {
-        size_t current_part_size = (i == (*cant_partes - 1) && resto != 0) ? resto : bytes; // Tamaño de la parte actual
-        partes[i] = (char*)malloc((current_part_size + 1) * sizeof(char)); // Reservar memoria para la parte
-        strncpy(partes[i], string + i * bytes, current_part_size); // Copiar la parte de la cadena original
-        partes[i][current_part_size] = '\0'; // Asegurar que la cadena termina con '\0'
-    }
-
-    return partes; // Devolver el arreglo de partes
-}*/
-    
 void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger, int socket_cliente, pthread_mutex_t lock_interrupt){
    
    t_cpu_blockeo blockeo;
@@ -685,7 +621,7 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger, int socket_cli
         
         t_decode* decodeado = decode(ins);
     
-        log_debug(logger, "Numero instruccion: %d", decodeado->op_code);
+        //log_debug(logger, "Numero Instruccion: %d", decodeado->op_code);
 
         blockeo = execute(decodeado,pcb, logger);
         loggear_registros(pcb, logger);
