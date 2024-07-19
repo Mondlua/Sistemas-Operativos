@@ -57,7 +57,7 @@ void enviar_instruccion_a_Kernel(t_paquete_instruccion* instruccion, instruccion
 
 //A MEMORIA
 t_buffer_ins* serializar_registro_direccion_tamanio_con_texto(instruccion_params* param);
-void enviar_instruccion_IO_Mem(t_paquete_instruccion* instruccion, instruccion_params* parametros, int socket_cliente);
+void enviar_instruccion_IO_Mem(t_paquete_instruccion* instruccion, instruccion_params* parametros, int socket_cliente, uint32_t pid);
 
 
 #endif

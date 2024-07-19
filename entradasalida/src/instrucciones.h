@@ -11,7 +11,6 @@
 #include "DialFS.h"
 
 extern char* nombre_interfaz;
-extern t_log* entradasalida_log;
 extern int conexion_kernel;
 extern int conexion_memoria;
 
@@ -24,7 +23,8 @@ instruccion_params* deserializar_io_fs_truncate(t_buffer_ins* buffer);
 instruccion_params* deserializar_io_fs_write_read(t_buffer_ins* buffer);
 
 int validar_operacion(char* tipo_interfaz, int codigo_operacion);
-void atender_cod_op(instruccion_params* parametros, instrucciones op_code);
+const char* op_code_a_string(instrucciones op_code);
+void atender_cod_op(instruccion_params* parametros, instrucciones op_code, uint32_t pid);
 
 
 #endif

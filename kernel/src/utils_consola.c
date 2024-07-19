@@ -69,7 +69,7 @@ void mostrar_pids_en_estado(t_proceso_estado estado)
         //log_warning(kernel_log, "La COLA %s esta VACIA", estado_a_string(estado));
     }
 }
-
+/*
 t_queue* cola_pcb(uint32_t num_pid){ //buscar cola en cada estado
 
     t_queue* buscado = NULL;
@@ -136,7 +136,7 @@ t_pcb* buscar_pcb(uint32_t num_pid){
         }
     return buscado;
 }
-
+*/
 
 void cambiar_a_cola(t_pcb* pcb, t_proceso_estado estado ){
     t_proceso_estado ant = pcb->estado;
@@ -148,7 +148,7 @@ void cambiar_a_cola(t_pcb* pcb, t_proceso_estado estado ){
     // log_info(kernel_log, "PID: <%u> - Estado Anterior: <%s> - Estado Actual: <%s>", pcb->pid, estado_a_string(ant), estado_a_string(pcb->estado));
 }
 
-t_queue *cola_de_estado(t_planificacion *kernel_argumentos, t_proceso_estado estado)
+t_queue *cola_de_estado(t_proceso_estado estado)
 {
 
     switch (estado)

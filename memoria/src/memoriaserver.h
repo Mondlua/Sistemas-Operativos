@@ -16,7 +16,7 @@
 #include "memoriautils.h"
 #include <commons/string.h>
 
-extern t_list* lista_arch;
+//extern t_list* lista_arch;
 extern sem_t semaforo_mem;
 
 typedef struct
