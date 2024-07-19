@@ -12,10 +12,9 @@
 #include <utils/mensajesPropios.h>
 #include <commons/collections/list.h>
 #include <semaphore.h>
-#include <utils/io_operation.h>
 #include <commons/collections/queue.h>
 #include <utils/funcionesUtiles.h>
-#include "alg_planificacion.h"
+#include <utils/planificador.h>
 
 extern t_list* interfaces;
 extern sem_t habilitacion_io;
@@ -31,17 +30,10 @@ typedef struct
 
 } t_atender_cliente_args;
 
-typedef struct {
-    char* nombre_interfaz;
-    int socket_interfaz;
-    sem_t semaforo_interfaz;  
-    t_queue* cola_block;
-} interfaz;
-
 void atender_cliente(void* void_args);
 int server_escuchar(void *arg);
-int buscar_posicion_interfaz_por_nombre(char* nombre_interfaz);
-//t_pcb* recibir_pcb(int socket_cliente);
+t_queue_block* buscar_interfaz_por_socket(t_planificacion* kernel_argumentos, int socket);
+
 
 
 #endif

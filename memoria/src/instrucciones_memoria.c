@@ -12,7 +12,7 @@ t_list* abrir_pseudocodigo(char* path){
     FILE* arch_pseudocodigo = fopen(path_completo, "r");
         if(arch_pseudocodigo == NULL){
             log_error(memoria_log, "No se pudo abrir el archivo.\n");
-            EXIT_FAILURE;
+            return NULL;
         }
     free(path_completo);
 
@@ -23,20 +23,10 @@ t_list* abrir_pseudocodigo(char* path){
         while (fgets(instruccionlinea, sizeof(instruccionlinea), arch_pseudocodigo) != NULL) {
             
             size_t longitud = strlen(instruccionlinea);
-            /*t_instruccion* instruccion = malloc(sizeof(t_instruccion));
-            instruccion->buffer=malloc(sizeof(t_buffer_ins));
-            instruccion->codigo_operacion = INSTRUCCION;
-            instruccion->buffer->size = longitud;
-            instruccion->buffer->stream = malloc(sizeof(instruccionlinea));
-            instruccion->buffer->stream = strdup(instruccionlinea);*/
-
             char* instruccion = strdup(instruccionlinea);
             list_add_in_index(lista_inst,cont,instruccion);
             cont++;
-            //printf("Longitud: %zu, Contenido: %s", instruccion->buffer->size, instruccion->buffer->stream);
-            //printf("Contenido: %s", list_get(lista_inst, cont));
             printf("Contenido: %s", instruccion);
-            //sem_post(&semaforo_mem); //Contador de intrucciones
             if(strcmp(strdup(instruccionlinea),"EXIT") == 0){
                  break;  
             }

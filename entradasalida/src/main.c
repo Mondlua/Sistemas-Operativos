@@ -4,6 +4,10 @@ char* nombre_interfaz;
 int conexion_kernel;
 int conexion_memoria;
 int tiempo_unidad_trabajo;
+int retraso_compactacion;
+int block_size;
+int block_count;
+char* path_base_dialfs;
 t_log* entradasalida_log;
 
 int main(void) {
@@ -40,25 +44,11 @@ int main(void) {
     send_handshake(conexion_kernel, entradasalida_log, "I/O / KERNEL");
 
     aviso_segun_cod_op(nombre_interfaz, conexion_kernel, INTERFAZ);
-    recibir_instruccion(interfaz);
-    terminar_io();
 
-    aviso_segun_cod_op(nombre_interfaz, conexion_kernel, AVISO_DESCONEXION);
+    pthread_t hilo;
+    pthread_create(&hilo, NULL, (void *)recibir_instruccion, interfaz);
+    pthread_join(hilo, NULL);
     return 0;
-}
-
-void terminar_io(){
-    char letra;
-    printf("Ingresa una letra para detener el programa: ");
-    
-    while (1) {  // Bucle infinito
-        scanf(" %c", &letra);  // Lee un carácter
-        
-        if (letra >= 'A' && letra <= 'Z') {  // Verifica si es una letra mayúscula
-            printf("Deteniendo el programa...\n");
-            break;  // Sale del bucle
-        }
-    }
 }
 
 void extraer_segun_tipo_io(t_config* config, char* tipo_interfaz){
@@ -73,11 +63,12 @@ void extraer_segun_tipo_io(t_config* config, char* tipo_interfaz){
     }
     else if(strcmp(tipo_interfaz, "DIALFS") == 0 ){
         tiempo_unidad_trabajo = config_get_int_value(config, "TIEMPO_UNIDAD_TRABAJO");
-        char* path_base_dialfs = config_get_string_value(config, "PATH_BASE_DIALFS");
-        int block_size = config_get_int_value(config, "BLOCK_SIZE");
-        int block_count = config_get_int_value(config, "BLOCK_COUNT");
-        int retraso_compactacion = config_get_int_value(config, "RETRASO_COMPACTACION");
+        path_base_dialfs = config_get_string_value(config, "PATH_BASE_DIALFS");
+        block_size = config_get_int_value(config, "BLOCK_SIZE");
+        block_count = config_get_int_value(config, "BLOCK_COUNT");
+        retraso_compactacion = config_get_int_value(config, "RETRASO_COMPACTACION");
         conectar_con_memoria(config);
+        inicio_filesystem();
     }
 }
 
