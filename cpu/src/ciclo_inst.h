@@ -43,6 +43,7 @@ typedef struct
 
 
 char* fetch(int conexion, t_pcb* pcb);
+
 t_decode* decode(char* ins);
 t_cpu_blockeo execute(t_decode* deacodeado, t_pcb* pcb, t_log *logger);
 instrucciones obtener_instruccion(char *nombre);

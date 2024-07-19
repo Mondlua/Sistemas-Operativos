@@ -12,8 +12,8 @@ instruccion_params* recibir_registro_direccion_tamanio_con_texto(int client_sock
     stream += sizeof(t_dir_fisica);
     memcpy(&(parametros->registro_tamanio), stream, sizeof(cpu_registros));
     stream += sizeof(cpu_registros);
-    size_t tamaño_texto = sizeof(parametros->registro_tamanio);
-    memcpy(&(parametros->texto), stream, sizeof(tamaño_texto));
+    size_t tamanio_texto = sizeof(parametros->registro_tamanio);
+    memcpy(&(parametros->texto), stream, sizeof(tamanio_texto));
     return parametros;
 }
 
