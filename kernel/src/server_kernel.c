@@ -16,19 +16,13 @@ void atender_cliente(void *void_args)
 
         if (cop == -1)
         {
-            interfaz* posible_interfaz = buscar_posicion_interfaz_por_cliente(client_socket);
-            if (posible_interfaz != NULL) {
-                if (list_remove_element(interfaces, posible_interfaz)) {
-                    queue_destroy(posible_interfaz->cola_block);
-                    sem_destroy(&posible_interfaz->semaforo_interfaz);
-                    log_info(logger, "DISCONNECT %s!", posible_interfaz->nombre_interfaz);
-                    free(posible_interfaz->nombre_interfaz);
-                    free(posible_interfaz);
-                }
-            } else {
-                log_error(logger, "No se encontró la interfaz %s en la lista", posible_interfaz->nombre_interfaz);
+            t_queue_block* interfaz_desconectada = buscar_interfaz_por_socket(args->planificador, client_socket);
+            if(interfaz_desconectada == NULL)
+            {
+                log_info(logger, "DISCONECT!");
+                return;
             }
-            return;
+            cop = AVISO_DESCONEXION;
         }
 
         switch (cop) 
@@ -66,23 +60,24 @@ void atender_cliente(void *void_args)
             // sem_post(&sem_contador_int);
             // break;
         }
-
-       /* case AVISO_DESCONEXION:
+        case AVISO_DESCONEXION:
         {
-            char* interfaz_recibida = recibir_desconexion(client_socket, logger);
+            //char* interfaz_recibida = recibir_desconexion(client_socket, logger);
 
-            t_queue_block* interfaz_desconectada = dictionary_remove(args->planificador->colas.lista_block, interfaz_recibida);
+            t_queue_block* interfaz_desconectada = buscar_interfaz_por_socket(args->planificador, client_socket);
 
             if(interfaz_desconectada == NULL)
             {
-                log_error(logger, "Se ha desconectado una interfaz desconocida: %s", interfaz_recibida);
+                log_error(logger, "Se ha desconectado una interfaz desconocida");
             }
 
             log_debug(logger, "Se deconecta la interfaz: %s", interfaz_desconectada->identificador);
             queue_destroy(interfaz_desconectada->block_queue);
+            list_destroy(interfaz_desconectada->block_dictionary);
+            free(interfaz_desconectada->identificador);
             free(interfaz_desconectada);
 
-            break;
+            return;
             // char* interfaz_recibida = recibir_desconexion(client_socket, logger);
             // int posicion_interfaz = buscar_posicion_interfaz_por_nombre(interfaz_recibida);
             // if (posicion_interfaz != -1) {
@@ -99,7 +94,6 @@ void atender_cliente(void *void_args)
             // }
             // break;
         }
-*/
         case AVISO_OPERACION_INVALIDA:
         {
             char* nombre_interfaz = recibir_error_oi(client_socket); // TODO: Pedir a Zoe que esto devuelva el nombre de la interfaz
@@ -114,7 +108,7 @@ void atender_cliente(void *void_args)
         }
         case AVISO_OPERACION_VALIDADA:
         {
-            logica_int = recibir_op_validada(client_socket);
+            int logica_int = recibir_op_validada(client_socket);
             log_debug(logger, "La ultima operacion solicitada ha sido validada");
             break;
         }
@@ -178,6 +172,24 @@ int server_escuchar(void* arg)
 }
 /* PROTOCOLO */
 
+t_queue_block* buscar_interfaz_por_socket(t_planificacion* kernel_argumentos, int socket)
+{
+    t_queue_block* ret = NULL;
+    t_list* lista = dictionary_elements(kernel_argumentos->colas.lista_block);
+
+    int i = 0, tamanio = list_size(lista);
+    while(i < tamanio)
+    {
+        t_queue_block* candidato = list_get(lista, i);
+        if(candidato->socket_interfaz == socket)
+        {
+            ret = candidato;
+        }
+        i++;
+    }
+    
+    return ret;
+}
 
 int buscar_posicion_interfaz_por_nombre(char* nombre_interfaz) {
 
@@ -189,25 +201,4 @@ int buscar_posicion_interfaz_por_nombre(char* nombre_interfaz) {
     //     }
     // }
     // return -1;
-
-    int tamanio_lista = list_size(interfaces);
-    for (int i = 0; i < tamanio_lista; i++) {
-        interfaz* posible_interfaz = list_get(interfaces, i);
-        if (string_equals_ignore_case(posible_interfaz->nombre_interfaz, nombre_interfaz)) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-interfaz* buscar_posicion_interfaz_por_cliente(int cliente) {
-    int tamanio_lista = list_size(interfaces);
-    for (int i = 0; i < tamanio_lista; i++) {
-        interfaz* posible_interfaz = list_get(interfaces, i);
-        if (posible_interfaz->socket_interfaz == cliente) {
-            return posible_interfaz;
-        }
-    }
-    return NULL;
-
 }

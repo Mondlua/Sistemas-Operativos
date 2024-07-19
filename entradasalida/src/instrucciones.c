@@ -117,9 +117,9 @@ void recibir_instruccion(char* tipo_interfaz)
             atender_cod_op(param, instruccion->codigo_operacion);
             free(instruccion->buffer);
             free(instruccion);
-            if (param != NULL) {
-            free(param);
-            }
+            // if (param != NULL) {
+            // free(param);
+            // }
         }
         else{
             char* error = "0";
@@ -141,6 +141,7 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code){
         int unidades_trabajo_recibidas = parametros->params.io_gen_sleep.unidades_trabajo;
         result = unidades_trabajo_recibidas * tiempo_unidad_trabajo * 1000; 
         usleep(result);
+        log_debug(entradasalida_log, "Termine de dormir %dms", result);
         break;
     }
     case IO_STDIN_READ:{

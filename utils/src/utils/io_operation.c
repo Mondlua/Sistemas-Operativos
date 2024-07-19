@@ -284,7 +284,6 @@ void enviar_instruccion_a_Kernel(t_paquete_instruccion* instruccion, instruccion
             buffer = serializar_io_fs_write_read_con_interfaz(parametros);
             break;
         }
-           
         // Otras operaciones de serialización para otros tipos de operaciones
         default:{
             printf("Tipo de operación no válido.\n");
