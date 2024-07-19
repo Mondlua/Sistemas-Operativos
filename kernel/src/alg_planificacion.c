@@ -740,9 +740,12 @@ t_instruccion_params_opcode recibir_solicitud_cpu(int socket_servidor, t_pcb* pc
             break;
         }
         case IO_STDIN_READ:
-        case IO_STDOUT_WRITE:
-            param = deserializar_io_stdin_stdout_con_interfaz(instruccion->buffer);
+        { param = deserializar_io_stdin_stdout_con_interfaz(instruccion->buffer);
             break;
+            }
+        case IO_STDOUT_WRITE:{
+            param = deserializar_io_stdin_stdout_con_interfaz(instruccion->buffer);
+            break;}
         case IO_FS_CREATE:
         case IO_FS_DELETE:
             param = deserializar_io_fs_create_delete_con_interfaz(instruccion->buffer);

@@ -14,7 +14,9 @@ void enviar_instruccion(t_paquete_instruccion* instruccion, instruccion_params* 
         }
         case IO_STDIN_READ:
         {
+            printf("holaq tal\n");
             buffer = serializar_registro_direccion_tamanio(parametros);
+            
             break;
         }
         case IO_STDOUT_WRITE:
@@ -84,12 +86,16 @@ t_buffer_ins* serializar_io_gen_sleep(instruccion_params* param) {
 }
 
 t_buffer_ins* serializar_registro_direccion_tamanio(instruccion_params* param) {
-    size_t size = sizeof(uint32_t) + sizeof(t_dir_fisica);
+    int size = sizeof(uint32_t) + sizeof(t_dir_fisica);
     t_buffer_ins* buffer = malloc(sizeof(t_buffer_ins));
     buffer->size = size;
     buffer->stream = malloc(size);
     size_t offset = 0;
-    memcpy(buffer->stream + offset, param->registro_direccion, sizeof(t_dir_fisica));
+    t_dir_fisica* dir  = malloc(sizeof(t_dir_fisica));
+    dir = param->registro_direccion;
+
+    printf("la dir tiene %d y %d ",dir->nro_frame, dir->desplazamiento); // NO RECIBE LA DIR FISICA
+    memcpy(buffer->stream + offset, dir, sizeof(t_dir_fisica));
     offset += sizeof(t_dir_fisica);
     memcpy(buffer->stream + offset, &(param->registro_tamanio), sizeof(uint32_t));
     return buffer;
@@ -365,8 +371,8 @@ void enviar_instruccion_IO_Mem(t_paquete_instruccion* instruccion, instruccion_p
 }
 
 t_buffer_ins* serializar_registro_direccion_tamanio_con_texto(instruccion_params* param){
-    size_t tamaño_texto = sizeof(param->registro_tamanio);
-    size_t size = sizeof(uint32_t) + sizeof(t_dir_fisica) + tamaño_texto;
+    size_t tamanio_texto = sizeof(param->registro_tamanio);
+    size_t size = sizeof(uint32_t) + sizeof(t_dir_fisica) + tamanio_texto;
     t_buffer_ins* buffer = malloc(sizeof(t_buffer_ins));
     buffer->size = size;
     buffer->stream = malloc(size);
@@ -375,7 +381,7 @@ t_buffer_ins* serializar_registro_direccion_tamanio_con_texto(instruccion_params
     offset += sizeof(t_dir_fisica);
     memcpy(buffer->stream + offset, &(param->registro_tamanio), sizeof(uint32_t));
     offset += sizeof(uint32_t);
-    memcpy(buffer->stream + offset, &(param->texto), tamaño_texto);
+    memcpy(buffer->stream + offset, &(param->texto), tamanio_texto);
     
     return buffer;
 }

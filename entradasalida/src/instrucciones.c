@@ -75,7 +75,7 @@ void recibir_instruccion(char* tipo_interfaz)
         instruccion->buffer->stream = malloc(instruccion->buffer->size);
         recv(conexion_kernel, instruccion->buffer->stream, instruccion->buffer->size, MSG_WAITALL);
         instruccion_params* param;
-
+        
         if(validar_operacion(tipo_interfaz, instruccion->codigo_operacion)){
             switch (instruccion->codigo_operacion)
             {
@@ -84,6 +84,7 @@ void recibir_instruccion(char* tipo_interfaz)
             break;
             }
             case IO_STDIN_READ:{
+                printf("hola entre \n");
             param = deserializar_registro_direccion_tamanio(instruccion->buffer);
             break;
             }
