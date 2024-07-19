@@ -61,12 +61,10 @@ void escribir_en_mem_cpu(char* aescribir, t_dir_fisica* dir_fisica, int tamanio 
     if (tamanio == 1){ //uint8
         uint8_t escribir = (uint8_t) atoi(aescribir);
         memcpy((char*)memoria + (nro_frame * tam_pagina) + desplazamiento , &escribir, tam_bytes); 
-        printf("Escribi en Nro Frame <%d> y Desp <%d>: <%u>\n", nro_frame, desplazamiento, escribir);
     }
     if(tamanio ==4){//uint32
         uint32_t escribir = (uint32_t)atoi(aescribir);
         memcpy((char*)memoria + (nro_frame * tam_pagina) + desplazamiento , &escribir, tam_bytes);
-        printf("Escribi en Nro Frame <%d> y Desp <%d>: <%u>\n", nro_frame, desplazamiento, escribir);
     }
 
     log_info(memoria_log, "PID: %u - Accion:ESCRIBIR - Direccion fisica: %d - Tamaño %d",pid ,nro_frame+desplazamiento,tamanio);
@@ -304,7 +302,7 @@ bool puede_escribir(uint32_t pid, int frame,int cant_pags ){
 
     //FRAME ESTA DISPONIBLE EN BIT ARRAY
     bool disponible = false;
-    if(bitarray_test_bit(escrito, frame)==0 && bitarray_test_bit(bitarray, frame)==1){
+    if( bitarray_test_bit(bitarray, frame)==1){//bitarray_test_bit(escrito, frame)==0 &&
         disponible=true;
     }
     //VER SI TIENE CANT PAGS NECESARIAS
