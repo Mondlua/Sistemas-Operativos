@@ -7,6 +7,8 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <string.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 #include <stdint.h>
 #include <utils/catedra/mensajes.h>
 #include "DialFS.h"

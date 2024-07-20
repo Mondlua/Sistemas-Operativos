@@ -375,7 +375,7 @@ void enviar_instruccion_IO_Mem(t_paquete_instruccion* instruccion, instruccion_p
 }
 
 t_buffer_ins* serializar_registro_direccion_tamanio_con_texto(instruccion_params* param){
-    size_t tamanio_texto = sizeof(param->registro_tamanio);
+    uint32_t tamanio_texto = param->registro_tamanio +1;
     size_t size = sizeof(uint32_t) + sizeof(t_dir_fisica) + tamanio_texto;
     t_buffer_ins* buffer = malloc(sizeof(t_buffer_ins));
     buffer->size = size;
@@ -387,7 +387,7 @@ t_buffer_ins* serializar_registro_direccion_tamanio_con_texto(instruccion_params
     offset += sizeof(int);
     memcpy(buffer->stream + offset, &(param->registro_tamanio), sizeof(uint32_t));
     offset += sizeof(uint32_t);
-    memcpy(buffer->stream + offset, &(param->texto), tamanio_texto);
+    memcpy(buffer->stream + offset, param->texto, tamanio_texto);
     
     return buffer;
 }

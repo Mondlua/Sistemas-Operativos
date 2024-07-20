@@ -15,8 +15,13 @@ instruccion_params* recibir_registro_direccion_tamanio_con_texto(int client_sock
     stream += sizeof(int);
     memcpy(&(parametros->registro_tamanio), stream, sizeof(uint32_t));
     stream += sizeof(uint32_t);
-    size_t tamanio_texto = sizeof(parametros->registro_tamanio);
-    memcpy(&(parametros->texto), stream, sizeof(tamanio_texto));
+    uint32_t tamanio_texto = parametros->registro_tamanio;
+    parametros->texto = malloc(tamanio_texto + 1); // +1 para el carácter nulo
+    memcpy(parametros->texto, stream, tamanio_texto);
+    parametros->texto[tamanio_texto] = '\0'; // Asegura que el texto está null-terminated
+    free(instruccion->buffer->stream);
+    free(instruccion->buffer);
+    free(instruccion);
     return parametros;
 }
 
