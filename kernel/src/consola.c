@@ -132,6 +132,7 @@ void finalizar_proceso(uint32_t pid, t_planificacion *kernel_argumentos){
     t_pcb* pcb_candidato;
     t_pcb* pcb_a_eliminar = NULL;
     pthread_mutex_lock(&kernel_argumentos->planning_mutex);
+    log_warning(kernel_argumentos->logger, "Se bloquea la planificacion");
 
     log_debug(kernel_argumentos->logger, "Busco en EXEC");
     if(!queue_is_empty(kernel_argumentos->colas.exec))
@@ -222,11 +223,13 @@ void finalizar_proceso(uint32_t pid, t_planificacion *kernel_argumentos){
             eliminar_proceso_recurso(pcb_a_eliminar, nombre_recurso, kernel_argumentos);
         }
         pthread_mutex_unlock(&kernel_argumentos->planning_mutex);
+        log_warning(kernel_argumentos->logger, "Se desbloquea la planificacion");
         return;
     }
 
     log_debug(kernel_argumentos->logger, "No se encontro el proceso de PID: %d", pid);
     pthread_mutex_unlock(&kernel_argumentos->planning_mutex);
+    log_warning(kernel_argumentos->logger, "Se desbloquea la planificacion");
 }
 
 t_pcb *buscar_pcb_en_cola(t_queue* cola, uint32_t pid)
@@ -261,10 +264,10 @@ t_pcb* buscar_pcb_en_lista(t_list* lista, uint32_t pid)
     int tamanio = list_size(lista);
     while(i<tamanio)
     {
-        pcb_candidato = list_get(lista, i);
+        pcb_candidato = list_remove(lista, 0);
         if(pcb_candidato->pid == pid)
         {
-            ret = list_remove(lista, i);
+            ret = pcb_candidato;
         }
         else
         {

@@ -904,9 +904,19 @@ void mover_a_exit(t_pcb* pcb_desalojado, t_planificacion *kernel_argumentos)
     queue_push(kernel_argumentos->colas.exit, pcb_desalojado);
     pthread_mutex_unlock(&kernel_argumentos->colas.mutex_exit);
 
+    // eliminar_recursos_afectados(pcb_desalojado, kernel_argumentos);
+
     char* estado = proceso_estado_a_string(aux);
     log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: %s - Estado actual: EXIT", pcb_desalojado->pid, estado);
 }
+
+// void eliminar_recursos_afectados(t_pcb* pcb, t_planificacion* kernel_argumentos)
+// {
+//     char* pid = string_itoa(pcb->pid);
+//     t_list* lista_del_proceso = dictionary_remove(kernel_argumentos->recursos_tomados, pid);
+
+//     log_debug(kernel_argumentos->logger, "El recurso %s tenia tomados %d recursos cuando termino su ejecucion");
+// }
 
 char* proceso_estado_a_string(t_proceso_estado estado)
 {
