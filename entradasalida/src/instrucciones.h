@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdint.h>
+#include <utils/catedra/mensajes.h>
 #include "DialFS.h"
 
 extern char* nombre_interfaz;
