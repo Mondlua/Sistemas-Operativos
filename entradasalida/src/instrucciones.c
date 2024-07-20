@@ -9,9 +9,12 @@ instruccion_params* deserializar_io_gen_sleep(t_buffer_ins* buffer) {
 
 instruccion_params* deserializar_registro_direccion_tamanio(t_buffer_ins* buffer) {
     instruccion_params* parametros = malloc(sizeof(instruccion_params));
+    parametros->registro_direccion = malloc(sizeof(t_dir_fisica));
     void* stream = buffer->stream;
-    memcpy(&(parametros->registro_direccion), stream, sizeof(t_dir_fisica));
-    stream += sizeof(t_dir_fisica);
+    memcpy(&(parametros->registro_direccion->nro_frame), stream, sizeof(int));
+    stream += sizeof(int);
+    memcpy(&(parametros->registro_direccion->desplazamiento), stream, sizeof(int));
+    stream += sizeof(int);
     memcpy(&(parametros->registro_tamanio), stream, sizeof(uint32_t));
     return parametros;
 }
@@ -54,8 +57,10 @@ instruccion_params* deserializar_io_fs_write_read(t_buffer_ins* buffer) {
     parametros->params.io_fs.nombre_archivo = malloc(archivo_len);
     memcpy(parametros->params.io_fs.nombre_archivo, buffer->stream + offset, archivo_len);
     offset += archivo_len;
-    memcpy(&(parametros->registro_direccion), buffer->stream + offset, sizeof(t_dir_fisica));
-    offset += sizeof(t_dir_fisica);
+    memcpy(&(parametros->registro_direccion->nro_frame), buffer->stream + offset, sizeof(int));
+    offset += sizeof(int);
+    memcpy(&(parametros->registro_direccion->desplazamiento), buffer->stream + offset, sizeof(int));
+    offset += sizeof(int);
     memcpy(&(parametros->registro_tamanio), buffer->stream + offset, sizeof(uint32_t));
     offset += sizeof(uint32_t);
     memcpy(&(parametros->params.io_fs.registro_puntero_archivo), buffer->stream + offset, sizeof(off_t));
@@ -84,7 +89,6 @@ void recibir_instruccion(char* tipo_interfaz)
             break;
             }
             case IO_STDIN_READ:{
-                printf("hola entre \n");
             param = deserializar_registro_direccion_tamanio(instruccion->buffer);
             break;
             }
@@ -128,7 +132,7 @@ void recibir_instruccion(char* tipo_interfaz)
             free(instruccion->buffer);
             free(instruccion);
         }
-        
+        aviso_segun_cod_op(nombre_interfaz, conexion_kernel,AVISO_OPERACION_FINALIZADA);
     }
 
 }
@@ -147,12 +151,12 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code, uint3
     }
     case IO_STDIN_READ:{
         uint32_t tamanio = parametros->registro_tamanio;
-        char* texto = (char*)malloc(sizeof(tamanio));
-        printf("Ingrese el texto: ");
-        fgets(texto, tamanio, stdin);
+        char* texto = (char*)malloc(tamanio+1);
+        log_info(entradasalida_log,"Ingrese el texto de tamanio %i: ", tamanio);
+        scanf("%s", texto);       
         parametros->texto = texto;
         t_paquete_instruccion* instruccion_enviar = malloc(sizeof(t_paquete_instruccion));
-        instruccion_enviar->codigo_operacion = IO_STDIN_READ;
+        instruccion_enviar->codigo_operacion = READ_IO;
         enviar_instruccion_IO_Mem(instruccion_enviar,parametros,conexion_memoria, pid);
         free(texto);
         free(instruccion_enviar);
@@ -160,7 +164,7 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code, uint3
     }
     case IO_STDOUT_WRITE:{
         t_paquete_instruccion* instruccion_enviar = malloc(sizeof(t_paquete_instruccion));
-        instruccion_enviar->codigo_operacion = IO_STDOUT_WRITE;
+        instruccion_enviar->codigo_operacion = WRITE_IO;
         enviar_instruccion_IO_Mem(instruccion_enviar,parametros,conexion_memoria, pid);
         free(instruccion_enviar);
         char* imprimir = recibir_mensaje(conexion_memoria, entradasalida_log);
@@ -185,7 +189,7 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code, uint3
     case IO_FS_WRITE:{
         log_info(entradasalida_log, "PID: <%i> - Escribir Archivo: <%s> - Tamaño a Escribir: <%i> - Puntero Archivo: <%jd>", pid,  parametros->params.io_fs.nombre_archivo, parametros->registro_tamanio, (intmax_t)parametros->params.io_fs.registro_puntero_archivo);
         t_paquete_instruccion* instruccion_enviar = malloc(sizeof(t_paquete_instruccion));
-        instruccion_enviar->codigo_operacion = IO_FS_WRITE;
+        instruccion_enviar->codigo_operacion = WRITE_IO_FS;
         enviar_instruccion_IO_Mem(instruccion_enviar,parametros,conexion_memoria, pid);
         free(instruccion_enviar);
         char* a_escribir = recibir_mensaje(conexion_memoria, entradasalida_log);
@@ -197,7 +201,7 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code, uint3
         log_info(entradasalida_log, "PID: <%i> - Leer Archivo: <%s> - Tamaño a Escribir: <%i> - Puntero Archivo: <%jd>", pid,  parametros->params.io_fs.nombre_archivo, parametros->registro_tamanio, (intmax_t)parametros->params.io_fs.registro_puntero_archivo);
         char* leido = leer_archivo(parametros->params.io_fs.nombre_archivo, parametros->params.io_fs.registro_puntero_archivo, parametros->registro_tamanio);
         t_paquete_instruccion* instruccion_enviar = malloc(sizeof(t_paquete_instruccion));
-        instruccion_enviar->codigo_operacion = IO_FS_READ;
+        instruccion_enviar->codigo_operacion = READ_IO_FS;
         parametros->texto = leido;
         enviar_instruccion_IO_Mem(instruccion_enviar,parametros,conexion_memoria, pid);
         free(leido);
@@ -206,7 +210,6 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code, uint3
     default:
         break;
     }
-    aviso_segun_cod_op(nombre_interfaz, conexion_kernel,AVISO_OPERACION_FINALIZADA);
     free(parametros);
 }
 

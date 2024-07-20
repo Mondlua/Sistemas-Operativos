@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include "Instrucciones_gral.h"
 #include <utils/catedra/inicio.h>
+#include <utils/catedra/mensajes.h>
 #include "mensajesPropios.h"
 #include <semaphore.h>
 #include <time.h>

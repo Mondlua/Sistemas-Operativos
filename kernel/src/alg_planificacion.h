@@ -19,7 +19,7 @@ extern sem_t cola_ready;
 typedef struct
 {
     instruccion_params *params;
-    op_code opcode;
+    instrucciones opcode;
 } t_instruccion_params_opcode;
 typedef struct {
     char* nombre_interfaz;

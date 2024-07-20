@@ -177,8 +177,10 @@ t_buffer_ins* serializar_registro_direccion_tamanio_con_interfaz(instruccion_par
     offset += sizeof(uint32_t);
     memcpy(buffer->stream + offset, param->interfaz, interfaz_len);
     offset += interfaz_len;
-    memcpy(buffer->stream + offset, param->registro_direccion, sizeof(t_dir_fisica));
-    offset += sizeof(t_dir_fisica);
+    memcpy(buffer->stream + offset, &(param->registro_direccion->nro_frame), sizeof(int));
+    offset += sizeof(int);
+    memcpy(buffer->stream + offset, &(param->registro_direccion->desplazamiento), sizeof(int));
+    offset += sizeof(int);
     memcpy(buffer->stream + offset, &(param->registro_tamanio), sizeof(uint32_t));
     return buffer;
 }
@@ -237,8 +239,10 @@ t_buffer_ins* serializar_io_fs_write_read_con_interfaz(instruccion_params* param
     offset += sizeof(uint32_t);
     memcpy(buffer->stream + offset, param->params.io_fs.nombre_archivo, archivo_len);
     offset += archivo_len;
-    memcpy(buffer->stream + offset, param->registro_direccion, sizeof(t_dir_fisica));
-    offset += sizeof(t_dir_fisica);
+    memcpy(buffer->stream + offset, &(param->registro_direccion->nro_frame), sizeof(int));
+    offset += sizeof(int);
+    memcpy(buffer->stream + offset, &(param->registro_direccion->desplazamiento), sizeof(int));
+    offset += sizeof(int);
     memcpy(buffer->stream + offset, &(param->registro_tamanio), sizeof(uint32_t));
     offset += sizeof(uint32_t);
     memcpy(buffer->stream + offset, &(param->params.io_fs.registro_puntero_archivo), sizeof(off_t));
@@ -325,19 +329,19 @@ void enviar_instruccion_IO_Mem(t_paquete_instruccion* instruccion, instruccion_p
     t_buffer_ins* buffer = NULL;
     
     switch (instruccion->codigo_operacion) {
-        case IO_STDIN_READ:{
+        case READ_IO:{
             buffer = serializar_registro_direccion_tamanio_con_texto(parametros);
             break;
         }
-        case IO_STDOUT_WRITE:{
+        case WRITE_IO:{
             buffer = serializar_registro_direccion_tamanio(parametros);
             break;
         }
-        case IO_FS_WRITE:{
+        case WRITE_IO_FS:{
             buffer = serializar_registro_direccion_tamanio(parametros);
             break;
         }
-        case IO_FS_READ:{
+        case READ_IO_FS:{
             buffer = serializar_registro_direccion_tamanio_con_texto(parametros);
             break;
         }
@@ -348,12 +352,12 @@ void enviar_instruccion_IO_Mem(t_paquete_instruccion* instruccion, instruccion_p
     }
     
     instruccion->buffer = buffer;
-    size_t total_size = sizeof(instrucciones) + sizeof(uint32_t) *2 + buffer->size;
+    size_t total_size = sizeof(op_code) + sizeof(uint32_t) *2 + buffer->size;
     void* a_enviar = malloc(total_size); 
     size_t offset = 0;
     
-    memcpy(a_enviar + offset, &(instruccion->codigo_operacion), sizeof(instrucciones));
-    offset += sizeof(instrucciones);
+    memcpy(a_enviar + offset, &(instruccion->codigo_operacion), sizeof(op_code));
+    offset += sizeof(op_code);
     memcpy(a_enviar + offset, &(pid), sizeof(uint32_t));
     offset += sizeof(uint32_t);
     memcpy(a_enviar + offset, &(buffer->size), sizeof(uint32_t));
@@ -377,8 +381,10 @@ t_buffer_ins* serializar_registro_direccion_tamanio_con_texto(instruccion_params
     buffer->size = size;
     buffer->stream = malloc(size);
     size_t offset = 0;
-    memcpy(buffer->stream + offset, &(param->registro_direccion), sizeof(t_dir_fisica));
-    offset += sizeof(t_dir_fisica);
+    memcpy(buffer->stream + offset, &(param->registro_direccion->nro_frame), sizeof(int));
+    offset += sizeof(int);
+    memcpy(buffer->stream + offset, &(param->registro_direccion->desplazamiento), sizeof(int));
+    offset += sizeof(int);
     memcpy(buffer->stream + offset, &(param->registro_tamanio), sizeof(uint32_t));
     offset += sizeof(uint32_t);
     memcpy(buffer->stream + offset, &(param->texto), tamanio_texto);

@@ -40,7 +40,11 @@ typedef enum
     BLOCK_RECURSO,
     FIN_QUANTUM,
     ACCESO_TABLA,
-    KERNEL_CPU_INTERRUPT
+    KERNEL_CPU_INTERRUPT,
+    READ_IO,
+    WRITE_IO,
+    WRITE_IO_FS,
+    READ_IO_FS
 } op_code;
 
 typedef struct

@@ -482,6 +482,8 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             log_info(cpu_log, "PID: %u - Ejecutando IO_STDIN_READ %s %s %s", pcb->pid, parametros->interfaz,registro_direccion, registro_tamanio);
 
             int dir_logica=(int)obtener_valor_registro(pcb->registros, registro_direccion);
+            printf("dir logica = %d", dir_logica);
+            printf("tamanio = <%s>", registro_tamanio);
             t_dir_fisica* dir_fisica =  mmu(dir_logica, pcb->pid);
             parametros->registro_direccion =  malloc(sizeof(t_dir_fisica));
             parametros->registro_direccion = dir_fisica;

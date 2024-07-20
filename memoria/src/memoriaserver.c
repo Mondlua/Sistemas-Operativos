@@ -103,7 +103,7 @@ void atender_cliente(void *void_args)
             free(pc_recibido);;
             break;
         }
-        case IO_STDIN_READ:{
+        case READ_IO:{
 
             recv(client_socket, &(pid), sizeof(uint32_t), MSG_WAITALL);
             instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
@@ -115,7 +115,7 @@ void atender_cliente(void *void_args)
             free(parametros_io);
             break;
         }
-        case IO_STDOUT_WRITE: {
+        case WRITE_IO: {
             recv(client_socket, &(pid), sizeof(uint32_t), MSG_WAITALL);
             instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
             parametros_io = recibir_registro_direccion_tamanio(client_socket);
@@ -128,7 +128,7 @@ void atender_cliente(void *void_args)
             break;
 
         }
-        case IO_FS_READ:{
+        case READ_IO_FS:{
             recv(client_socket, &(pid), sizeof(uint32_t), MSG_WAITALL);
             instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
             parametros_io = recibir_registro_direccion_tamanio_con_texto(client_socket);
@@ -139,7 +139,7 @@ void atender_cliente(void *void_args)
             free(parametros_io);
             break;
         }
-        case IO_FS_WRITE: {
+        case WRITE_IO_FS: {
             recv(client_socket, &(pid), sizeof(uint32_t), MSG_WAITALL);
             instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
             parametros_io = recibir_registro_direccion_tamanio(client_socket);
