@@ -151,9 +151,22 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code, uint3
     }
     case IO_STDIN_READ:{
         uint32_t tamanio = parametros->registro_tamanio;
-        char* texto = (char*)malloc(tamanio+1);
-        log_info(entradasalida_log,"Ingrese el texto de tamanio %i: ", tamanio);
-        scanf("%s", texto);       
+        char* prompt = (char*)malloc(256); // Para un mensaje de entrada personalizado
+        if (prompt == NULL) {
+            log_error(entradasalida_log, "Error al asignar memoria para el prompt");
+            break;
+        }   
+        snprintf(prompt, 256, "Ingrese el texto de tamaño %u: ", tamanio);
+        char* texto = readline(prompt);
+        free(prompt); 
+        if (texto == NULL) {
+            log_error(entradasalida_log, "Error al leer el texto");
+            break;
+        }
+    // Si el texto es más largo que el tamaño esperado, truncar
+        if (strlen(texto) > tamanio) {
+            texto[tamanio] = '\0'; // Truncar el texto al tamaño permitido
+        }
         parametros->texto = texto;
         t_paquete_instruccion* instruccion_enviar = malloc(sizeof(t_paquete_instruccion));
         instruccion_enviar->codigo_operacion = READ_IO;
