@@ -438,6 +438,8 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             char* mensaje = malloc(sizeof(d1)+sizeof(d2)+sizeof(d3)+sizeof(d4)+sizeof(cant_char)+sizeof(pid));
             sprintf(mensaje, "%d/%d/%d/%d/%d/%u", d1,d2,d3,d4,cant_char,pid);      //ver de implementar en demas    
             enviar_a_mem(conexion_memoria_cpu, mensaje,CPY_STRING);
+
+            log_info(logger, "PID: %d - Ejecutando: CPY_STRING %d", pcb->pid, bytes);  
            
             break;
         }
