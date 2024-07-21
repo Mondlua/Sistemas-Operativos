@@ -27,8 +27,22 @@ void* hilo_planificador(void *args)
         // Planifico a corto plazo
         planificador_corto_plazo(algoritmo_planificador, kernel_argumentos);
         pthread_mutex_unlock(&kernel_argumentos->planning_mutex);
+        loguear_recursos(kernel_argumentos);
     }
     return NULL;
+}
+
+void loguear_recursos(t_planificacion* kernel_argumentos)
+{
+    t_list* lista_recursos = dictionary_elements(kernel_argumentos->colas.lista_block);
+    int i = 0, tamanio = list_size(lista_recursos);
+    while(i<tamanio)
+    {
+        t_queue_block* recurso = list_remove(lista_recursos, 0);
+        log_debug(kernel_argumentos->logger, "El recurso %s tiene %d instancias disponibles", recurso->identificador, recurso->cantidad_instancias);
+        list_add(lista_recursos, recurso);
+        i++;
+    }
 }
 
 void fifo(t_planificacion *kernel_argumentos)
@@ -166,12 +180,14 @@ bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_a
             frenar_timer(kernel_argumentos->timer_quantum);
         }
 
+        log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: SUCCESS", pcb_desalojado->pid);
         mover_a_exit(pcb_desalojado, kernel_argumentos);
+
+        return true;
         //pcb_desalojado->estado = EXIT;
         //queue_push(kernel_argumentos->colas.exit, pcb_desalojado);
         // Enviar solicitud a memoria para desalojar el proceso
         //log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: EXEC - Estado actual: EXIT", pcb_desalojado->pid);
-        log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: SUCCESS", pcb_desalojado->pid);
     }
     if(pcb_desalojado->motivo_desalojo == 1) // Desalojado por fin de quantum
     {
@@ -368,6 +384,8 @@ void inicializar_lista_recursos(t_planificacion *planificador, t_config *kernel_
         i++;
     }
 
+    string_array_destroy(array_nombre_recursos);
+    string_array_destroy(array_instancias_recursos);
     //free(array_nombre_recursos);
     //free(array_instancias_recursos);
 }
@@ -540,7 +558,7 @@ void procesar_desbloqueo_factible(char* recurso_solicitado, t_planificacion *ker
         
         kernel_argumentos->colas.cantidad_procesos_block--;
         log_debug(kernel_argumentos->logger, "Cantidad de procesos en block: %d", kernel_argumentos->colas.cantidad_procesos_block);
-        recurso->cantidad_instancias--;
+        // recurso->cantidad_instancias--;
         log_debug(kernel_argumentos->logger, "Cantidad de instancias disponibles para el recurso %s: %d", recurso->identificador, recurso->cantidad_instancias);
         return;
     }
@@ -908,6 +926,9 @@ void mover_a_exit(t_pcb* pcb_desalojado, t_planificacion *kernel_argumentos)
 
     char* estado = proceso_estado_a_string(aux);
     log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: %s - Estado actual: EXIT", pcb_desalojado->pid, estado);
+
+    free(pcb_desalojado->registros);
+    free(pcb_desalojado);
 }
 
 // void eliminar_recursos_afectados(t_pcb* pcb, t_planificacion* kernel_argumentos)
