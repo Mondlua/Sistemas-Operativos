@@ -45,6 +45,7 @@ void funciones(char* leido, t_planificacion *kernel_argumentos) {
     } else if (!string_is_empty(leido)){
         log_error(kernel_argumentos->logger, ">> COMANDO ERRONEO!");
     }
+    string_array_destroy(funcion);
 }
 
 void ejecutar_script(char* path, t_planificacion *kernel_argumentos){
@@ -281,15 +282,12 @@ t_pcb* buscar_pcb_en_lista(t_list* lista, uint32_t pid)
 
 void eliminar_proceso(t_pcb* pcb, t_planificacion* kernel_argumentos)
 {
-    mover_a_exit(pcb, kernel_argumentos);
     log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: INTERRUPTED_BY_USER", pcb->pid);
+    mover_a_exit(pcb, kernel_argumentos);
 }
 
 void eliminar_proceso_recurso(t_pcb* pcb, char* nombre_recurso, t_planificacion* kernel_argumentos)
 {
-    mover_a_exit(pcb, kernel_argumentos);
-    log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: INTERRUPTED_BY_USER", pcb->pid);
-
     char* pid = string_itoa(pcb->pid);
     t_list* lista_recursos_tomados = dictionary_get(kernel_argumentos->recursos_tomados, pid);
     
@@ -313,6 +311,9 @@ void eliminar_proceso_recurso(t_pcb* pcb, char* nombre_recurso, t_planificacion*
 
         i++;
     }
+
+    log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: INTERRUPTED_BY_USER", pcb->pid);
+    mover_a_exit(pcb, kernel_argumentos);
     free(nombre_recurso);
 }
 
