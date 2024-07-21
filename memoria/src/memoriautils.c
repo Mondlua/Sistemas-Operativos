@@ -14,19 +14,43 @@ void escribir_en_mem_io(char* aescribir, t_dir_fisica* dir_fisica, int tamanio, 
     int desplazamiento = dir_fisica->desplazamiento;
   
     int cant_pags_necesarias = tamanio/tam_pagina;
+
+    log_info(memoria_log, "cant pags %d \n", cant_pags_necesarias);
+    log_info( memoria_log, "desp %d \n", desplazamiento);
+    log_info(memoria_log ,"frame %d \n", nro_frame);
+    log_info(memoria_log, "a escribir <%s> \n", aescribir);
+    log_info(memoria_log, "tamanio <%d> \n", tamanio);
+
     int resto_desp=tamanio % tam_pagina;
+    log_info(memoria_log, "resto %d", resto_desp);
     int resto = 0;
     int cont = 0;
     if(resto_desp != 0){
         cant_pags_necesarias++;
         resto=1;
     }
+    log_info(memoria_log, "cant pags %d \n", cant_pags_necesarias);
     int pagina_comienza=0;
     char** arr;
     t_tabla* tabla_pid=buscar_por_pid_return(pid);
     t_list* tabla=tabla_pid->tabla;
-    int tam_primera=tam_pagina;
+    int tam_primera=tam_pagina - desplazamiento;
+
     if(puede_escribir(pid,nro_frame, cant_pags_necesarias)){
+
+        if(cant_pags_necesarias > 1 || strlen(aescribir) > tam_primera){
+
+        if(strlen(aescribir) > tam_primera){
+            char* primero = decstring(aescribir, 0, tam_primera-1) ;
+            char* segundo = decstring(aescribir, tam_primera, strlen(aescribir));
+            memcpy((char*)memoria + (nro_frame * tam_pagina) , primero,strlen(primero)-1);
+            bitarray_set_bit(escrito, nro_frame);  
+            int frame_sig=frame_sig_disp(pid, nro_frame);
+            memcpy((char*)memoria + (frame_sig * tam_pagina) , segundo, strlen(segundo));
+            bitarray_set_bit(escrito, frame_sig);  
+
+        }
+        else{
         arr=dividir_str_segun_pags(aescribir, cant_pags_necesarias, desplazamiento, resto); 
         memcpy((char*)memoria + (nro_frame * tam_pagina) , arr[0], strlen(arr[0])-1);
         bitarray_set_bit(escrito, nro_frame);      
@@ -41,6 +65,12 @@ void escribir_en_mem_io(char* aescribir, t_dir_fisica* dir_fisica, int tamanio, 
             memcpy((char*)memoria + (frame_sig * tam_pagina) , arr[i], strlen(arr[i]));
             bitarray_set_bit(escrito, frame_sig);
            }
+        }
+        }
+        }
+        else{
+        memcpy((char*)memoria + (nro_frame * tam_pagina) , aescribir, strlen(aescribir));
+        bitarray_set_bit(escrito, nro_frame);  
         }
     log_info(memoria_log, "PID: %u - Accion:ESCRIBIR - Direccion fisica: %d - Tamaño %d",pid ,nro_frame+desplazamiento,tamanio);
     }
@@ -81,7 +111,9 @@ char** dividir_str_segun_pags(char* str, int cantpags, int desplazamiento, int r
     int contador=0;
     int pos=0;
     char** arr=(char**)malloc(sizeof(char*)*(cantpags+resto));
+
     if(resto==0 && desplazamiento == 0){
+        log_info(memoria_log,"entre1");
     while(contador<cantpags){
         char* substring= decstring(str,pos,pos+tam_pagina);
         arr[contador]=substring;
@@ -90,6 +122,7 @@ char** dividir_str_segun_pags(char* str, int cantpags, int desplazamiento, int r
     }
     }
     if(resto!=0 && desplazamiento == 0){
+        log_info(memoria_log,"entre2");
        while(contador<cantpags-1){
         char* substring= decstring(str,pos,pos+tam_pagina);
         arr[contador]=substring;
@@ -100,10 +133,13 @@ char** dividir_str_segun_pags(char* str, int cantpags, int desplazamiento, int r
         arr[contador]=subs;
     }
     if(desplazamiento != 0){
-        
+        log_info(memoria_log,"entre3");
+
         //PRIMER PAG
         int tam_primera = tam_pagina-desplazamiento;
+        log_info(memoria_log," tam primera %d", tam_primera);
         char* substring= decstring(str,pos,tam_primera);
+        log_info(memoria_log,"  primera %s", substring);
         pos = tam_primera+1; ///PARA QUE SALGA D LA POS
         arr[contador]=substring;
         contador++;
@@ -125,6 +161,9 @@ char** dividir_str_segun_pags(char* str, int cantpags, int desplazamiento, int r
 
 char* decstring(const char* str, int start, int end) {
     //posicion inicial arranca en 0
+
+    printf(" long %d", strlen(str));
+    printf(" str es %s", str);
     if (start < 0 || end < 0 || start > end || end >= strlen(str)) {
         return NULL;
     }
