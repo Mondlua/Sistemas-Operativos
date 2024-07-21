@@ -504,8 +504,9 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
 
             int dir_logica =(int)obtener_valor_registro(pcb->registros, registro_direccion);
             t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
+            parametros->registro_direccion =  malloc(sizeof(t_dir_fisica));
             parametros->registro_direccion = dir_fisica;
-            parametros->registro_tamanio = (uint32_t)obtener_valor_registro(pcb->registros, registro_tamanio);
+            parametros->registro_tamanio = (uint32_t)obtener_valor_registro(pcb->registros, registro_tamanio); 
             
             ret.io_opcode = IO_STDOUT_WRITE;
             ret.blockeo = IO_BLOCK;
@@ -564,6 +565,7 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             int dir_logica =(int)obtener_valor_registro(pcb->registros, registro_direccion);
 
             t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
+            parametros->registro_direccion =  malloc(sizeof(t_dir_fisica));
             parametros->registro_direccion = dir_fisica;
             parametros->registro_tamanio = (uint32_t)obtener_valor_registro(pcb->registros, registro_tamanio);
             parametros->params.io_fs.registro_puntero_archivo = (off_t)obtener_valor_registro(pcb->registros, registro_puntero_archivo);
@@ -586,6 +588,7 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             int dir_logica =(int)obtener_valor_registro(pcb->registros, registro_direccion);
 
             t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
+            parametros->registro_direccion =  malloc(sizeof(t_dir_fisica));
             parametros->registro_direccion = dir_fisica;
             parametros->registro_tamanio = (uint32_t)obtener_valor_registro(pcb->registros, registro_tamanio);
             parametros->params.io_fs.registro_puntero_archivo = (off_t)obtener_valor_registro(pcb->registros, registro_puntero_archivo);
