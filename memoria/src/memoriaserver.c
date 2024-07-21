@@ -108,11 +108,11 @@ void atender_cliente(void *void_args)
             recv(client_socket, &(pid), sizeof(uint32_t), MSG_WAITALL);
             instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
             parametros_io = recibir_registro_direccion_tamanio_con_texto(client_socket);
-            log_info(memoria_log, "Escribi en memoria, %s", parametros_io->texto);
+            log_info(memoria_log, "Escribir en memoria: %s", parametros_io->texto);
             usleep(retardo*1000);
             //GUARDAR TEXTO EN REGISTRO_DIRECCION
             escribir_en_mem_io(parametros_io->texto, parametros_io->registro_direccion, parametros_io->registro_tamanio,pid);//VER CAMI EMI ACA SE TRABA
-            log_info(memoria_log, "Escribi en memoria, %s", parametros_io->texto); //ACA NO LLEGA
+            log_info(memoria_log, "Escribi en memoria: %s", parametros_io->texto); //ACA NO LLEGA
             free(parametros_io);
             break;
         }
