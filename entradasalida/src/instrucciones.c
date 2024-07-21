@@ -49,6 +49,7 @@ instruccion_params* deserializar_io_fs_truncate(t_buffer_ins* buffer) {
 
 instruccion_params* deserializar_io_fs_write_read(t_buffer_ins* buffer) {
     instruccion_params* parametros = malloc(sizeof(instruccion_params));
+    parametros->registro_direccion = malloc(sizeof(t_dir_fisica));
     
     uint32_t offset = 0;
     uint32_t archivo_len;
@@ -96,7 +97,10 @@ void recibir_instruccion(char* tipo_interfaz)
             param = deserializar_registro_direccion_tamanio(instruccion->buffer);
             break;
             }
-            case IO_FS_CREATE: 
+            case IO_FS_CREATE: {
+                param = deserializar_io_fs_create_delete(instruccion->buffer);
+                break;
+            }
             case IO_FS_DELETE: {
                 param = deserializar_io_fs_create_delete(instruccion->buffer);
                 break;
@@ -105,7 +109,10 @@ void recibir_instruccion(char* tipo_interfaz)
                 param = deserializar_io_fs_truncate(instruccion->buffer);
                 break;
             }
-            case IO_FS_WRITE:
+            case IO_FS_WRITE: {
+                param = deserializar_io_fs_write_read(instruccion->buffer);
+                break;
+            }
             case IO_FS_READ: {
                 param = deserializar_io_fs_write_read(instruccion->buffer);
                 break;

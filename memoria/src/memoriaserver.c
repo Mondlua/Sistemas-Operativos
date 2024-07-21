@@ -120,9 +120,12 @@ void atender_cliente(void *void_args)
             recv(client_socket, &(pid), sizeof(uint32_t), MSG_WAITALL);
             instruccion_params* parametros_io = malloc(sizeof(instruccion_params));
             parametros_io = recibir_registro_direccion_tamanio(client_socket);
+            log_info(memoria_log, "Escribi en frame: %i", parametros_io->registro_direccion->nro_frame);
+            log_info(memoria_log, "Escribi en des: %i", parametros_io->registro_direccion->desplazamiento);
+            log_info(memoria_log, "tamanio %i", parametros_io->registro_tamanio);
             usleep(retardo*1000);
             //BUSCAR EN REGISTRO_DIRECCION Y LEER EL REGISTRO_TAMAÑO
-            char* mensaje = leer_en_mem_io(parametros_io->registro_tamanio, parametros_io->registro_direccion,pid); 
+            char* mensaje = leer_en_mem_io(parametros_io->registro_tamanio, parametros_io->registro_direccion,pid); //ACA SE TRABA
             //MANDAR RESULTADO A IO
             enviar_mensaje(mensaje, client_socket);
             free(parametros_io);
