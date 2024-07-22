@@ -120,21 +120,21 @@ char** dividir_str_segun_pags(char* str, int cantpags, int desplazamiento, int r
     if(resto==0 && desplazamiento == 0){
         log_info(memoria_log,"entre1");
     while(contador<cantpags){
-        char* substring= decstring(str,pos,pos+tam_pagina);
+        char* substring= decstring(str,pos,pos+tam_pagina-1);
         arr[contador]=substring;
-        pos = pos + tam_pagina +1;
+        pos = pos + tam_pagina;
         contador++;
     }
     }
     if(resto!=0 && desplazamiento == 0){
         log_info(memoria_log,"entre2");
        while(contador<cantpags-1){
-        char* substring= decstring(str,pos,pos+tam_pagina);
+        char* substring= decstring(str,pos,pos+tam_pagina-1);
         arr[contador]=substring;
-        pos = pos + tam_pagina +1;
+        pos = pos + tam_pagina ;
         contador++;
         } 
-        char* subs=decstring(str,pos,strlen(str));
+        char* subs=decstring(str,pos,strlen(str)-1);
         arr[contador]=subs;
     }
     if(desplazamiento != 0 ){
