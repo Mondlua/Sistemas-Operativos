@@ -26,33 +26,44 @@ t_dir_fisica* mmu(int dir_logica, uint32_t pid){
 
     int numero_pagina = floor(dir_logica / tam_pag);
     int desplazamiento = dir_logica - numero_pagina * tam_pag;
-    int frame = buscar_tlb(pid, numero_pagina);
-   if (frame != -1) {  // HIT
-        log_info(cpu_log, "TLB Hit: “PID: <%i>  - Pagina: <%i>", pid, numero_pagina);
-    } else {  // MISS
-        log_info(cpu_log, "TLB Miss: “PID: <%i>  - Pagina: <%i>", pid, numero_pagina);
-
-        char* mensaje = malloc(sizeof(pid)+sizeof(numero_pagina));
-        sprintf(mensaje, "%u/%d", pid, numero_pagina); 
-        
-        enviar_a_mem(conexion_memoria_cpu, mensaje, FRAME);
-
-        frame = recibir_frame(conexion_memoria_cpu);
-        if(frame==-1){
-        log_info(cpu_log, "out of memory"); //ver log
-        }
-        log_info(cpu_log, "Obtener Marco: “PID: <%i>  - Página: <%i> - Marco: <%i>", pid, numero_pagina, frame);
-        if (string_equals_ignore_case(algoritmo, "FIFO")) {
-            remplazo_fifo(pid, numero_pagina, frame);
-        } else if (string_equals_ignore_case(algoritmo, "LRU")) {
-            remplazo_lru(pid, numero_pagina, frame);
+    int frame;
+    if (cant_entradas_tlb == 0){
+        frame = manejar_tlb_miss(pid, numero_pagina);
+    }else {
+        frame = buscar_tlb(pid, numero_pagina);
+        if (frame != -1) {  // HIT
+            manejar_tlb_hit(pid, numero_pagina);
+        } else {  // MISS
+            log_info(cpu_log, "TLB Miss: PID: <%i>  - Pagina: <%i>", pid, numero_pagina);
+            frame = manejar_tlb_miss(pid, numero_pagina);
+            if (string_equals_ignore_case(algoritmo, "FIFO")) {
+                remplazo_fifo(pid, numero_pagina, frame);
+            } else if (string_equals_ignore_case(algoritmo, "LRU")) {
+                remplazo_lru(pid, numero_pagina, frame);
+            }
         }
     }
+    
    t_dir_fisica* direccionFisica = malloc(sizeof(t_dir_fisica));
    direccionFisica->nro_frame = frame;
    direccionFisica->desplazamiento = desplazamiento;
    return direccionFisica;
 }
+
+int manejar_tlb_miss(uint32_t pid, int numero_pagina) {
+    char* mensaje = malloc(sizeof(pid) + sizeof(numero_pagina));
+    sprintf(mensaje, "%u/%d", pid, numero_pagina);
+    enviar_a_mem(conexion_memoria_cpu, mensaje, FRAME);
+
+    int frame = recibir_frame(conexion_memoria_cpu);
+    log_info(cpu_log, "Obtener Marco: PID: <%i> - Página: <%i> - Marco: <%i>", pid, numero_pagina, frame);
+    return frame;
+}
+
+void manejar_tlb_hit(uint32_t pid, int numero_pagina) {
+    log_info(cpu_log, "TLB Hit: PID: <%i> - Página: <%i>", pid, numero_pagina);
+}
+
 
 void remplazo_fifo(uint32_t pid, int pagina, int frame){
     tlb->entradas[tlb->siguiente_fifo].pid = pid;
