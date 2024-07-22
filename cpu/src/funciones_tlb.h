@@ -32,6 +32,8 @@ extern t_log* cpu_log;
 void iniciar_tlb();
 int buscar_tlb(uint32_t pid, int num_pag);
 t_dir_fisica* mmu(int dir_logica, uint32_t pid);
+int manejar_tlb_miss(uint32_t pid, int numero_pagina);
+void manejar_tlb_hit(uint32_t pid, int numero_pagina);
 void remplazo_fifo(uint32_t pid, int pagina, int frame);
 void remplazo_lru(uint32_t pid, int pagina, int frame);
 

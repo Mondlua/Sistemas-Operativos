@@ -36,7 +36,9 @@ int main(void){
 	puerto_memoria = config_get_string_value(cpu_config, "PUERTO_MEMORIA");
     algoritmo = config_get_string_value(cpu_config,"ALGORITMO_TLB");
     cant_entradas_tlb = config_get_int_value(cpu_config, "CANTIDAD_ENTRADAS_TLB"); 
-    iniciar_tlb();
+    if(cant_entradas_tlb != 0){
+        iniciar_tlb();
+    }
 	
     // Establecer conexiones
     
