@@ -40,8 +40,14 @@ void atender_cliente(void *void_args)
             sscanf(mensaje, "%u/%d", &pid,&pag);
             
             t_tabla* tabla = buscar_por_pid_return(pid);
+            if(pag<list_size(tabla->tabla) || pag==0){
             int frame = list_get(tabla->tabla, pag);
             enviar_tamanio_pag_frame(client_socket, frame);
+            }
+            else{
+            enviar_tamanio_pag_frame(client_socket, -1);
+            }
+
             free(mensaje);
             
             break;
@@ -192,8 +198,12 @@ void atender_cliente(void *void_args)
             int tamanio_pid = cant_pags * tam_pagina;   
             if(tamanio > tamanio_pid){
             //AMPLIAR PROCESO
+
                 int bytes_a_ampliar = tamanio- tamanio_pid;
                 int cantframes_a_ocupar=  bytes_a_ampliar/tam_pagina;
+                if(bytes_a_ampliar%tam_pagina !=0){
+                cantframes_a_ocupar++;
+                }
                 size_t count = 0;
                 for (int i = 0; i < bitarray->size; i++) {
                     if (bitarray_test_bit(bitarray, i) == 0) {
@@ -242,7 +252,9 @@ void atender_cliente(void *void_args)
                 int cant_pags = tamanio/tam_pagina;
                 int cantframes_a_ocupar=  cant_pags;
                 size_t count = 0;
-                
+                if(tamanio%tam_pagina !=0){
+                cantframes_a_ocupar++;
+                }
                 for (size_t i = 0; i < bitarray->size; i++) {
                     if (bitarray_test_bit(bitarray, i) == 0) {
                         count++;
@@ -265,7 +277,7 @@ void atender_cliente(void *void_args)
                 
                 }
             
-            log_info(logger, "PID: <%u> - Tamaño Actual: <%d> - Tamaño a Ampliar: <%d>", pid, 0, list_size(tabla_pid->tabla)*tam_pagina); 
+            log_info(logger, "PID: <%u> - Tamaño Actual: <%d> - Tamaño a Ampliar: <%d>", pid, 0, tamanio); 
             }
            free(mensaje);
             break;

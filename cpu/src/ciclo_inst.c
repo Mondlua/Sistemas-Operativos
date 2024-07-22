@@ -357,13 +357,16 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             aescribir= int_to_char(valor);
 
             int cant_pags = tamanio/tam_pag;
-
+            bool salir=false;
             if(cant_pags <=1){        
                 t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
 
                 int num_frame = dir_fisica->nro_frame;
                 int desplazamiento = dir_fisica->desplazamiento;
-
+                if(num_frame==-1){
+                    salir=true;
+                }
+                if(salir==false){
                 int tam_mensaje = sizeof(tamanio)+sizeof(aescribir)+sizeof(num_frame)+sizeof(desplazamiento)+sizeof(pcb->pid); 
                 char* mensaje = malloc(tam_mensaje);
                 sprintf(mensaje, "%d/%s/%d/%d/%d", tamanio,aescribir,num_frame,desplazamiento,pcb->pid);     
@@ -371,6 +374,7 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
                 enviar_a_mem(conexion_memoria_cpu, mensaje,PED_ESCRITURA);
                 int i = recibir_operacion(conexion_memoria_cpu);
                 char* frame_siguiente = recibir_mensaje(conexion_memoria_cpu,cpu_log);
+                }
             }
             break; 
         }
