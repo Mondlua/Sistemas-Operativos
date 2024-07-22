@@ -336,15 +336,19 @@ void atender_cliente(void *void_args)
             a_escribir=recibir_pedido(client_socket);
             sscanf(a_escribir, "%d/%d/%d/%d/%d/%u", &frame1,&desp1,&frame2,&desp2,&cantchar,&pid);
          
-            t_dir_fisica* dir1=malloc(sizeof(t_dir_fisica*)) ;//direc
-            t_dir_fisica* dir2= malloc(sizeof(t_dir_fisica*)); //stri
+            t_dir_fisica* dir1=malloc(sizeof(t_dir_fisica)) ;//direc
+            t_dir_fisica* dir2= malloc(sizeof(t_dir_fisica)); //stri
             dir1->nro_frame = frame1;
             dir1->desplazamiento=desp1;
             dir2->nro_frame = frame2;
             dir2->desplazamiento=desp2;
 
             usleep(retardo*1000);
-            free(a_escribir);
+            char* leido=malloc(cantchar);
+            memcpy(leido,(char*)memoria + (frame2* tam_pagina) + desp2 , cantchar); 
+            memcpy((char*)memoria + (frame1* tam_pagina) + desp1 , leido, cantchar); 
+
+            free(leido);
 
             free(dir1);
             free(dir2);
