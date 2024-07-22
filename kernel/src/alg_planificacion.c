@@ -783,18 +783,26 @@ t_instruccion_params_opcode recibir_solicitud_cpu(int socket_servidor, t_pcb* pc
         case IO_STDOUT_WRITE:{
             param = deserializar_io_stdin_stdout_con_interfaz(instruccion->buffer);
             break;}
-        case IO_FS_CREATE:
-        case IO_FS_DELETE:
+        case IO_FS_CREATE:{
             param = deserializar_io_fs_create_delete_con_interfaz(instruccion->buffer);
             break;
-        case IO_FS_TRUNCATE:
+        }
+        case IO_FS_DELETE:{
+            param = deserializar_io_fs_create_delete_con_interfaz(instruccion->buffer);
+            break;
+        }
+        case IO_FS_TRUNCATE:{
             param = deserializar_io_fs_truncate_con_interfaz(instruccion->buffer);
             break;
-        case IO_FS_WRITE:
-        case IO_FS_READ:
+        }
+        case IO_FS_WRITE:{
             param = deserializar_io_fs_write_read_con_interfaz(instruccion->buffer);
             break;
-
+        }
+        case IO_FS_READ:{
+            param = deserializar_io_fs_write_read_con_interfaz(instruccion->buffer);
+            break;
+        }
         default:
             printf("Tipo de operación no válido.\n");
             break;
