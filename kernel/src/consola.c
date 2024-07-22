@@ -45,6 +45,7 @@ void funciones(char* leido, t_planificacion *kernel_argumentos) {
     } else if (!string_is_empty(leido)){
         log_error(kernel_argumentos->logger, ">> COMANDO ERRONEO!");
     }
+    string_array_destroy(funcion);
 }
 
 void ejecutar_script(char* path, t_planificacion *kernel_argumentos){
@@ -132,6 +133,7 @@ void finalizar_proceso(uint32_t pid, t_planificacion *kernel_argumentos){
     t_pcb* pcb_candidato;
     t_pcb* pcb_a_eliminar = NULL;
     pthread_mutex_lock(&kernel_argumentos->planning_mutex);
+    log_warning(kernel_argumentos->logger, "Se bloquea la planificacion");
 
     log_debug(kernel_argumentos->logger, "Busco en EXEC");
     if(!queue_is_empty(kernel_argumentos->colas.exec))
@@ -190,24 +192,24 @@ void finalizar_proceso(uint32_t pid, t_planificacion *kernel_argumentos){
     char* nombre_recurso;
     while(i<tamanio_lista)
     {
-        t_queue_block* cola_bloqueo = list_get(colas_bloqueo, i);
+        t_queue_block* cola_bloqueo = list_remove(colas_bloqueo, 0);
         log_debug(kernel_argumentos->logger, "Busco en la lista de: %s", cola_bloqueo->identificador);
         if(!queue_is_empty(cola_bloqueo->block_queue))
         {
-            pcb_a_eliminar = buscar_pcb_en_cola(cola_bloqueo->block_queue, pid);
+            pcb_candidato = buscar_pcb_en_cola(cola_bloqueo->block_queue, pid);
             cola = 1;
         }
-        log_debug(kernel_argumentos->logger, "Abajo de la queue");
         if(!list_is_empty(cola_bloqueo->block_dictionary))
         {
-            pcb_a_eliminar = buscar_pcb_en_lista(cola_bloqueo->block_dictionary, pid);
-            if(pcb_a_eliminar != NULL)
+            pcb_candidato = buscar_pcb_en_lista(cola_bloqueo->block_dictionary, pid);
+            if(pcb_candidato != NULL)
             {
                 nombre_recurso = string_duplicate(cola_bloqueo->identificador);
+                pcb_a_eliminar = pcb_candidato;
             }
             cola = 0;
         }
-        log_debug(kernel_argumentos->logger, "Abajo de la lista");
+        list_add(colas_bloqueo, cola_bloqueo);
         i++;
     }
 
@@ -222,11 +224,13 @@ void finalizar_proceso(uint32_t pid, t_planificacion *kernel_argumentos){
             eliminar_proceso_recurso(pcb_a_eliminar, nombre_recurso, kernel_argumentos);
         }
         pthread_mutex_unlock(&kernel_argumentos->planning_mutex);
+        log_warning(kernel_argumentos->logger, "Se desbloquea la planificacion");
         return;
     }
 
     log_debug(kernel_argumentos->logger, "No se encontro el proceso de PID: %d", pid);
     pthread_mutex_unlock(&kernel_argumentos->planning_mutex);
+    log_warning(kernel_argumentos->logger, "Se desbloquea la planificacion");
 }
 
 t_pcb *buscar_pcb_en_cola(t_queue* cola, uint32_t pid)
@@ -261,7 +265,7 @@ t_pcb* buscar_pcb_en_lista(t_list* lista, uint32_t pid)
     int tamanio = list_size(lista);
     while(i<tamanio)
     {
-        pcb_candidato = list_get(lista, i);
+        pcb_candidato = list_remove(lista, 0);
         if(pcb_candidato->pid == pid)
         {
             ret = pcb_candidato;
@@ -278,30 +282,51 @@ t_pcb* buscar_pcb_en_lista(t_list* lista, uint32_t pid)
 
 void eliminar_proceso(t_pcb* pcb, t_planificacion* kernel_argumentos)
 {
-    mover_a_exit(pcb, kernel_argumentos);
     log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: INTERRUPTED_BY_USER", pcb->pid);
+    mover_a_exit(pcb, kernel_argumentos);
 }
 
 void eliminar_proceso_recurso(t_pcb* pcb, char* nombre_recurso, t_planificacion* kernel_argumentos)
 {
-    mover_a_exit(pcb, kernel_argumentos);
-    log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: INTERRUPTED_BY_USER", pcb->pid);
-
     char* pid = string_itoa(pcb->pid);
-    t_list* lista_recursos = dictionary_get(kernel_argumentos->recursos_tomados, pid);
+    t_list* lista_recursos_tomados = dictionary_get(kernel_argumentos->recursos_tomados, pid);
     
-    int i = 0, tamanio = list_size(lista_recursos);
+    int i = 0, tamanio = list_size(lista_recursos_tomados);
+    log_debug(kernel_argumentos->logger, "El proceso %s tenia tomados %d recursos", pid, tamanio);
     while(i<tamanio)
     {
-        char* recurso = list_remove(lista_recursos, i);
+        char* recurso = list_remove(lista_recursos_tomados, 0);
 
         t_queue_block* cola_recurso = dictionary_get(kernel_argumentos->colas.lista_block, recurso);
-        cola_recurso->cantidad_instancias++;
-        procesar_desbloqueo_factible(recurso, kernel_argumentos);
+        if(cola_recurso != NULL)
+        {
+            cola_recurso->cantidad_instancias++;
+            log_debug(kernel_argumentos->logger, "Instancias del recurso %s: %d", recurso, cola_recurso->cantidad_instancias);
+            procesar_desbloqueo_factible(recurso, kernel_argumentos);
+        }
+        else
+        {
+            log_warning(kernel_argumentos->logger, "Obtuve un elemento t_queue_block nulo");
+        }
+
         i++;
     }
+
+    log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: INTERRUPTED_BY_USER", pcb->pid);
+    mover_a_exit(pcb, kernel_argumentos);
     free(nombre_recurso);
 }
+
+// void borrar_recurso_eliminado_de_cola(t_queue_block* cola, char* pid)
+// {
+//     int i = 0, tamanio = list_size(cola->block_dictionary);
+
+//     while(i < tamanio)
+//     {
+//         t_pcb* pcb
+//     }
+
+// }
 
 void iniciar_planificacion(t_planificacion *kernel_argumentos){
     if(kernel_argumentos->detener_planificacion != 0)

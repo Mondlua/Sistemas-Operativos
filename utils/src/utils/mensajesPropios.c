@@ -185,7 +185,7 @@ void enviar_pcb(t_pcb* pcb, int socket_cliente){
 t_pcb* recibir_pcb(int socket_cliente) {
     t_pcb* pcb = malloc(sizeof(t_pcb));
     t_list* valores_paquete = recibir_paquete(socket_cliente);
-    pcb->registros = malloc(sizeof(cpu_registros));
+    // pcb->registros = malloc(sizeof(cpu_registros));
     pcb->pid = *((uint32_t*)list_get(valores_paquete, 0));
     pcb->quantum = *((int*)list_get(valores_paquete, 1));
     pcb->registros = (cpu_registros*)list_get(valores_paquete, 2);
