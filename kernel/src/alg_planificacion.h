@@ -83,4 +83,6 @@ void mover_a_prioridad(t_pcb* pcb, t_planificacion* kernel_argumentos);
 void logear_cola_ready(t_planificacion* kernel_argumentos);
 void logear_cola_prioridad(t_planificacion* kernel_argumentos);
 
+void loguear_recursos(t_planificacion* kernel_argumentos);
+
 #endif
