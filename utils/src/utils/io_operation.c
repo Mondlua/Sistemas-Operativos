@@ -14,7 +14,6 @@ void enviar_instruccion(t_paquete_instruccion* instruccion, instruccion_params* 
         }
         case IO_STDIN_READ:
         {
-            printf("holaq tal\n");
             buffer = serializar_registro_direccion_tamanio(parametros);
             
             break;
