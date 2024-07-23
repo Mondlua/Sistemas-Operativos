@@ -13,9 +13,6 @@ t_log* entradasalida_log;
 int main(void) {
 	t_config* entradasalida_config;   
 
-    char* ip_memoria;
-    char* puerto_memoria;   
-
     char* ip_kernel; 
     char* puerto_kernel;
     
