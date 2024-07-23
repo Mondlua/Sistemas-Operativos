@@ -32,7 +32,6 @@ int main(void) {
     
     entradasalida_config = iniciar_config(ruta);
     
-
 	/* I/O - Cliente */
 
     interfaz = config_get_string_value(entradasalida_config, "TIPO_INTERFAZ");
@@ -69,6 +68,7 @@ void extraer_segun_tipo_io(t_config* config, char* tipo_interfaz){
         retraso_compactacion = config_get_int_value(config, "RETRASO_COMPACTACION");
         conectar_con_memoria(config);
         inicio_filesystem();
+        signal(SIGINT, manejar_interrupcion);
     }
 }
 
@@ -78,4 +78,10 @@ void conectar_con_memoria(t_config* config){
     conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
     log_info(entradasalida_log, "I/O conectado a MEMORIA");
     send_handshake(conexion_memoria, entradasalida_log, "I/O / MEMORIA");
+}
+
+void manejar_interrupcion(int sig) {
+    log_error(entradasalida_log,"Interrupción detectada. Guardando lista de archivos...");
+    guardar_lista_archivos();
+    exit(0);  // Terminar el programa
 }

@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
+#include <signal.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <commons/collections/list.h>
@@ -45,12 +46,14 @@ int buscar_archivo_x_bloque_inicial(int bloque_inicial);
 void eliminar_archivo_de_lista(int bloque_inicial);
 void destruir_file(void* elemento);
 bool bloques_contiguos_libres(int bloque_inicial, int bloque_final);
-bool comparar_archivos_por_bloque_inicial(void* a, void* b); 
+void ordenar_archivos_por_comienzo();
+int comparar_por_comienzo(const void* a, const void* b);
 char** guardar_contenido_bloques(int* bloques_originales, int num_bloques);
 int limpiar_bloques_y_buscar_libres(int bloque_inicial, int bloque_final);
 void escribir_datos_en_nuevos_bloques(int* bloques_originales, char** buffers_datos, int num_bloques, int* bloque_libre_actual);
 
 void compactar(int*, int);
-
+void guardar_lista_archivos();
+void cargar_lista_archivos();
 
 #endif
