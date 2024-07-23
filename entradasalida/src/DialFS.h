@@ -48,9 +48,9 @@ void destruir_file(void* elemento);
 bool bloques_contiguos_libres(int bloque_inicial, int bloque_final);
 void ordenar_archivos_por_comienzo();
 int comparar_por_comienzo(const void* a, const void* b);
-char** guardar_contenido_bloques(int* bloques_originales, int num_bloques);
+char** guardar_contenido_bloques(int* bloques_originales, int num_bloques, FILE* archivo_bloques);
 int limpiar_bloques_y_buscar_libres(int bloque_inicial, int bloque_final);
-void escribir_datos_en_nuevos_bloques(int* bloques_originales, char** buffers_datos, int num_bloques, int* bloque_libre_actual);
+void escribir_datos_en_nuevos_bloques(int* bloques_originales, char** buffers_datos, int num_bloques, int* bloque_libre_actual, FILE* archivo_bloques);
 
 void compactar(int*, int);
 void guardar_lista_archivos();
