@@ -48,7 +48,7 @@ bool bloques_contiguos_libres(int bloque_inicial, int bloque_final);
 bool comparar_archivos_por_bloque_inicial(void* a, void* b); 
 char** guardar_contenido_bloques(int* bloques_originales, int num_bloques);
 int limpiar_bloques_y_buscar_libres(int bloque_inicial, int bloque_final);
-void escribir_datos_en_nuevos_bloques(int* bloques_originales, char** buffers_datos, int num_bloques, int bloque_libre_actual);
+void escribir_datos_en_nuevos_bloques(int* bloques_originales, char** buffers_datos, int num_bloques, int* bloque_libre_actual);
 
 void compactar(int*, int);
 
