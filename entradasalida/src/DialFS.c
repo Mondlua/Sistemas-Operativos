@@ -433,11 +433,6 @@ char** guardar_contenido_bloques(Archivo** bloques_originales, int num_bloques, 
         buffers_datos[i] = malloc(block_size); 
         fseek(archivo_bloques, bloques_originales[i]->comienzo * block_size, SEEK_SET);
         fread(buffers_datos[i], block_size, 1, archivo_bloques);
-
-        char* buffer_cero = calloc(block_size, sizeof(char));
-        fseek(archivo_bloques, bloques_originales[i]->comienzo * block_size, SEEK_SET);
-        fwrite(buffer_cero, block_size, 1, archivo_bloques);
-        free(buffer_cero);
     }
     return buffers_datos;
 }
