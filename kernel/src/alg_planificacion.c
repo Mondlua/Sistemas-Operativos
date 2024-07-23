@@ -27,7 +27,7 @@ void* hilo_planificador(void *args)
         // Planifico a corto plazo
         planificador_corto_plazo(algoritmo_planificador, kernel_argumentos);
         pthread_mutex_unlock(&kernel_argumentos->planning_mutex);
-        loguear_recursos(kernel_argumentos);
+        //loguear_recursos(kernel_argumentos);
     }
     return NULL;
 }
@@ -204,7 +204,7 @@ bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_a
         }
         // Recibir los parametros del io_block
         t_instruccion_params_opcode parametros_solicitud;
-        parametros_solicitud = recibir_solicitud_cpu(kernel_argumentos->socket_cpu_dispatch, pcb_desalojado);
+        parametros_solicitud = recibir_solicitud_cpu(kernel_argumentos->socket_cpu_dispatch, pcb_desalojado, kernel_argumentos);
         log_debug(kernel_argumentos->logger, "Solicitud recibida: %s, %d", parametros_solicitud.params->interfaz, parametros_solicitud.params->params.io_gen_sleep.unidades_trabajo);
 
         validar_peticion(parametros_solicitud.params, pcb_desalojado, parametros_solicitud.opcode, kernel_argumentos);
@@ -616,9 +616,9 @@ void agregar_a_cola_interfaz(t_planificacion* kernel_argumentos, instruccion_par
 {
     char* pid = string_itoa(pcb->pid);
     t_instruccion_params_opcode* param = malloc(sizeof(t_instruccion_params_opcode));
-    param->opcode = 0;
+    param->opcode = op_code;
     param->params = parametros;
-    dictionary_put(kernel_argumentos->parametros_en_espera, pid, parametros);
+    dictionary_put(kernel_argumentos->parametros_en_espera, pid, param);
     //free(pid);
 }
 
@@ -756,7 +756,7 @@ instruccion_params* deserializar_io_fs_write_read_con_interfaz(t_buffer_ins* buf
 }
 */
 
-t_instruccion_params_opcode recibir_solicitud_cpu(int socket_servidor, t_pcb* pcb)
+t_instruccion_params_opcode recibir_solicitud_cpu(int socket_servidor, t_pcb* pcb, t_planificacion* kernel_argumentos)
 {
     t_paquete_instruccion* instruccion = malloc(sizeof(t_paquete_instruccion));
     instruccion->buffer = malloc(sizeof(t_buffer_ins));
@@ -804,7 +804,7 @@ t_instruccion_params_opcode recibir_solicitud_cpu(int socket_servidor, t_pcb* pc
             break;
         }
         default:
-            printf("Tipo de operación no válido.\n");
+            log_warning(kernel_argumentos->logger, "Tipo de operación no válido.\n");
             break;
         }
 
@@ -876,6 +876,11 @@ void verificar_potencial_envio(t_planificacion* kernel_argumentos, t_queue_block
     char* pid = string_itoa(pcb->pid);
 
     t_instruccion_params_opcode* parametros = dictionary_get(kernel_argumentos->parametros_en_espera, pid);
+
+    log_debug(kernel_argumentos->logger, "Parametros obtenidos para instruccion pendiente:");
+    log_debug(kernel_argumentos->logger, "OPCODE: %d", parametros->opcode);
+    log_debug(kernel_argumentos->logger, "Interfaz: %s", parametros->params->interfaz);
+    log_debug(kernel_argumentos->logger, "Nombre archivo: %s", parametros->params->params.io_fs.nombre_archivo);
 
     enviar_instruccion_a_interfaz(interfaz, parametros->params, parametros->opcode, pcb->pid);
     log_debug(kernel_argumentos->logger, "Se envia una solicitud de instruccion de un proceso que estaba en espera (%d), a la interfaz: %s", pcb->pid, interfaz->identificador);

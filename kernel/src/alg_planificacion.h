@@ -68,7 +68,7 @@ void pcb_a_exit_por_sol_invalida(t_queue_block* interfaz, t_planificacion *kerne
 void agregar_a_cola_interfaz(t_planificacion* kernel_argumentos, instruccion_params* parametros, int op_code, t_pcb* pcb);
 void verificar_potencial_envio(t_planificacion* kernel_argumentos, t_queue_block* interfaz);
 
-t_instruccion_params_opcode recibir_solicitud_cpu(int socket_servidor, t_pcb* pcb);
+t_instruccion_params_opcode recibir_solicitud_cpu(int socket_servidor, t_pcb* pcb, t_planificacion* kernel_argumentos);
 /*
 instruccion_params* deserializar_io_gen_sleep_con_interfaz(t_buffer_ins* buffer);
 instruccion_params* deserializar_io_fs_create_delete_con_interfaz(t_buffer_ins* buffer);
