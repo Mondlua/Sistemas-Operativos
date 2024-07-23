@@ -8,6 +8,7 @@
 #include <math.h>
 //#include "/home/utnso/tp-2024-1c-Operati2/memoria/src/main.h"
 
+extern int kernel_socket;
 typedef struct t_decode {
 instrucciones op_code;
 t_list* registroCpu;
