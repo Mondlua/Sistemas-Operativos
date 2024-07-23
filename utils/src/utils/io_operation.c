@@ -35,17 +35,17 @@ void enviar_instruccion(t_paquete_instruccion* instruccion, instruccion_params* 
         }
         case IO_FS_TRUNCATE:
         {
-            buffer = serializar_io_fs_truncate_con_interfaz(parametros);
+            buffer = serializar_io_fs_truncate(parametros);
             break;
         }
         case IO_FS_WRITE:
         {
-            buffer = serializar_io_fs_write_read_con_interfaz(parametros);
+            buffer = serializar_io_fs_write_read(parametros);
             break;
         }
         case IO_FS_READ:
         {
-            buffer = serializar_io_fs_write_read_con_interfaz(parametros);
+            buffer = serializar_io_fs_write_read(parametros);
             break;
         }
         // OTRAS INSTRUCCIONES
