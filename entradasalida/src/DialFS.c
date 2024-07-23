@@ -231,8 +231,9 @@ uint8_t leer_de_bitmap(uint32_t nroBloque){
 }
 
 Archivo* buscar_archivo_por_nombre(char* nombre) {
+    Archivo* archivo = malloc(sizeof(Archivo));
     for (int i = 0; i < list_size(lista_archivos); i++) {
-        Archivo* archivo = list_get(lista_archivos, i);
+        archivo = (Archivo*)list_get(lista_archivos, i);
         if (strcmp(archivo->nombre, nombre) == 0) {
             return archivo;
         }
