@@ -199,7 +199,7 @@ void truncar_archivo(char* nombre, uint32_t tamanio, uint32_t pid){
     else if (bloque_final > bloque_final_anterior) { //Agrandar
         if (!bloques_contiguos_libres(bloque_final_anterior, bloque_final)){
             log_info(entradasalida_log, "PID: <%i> - Inicio Compactación.", pid);
-            compactar(&bloque_inicial, bloque_final_anterior);
+            compactar(&bloque_inicial, bloque_final_anterior, nombre);
             log_info(entradasalida_log, "PID: <%i> - Fin Compactación.", pid);
             archivo->comienzo = bloque_inicial;
             config_set_value(file_config, "BLOQUE_INICIAL", int_to_char(bloque_inicial));
@@ -412,14 +412,14 @@ char** guardar_contenido_bloques(int* bloques_originales, int num_bloques, FILE 
     return buffers_datos;
 }
 
-void compactar(int* bloque_inicial, int bloque_final) {
+void compactar(int* bloque_inicial, int bloque_final, char* nombre) {
     ordenar_archivos_por_comienzo();
 
     int num_bloques = 0;
     int* bloques_originales = malloc(sizeof(int) * list_size(lista_archivos));
     char** buffers_datos = NULL;
 
-    Archivo* a_mover = buscar_archivo_por_bloque_inicial(*bloque_inicial);
+    Archivo* a_mover = buscar_archivo_por_nombre(nombre);
     char* buffer_de_archivo_a_mover = malloc(a_mover->tamanio);
     FILE* archivo_bloques = fopen(blocks_path, "rb+");
     fseek(archivo_bloques, *bloque_inicial * block_size, SEEK_SET);
@@ -461,7 +461,6 @@ void guardar_lista_archivos(){
     snprintf(lista_salida_path, sizeof(lista_salida_path), "%s/lista_archivos.txt", path_base_dialfs);
     int archivo_salida = open(lista_salida_path, O_CREAT | O_WRONLY | O_TRUNC, 0666);
     char buffer[512];
-    ssize_t bytes_escritos;
     for (int i = 0; i < list_size(lista_archivos); i++) {
         Archivo* archivo = (Archivo*)list_get(lista_archivos, i);
         int len = snprintf(buffer, sizeof(buffer), "%s %s %d %d\n", archivo->ruta, archivo->nombre, archivo->comienzo, archivo->tamanio);
