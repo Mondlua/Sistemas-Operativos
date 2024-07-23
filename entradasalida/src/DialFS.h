@@ -52,7 +52,7 @@ char** guardar_contenido_bloques(int* bloques_originales, int num_bloques, FILE*
 int limpiar_bloques_y_buscar_libres(int bloque_inicial, int bloque_final);
 void escribir_datos_en_nuevos_bloques(int* bloques_originales, char** buffers_datos, int num_bloques, int* bloque_libre_actual, FILE* archivo_bloques);
 
-void compactar(int*, int);
+void compactar(int* bloque_inicial, int bloque_final, char* nombre);
 void guardar_lista_archivos();
 void cargar_lista_archivos();
 
