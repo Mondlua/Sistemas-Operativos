@@ -132,6 +132,7 @@ void recibir_instruccion(char* tipo_interfaz)
             // if (param != NULL) {
             // free(param);
             // }
+            aviso_segun_cod_op(nombre_interfaz, conexion_kernel,AVISO_OPERACION_FINALIZADA);
         }
         else{
             aviso_segun_cod_op(nombre_interfaz, conexion_kernel, AVISO_OPERACION_INVALIDA);
@@ -139,7 +140,6 @@ void recibir_instruccion(char* tipo_interfaz)
             free(instruccion->buffer);
             free(instruccion);
         }
-        aviso_segun_cod_op(nombre_interfaz, conexion_kernel,AVISO_OPERACION_FINALIZADA);
     }
 
 }
@@ -187,7 +187,9 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code, uint3
         instruccion_enviar->codigo_operacion = WRITE_IO;
         enviar_instruccion_IO_Mem(instruccion_enviar,parametros,conexion_memoria, pid);
         free(instruccion_enviar);
+        int nousar= recibir_operacion(conexion_memoria);
         char* imprimir = recibir_mensaje(conexion_memoria, entradasalida_log);
+        log_warning(entradasalida_log, "RECIBI EL MENSAJE : %s", imprimir);
         free(imprimir);
         break;
     }
@@ -212,6 +214,7 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code, uint3
         instruccion_enviar->codigo_operacion = WRITE_IO_FS;
         enviar_instruccion_IO_Mem(instruccion_enviar,parametros,conexion_memoria, pid);
         free(instruccion_enviar);
+        int nousar= recibir_operacion(conexion_memoria);
         char* a_escribir = recibir_mensaje(conexion_memoria, entradasalida_log);
         escribir_archivo(parametros->params.io_fs.nombre_archivo, parametros->params.io_fs.registro_puntero_archivo, a_escribir, parametros->registro_tamanio);
         free(a_escribir);

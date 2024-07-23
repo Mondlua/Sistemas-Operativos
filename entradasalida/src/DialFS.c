@@ -88,10 +88,12 @@ void cargar_lista_archivos(){
     lista_archivos = list_create();
     FILE* archivo_lista = fopen(lista_salida_path, "r");
     char nombre[256];
+    char ruta[256];
     int comienzo;
     int tamanio;
-    while (fscanf(archivo_lista, "%255s %d %d", nombre, &comienzo, &tamanio) == 3) {
+    while (fscanf(archivo_lista, "%255s %255s %d %d", ruta, nombre, &comienzo, &tamanio) == 4) {
         Archivo* archivo = malloc(sizeof(Archivo));
+        archivo->ruta = strdup(ruta);
         archivo->nombre = strdup(nombre);
         archivo->comienzo = comienzo;
         archivo->tamanio = tamanio;
@@ -130,6 +132,7 @@ void crear_archivo(char* nombre){
     list_add(lista_archivos, file);
     config_save(new_file_config);
     config_destroy(new_file_config);
+    guardar_lista_archivos();
 }
 
 void borrar_archivo(char* nombre){
@@ -166,6 +169,7 @@ void borrar_archivo(char* nombre){
     msync(bitmap->bitarray, bitmap_size, MS_SYNC);
     close(bitmap_file);
     eliminar_archivo_de_lista(bloque_inicial);
+    guardar_lista_archivos();
 }
 
 void truncar_archivo(char* nombre, uint32_t tamanio, uint32_t pid){
@@ -212,6 +216,7 @@ void truncar_archivo(char* nombre, uint32_t tamanio, uint32_t pid){
     int bitmap_file = open(bitmap_path, O_RDWR);
     msync(bitmap->bitarray, bitmap_size, MS_SYNC);
     close(bitmap_file);
+    guardar_lista_archivos();
 }
 
 void escribir_archivo(char* nombre, off_t puntero, char* a_escribir, uint32_t tamanio){
@@ -445,13 +450,13 @@ void compactar(int* bloque_inicial, int bloque_final) {
 
 void guardar_lista_archivos(){
     snprintf(lista_salida_path, sizeof(lista_salida_path), "%s/lista_archivos.txt", path_base_dialfs);
-    int archivo_salida = open(lista_salida_path, O_CREAT | O_RDWR, 0666);
+    int archivo_salida = open(lista_salida_path, O_CREAT | O_WRONLY | O_TRUNC, 0666);
     char buffer[512];
     ssize_t bytes_escritos;
     for (int i = 0; i < list_size(lista_archivos); i++) {
         Archivo* archivo = (Archivo*)list_get(lista_archivos, i);
-        int len = snprintf(buffer, sizeof(buffer), "%s %d %d\n", archivo->nombre, archivo->comienzo, archivo->tamanio);
-        bytes_escritos = write(archivo_salida, buffer, len);
+        int len = snprintf(buffer, sizeof(buffer), "%s %s %d %d\n", archivo->ruta, archivo->nombre, archivo->comienzo, archivo->tamanio);
+        write(archivo_salida, buffer, len);
     }
     close(archivo_salida);
 }

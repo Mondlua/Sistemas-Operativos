@@ -90,12 +90,10 @@ t_buffer_ins* serializar_registro_direccion_tamanio(instruccion_params* param) {
     buffer->size = size;
     buffer->stream = malloc(size);
     size_t offset = 0;
-    t_dir_fisica* dir  = malloc(sizeof(t_dir_fisica));
-    dir = param->registro_direccion;
-
-    printf("la dir tiene %d y %d ",dir->nro_frame, dir->desplazamiento); // NO RECIBE LA DIR FISICA
-    memcpy(buffer->stream + offset, dir, sizeof(t_dir_fisica));
-    offset += sizeof(t_dir_fisica);
+    memcpy(buffer->stream + offset, &(param->registro_direccion->nro_frame), sizeof(int));
+    offset += sizeof(int);
+    memcpy(buffer->stream + offset, &(param->registro_direccion->desplazamiento), sizeof(int));
+    offset += sizeof(int);
     memcpy(buffer->stream + offset, &(param->registro_tamanio), sizeof(uint32_t));
     return buffer;
 }
@@ -139,8 +137,10 @@ t_buffer_ins* serializar_io_fs_write_read(instruccion_params* param) {
     offset += sizeof(uint32_t);
     memcpy(buffer->stream + offset, param->params.io_fs.nombre_archivo, archivo_len);
     offset += archivo_len;
-    memcpy(buffer->stream + offset, param->registro_direccion, sizeof(t_dir_fisica));
-    offset += sizeof(t_dir_fisica);
+    memcpy(buffer->stream + offset, &(param->registro_direccion->nro_frame), sizeof(int));
+    offset += sizeof(int);
+    memcpy(buffer->stream + offset, &(param->registro_direccion->desplazamiento), sizeof(int));
+    offset += sizeof(int);
     memcpy(buffer->stream + offset, &(param->registro_tamanio), sizeof(uint32_t));
     offset += sizeof(uint32_t);
     memcpy(buffer->stream + offset, &(param->params.io_fs.registro_puntero_archivo), sizeof(off_t));
