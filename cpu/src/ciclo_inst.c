@@ -422,7 +422,13 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             char* mensaje = malloc(sizeof(tamanio_resize)+sizeof(pcb->pid));
             sprintf(mensaje, "%d/%u", tamanio_resize,pcb->pid);       
             enviar_a_mem(conexion_memoria_cpu, mensaje,CPU_RESIZE);
-           
+            int a= recibir_operacion(conexion_memoria_cpu);
+            char* msj=recibir_mensaje(conexion_memoria_cpu,cpu_log);
+            if(strcmp(msj, "outofmem") == 0)
+            {
+                log_info(cpu_log, "entre aca por out of mem");
+                enviar_pcb(pcb, kernel_socket);
+            }
 
             break;
         }
@@ -633,6 +639,7 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger, int socket_cli
         //log_debug(logger, "Numero Instruccion: %d", decodeado->op_code);
 
         blockeo = execute(decodeado,pcb, logger);
+        
         loggear_registros(pcb, logger);
     }
 

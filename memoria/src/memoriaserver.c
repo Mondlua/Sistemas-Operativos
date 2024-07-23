@@ -198,7 +198,6 @@ void atender_cliente(void *void_args)
             int tamanio_pid = cant_pags * tam_pagina;   
             if(tamanio > tamanio_pid){
             //AMPLIAR PROCESO
-                log_info(memoria_log, "entre cuando lis size distinto de cero \n");
                 int bytes_a_ampliar = tamanio- tamanio_pid;
                 int cantframes_a_ocupar=  bytes_a_ampliar/tam_pagina;
                 if(bytes_a_ampliar%tam_pagina !=0){
@@ -224,10 +223,13 @@ void atender_cliente(void *void_args)
                        }
                     }
                 log_info(logger, "PID: <%u> - Tamaño Actual: <%d> - Tamaño a Ampliar: <%d>", pid, tamanio_pid, tamanio); 
+                enviar_mensaje("ok",client_socket);
+
                 }
                 else{
                 log_error(logger, "Out Of Memory");
-                   
+                enviar_mensaje("outofmem",client_socket);
+
                 } 
             }     
             else{
@@ -245,14 +247,14 @@ void atender_cliente(void *void_args)
 
                 }
                 log_info(logger,"PID: <%d> - Tamaño Actual: <%d> - Tamaño a Reducir: <%d>", pid,tamanio_pid, tamanio);
+                enviar_mensaje("ok",client_socket);
+
             }
             }
 
             if(list_size(tabla_pid->tabla) == 0){
-                log_info(memoria_log,"entre aca: cuando tbala size es 0 \n");
                 int cant_pags = tamanio/tam_pagina;
                 int cantframes_a_ocupar=  cant_pags;
-                log_info(memoria_log,"cant de frames a ocupar %d \n", cantframes_a_ocupar);
 
                 size_t count = 0;
                 if(tamanio%tam_pagina !=0){
@@ -263,7 +265,6 @@ void atender_cliente(void *void_args)
                         count++;
                     }
                 }            
-                log_info(memoria_log,"el count de los frames libres es %d \n", count);
    
                 if(count>=cantframes_a_ocupar){
                    
@@ -280,9 +281,12 @@ void atender_cliente(void *void_args)
                        }
                     }
                     log_info(logger, "PID: <%u> - Tamaño Actual: <%d> - Tamaño a Ampliar: <%d>", pid, 0, tamanio); 
+                    enviar_mensaje("ok",client_socket);
+
                 }
                 else{
                 log_error(logger, "Out Of Memory");
+                enviar_mensaje("outofmem",client_socket);
                 }
             
             }
