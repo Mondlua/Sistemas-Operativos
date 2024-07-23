@@ -44,6 +44,7 @@ int main(void) {
     pthread_t hilo;
     pthread_create(&hilo, NULL, (void *)recibir_instruccion, interfaz);
     pthread_join(hilo, NULL);
+    
     return 0;
 }
 
