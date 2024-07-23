@@ -218,7 +218,7 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code, uint3
         break;
     }
     case IO_FS_READ:{
-        log_info(entradasalida_log, "PID: <%i> - Leer Archivo: <%s> - Tamaño a Escribir: <%i> - Puntero Archivo: <%jd>", pid,  parametros->params.io_fs.nombre_archivo, parametros->registro_tamanio, (intmax_t)parametros->params.io_fs.registro_puntero_archivo);
+        log_info(entradasalida_log, "PID: <%i> - Leer Archivo: <%s> - Tamaño a Leer: <%i> - Puntero Archivo: <%jd>", pid,  parametros->params.io_fs.nombre_archivo, parametros->registro_tamanio, (intmax_t)parametros->params.io_fs.registro_puntero_archivo);
         char* leido = leer_archivo(parametros->params.io_fs.nombre_archivo, parametros->params.io_fs.registro_puntero_archivo, parametros->registro_tamanio);
         t_paquete_instruccion* instruccion_enviar = malloc(sizeof(t_paquete_instruccion));
         instruccion_enviar->codigo_operacion = READ_IO_FS;

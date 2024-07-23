@@ -5,6 +5,7 @@ t_bitarray* bitmap;
 size_t bitmap_size;
 char bitmap_path[256];
 char blocks_path[256];
+char lista_salida_path[256];
 
 void inicio_filesystem() {
 
@@ -74,9 +75,30 @@ void inicio_filesystem() {
     bitmap = bitarray_create_with_mode(bitmap_mmap, bitmap_size, LSB_FIRST);
     close(bitmap_file); 
 
-    lista_archivos = list_create();
+    snprintf(lista_salida_path, sizeof(lista_salida_path), "%s/lista_archivos.txt", path_base_dialfs);
+    struct stat lista_st;
+    if (stat(lista_salida_path, &lista_st) == 0) {
+        cargar_lista_archivos();
+    } else { 
+        lista_archivos = list_create();
+    }
 }
 
+void cargar_lista_archivos(){
+    lista_archivos = list_create();
+    FILE* archivo_lista = fopen(lista_salida_path, "r");
+    char nombre[256];
+    int comienzo;
+    int tamanio;
+    while (fscanf(archivo_lista, "%255s %d %d", nombre, &comienzo, &tamanio) == 3) {
+        Archivo* archivo = malloc(sizeof(Archivo));
+        archivo->nombre = strdup(nombre);
+        archivo->comienzo = comienzo;
+        archivo->tamanio = tamanio;
+        list_add(lista_archivos, archivo);
+    }
+    fclose(archivo_lista);
+}
 
 void crear_archivo(char* nombre){
     usleep(tiempo_unidad_trabajo * 1000);
@@ -173,15 +195,16 @@ void truncar_archivo(char* nombre, uint32_t tamanio, uint32_t pid){
     else if (bloque_final > bloque_final_anterior) { //Agrandar
         if (!bloques_contiguos_libres(bloque_final_anterior, bloque_final)){
             log_info(entradasalida_log, "PID: <%i> - Inicio Compactación.", pid);
-            compactar(&bloque_inicial, bloque_final);
+            compactar(&bloque_inicial, bloque_final_anterior);
             log_info(entradasalida_log, "PID: <%i> - Fin Compactación.", pid);
+            archivo->comienzo = bloque_inicial;
+            config_set_value(file_config, "BLOQUE_INICIAL", int_to_char(bloque_inicial));
             bloque_final = bloque_inicial + cantidad_bloques - 1;
         }
         for (int i = bloque_inicial; i <= bloque_final; i++) {
             bitarray_set_bit(bitmap, i);
         }
     }
-    log_warning(entradasalida_log, "TENGO A : %s, con bloque inicial %i, y final %i", nombre, bloque_inicial, bloque_final);
     config_set_value(file_config, "TAMANIO_ARCHIVO", int_to_char(tamanio));
     config_save(file_config);
     archivo->tamanio = tamanio;
@@ -195,9 +218,21 @@ void escribir_archivo(char* nombre, off_t puntero, char* a_escribir, uint32_t ta
     usleep(tiempo_unidad_trabajo * 1000);
 
     Archivo* archivo = buscar_archivo_por_nombre(nombre);
+    if (puntero + tamanio > archivo->tamanio) {
+        fprintf(stderr, "Error: Tamaño insuficiente para escribir todo. La escritura excede el tamaño del archivo.\n");
+        return;
+    }
     FILE* archivo_bloques = fopen(blocks_path, "rb+");
     fseeko(archivo_bloques, (archivo->comienzo * block_size) + puntero, SEEK_SET);
-    fwrite(a_escribir, tamanio, 1, archivo_bloques);
+    size_t espacio_disponible = archivo->tamanio - puntero;
+    size_t bytes_a_escribir;
+
+    if (tamanio > espacio_disponible) {
+        bytes_a_escribir = espacio_disponible;
+    } else {
+        bytes_a_escribir = tamanio;
+    }
+    fwrite(a_escribir, 1, bytes_a_escribir, archivo_bloques);
     fclose(archivo_bloques);
 }
 
@@ -205,12 +240,31 @@ char* leer_archivo(char* nombre, off_t puntero, uint32_t tamanio){
     usleep(tiempo_unidad_trabajo * 1000);
     Archivo* archivo = buscar_archivo_por_nombre(nombre);
     FILE* archivo_bloques = fopen(blocks_path, "rb");
+
+    off_t posicion_final = (archivo->comienzo * block_size) + puntero + tamanio;
+    off_t tamanio_archivo = archivo->comienzo * block_size + archivo->tamanio;
+    if (posicion_final > tamanio_archivo) {
+        fprintf(stderr, "Error: Intento de leer fuera del rango del archivo.\n");
+        fclose(archivo_bloques);
+        return NULL;
+    }
     fseeko(archivo_bloques, (archivo->comienzo * block_size) + puntero, SEEK_SET);
     char* buffer = malloc(tamanio + 1);
-    fread(buffer, 1, tamanio, archivo_bloques);
-    buffer[tamanio] = '\0';
-    fclose(archivo_bloques);
+    if (buffer == NULL) {
+        perror("Error al asignar memoria para el buffer");
+        fclose(archivo_bloques);
+        return NULL;  // No se pudo asignar memoria
+    }
+    size_t bytes_leidos = fread(buffer, 1, tamanio, archivo_bloques);
+    if (bytes_leidos < tamanio) {
+        if (ferror(archivo_bloques)) {
+            perror("Error al leer el archivo");
+        }
+    }
+    
+    buffer[bytes_leidos] = '\0';  // termina en NULL
 
+    fclose(archivo_bloques);
     return buffer;
 }
 
@@ -229,8 +283,9 @@ uint8_t leer_de_bitmap(uint32_t nroBloque){
 }
 
 Archivo* buscar_archivo_por_nombre(char* nombre) {
+    Archivo* archivo = malloc(sizeof(Archivo));
     for (int i = 0; i < list_size(lista_archivos); i++) {
-        Archivo* archivo = (Archivo*)list_get(lista_archivos, i);
+        archivo = (Archivo*)list_get(lista_archivos, i);
         if (strcmp(archivo->nombre, nombre) == 0) {
             return archivo;
         }
@@ -239,8 +294,9 @@ Archivo* buscar_archivo_por_nombre(char* nombre) {
 }
 
 int buscar_archivo_x_bloque_inicial(int bloque_inicial){
+    Archivo* file = malloc(sizeof(Archivo));
     for (int i = 0; i < list_size(lista_archivos); i++) {
-        Archivo* file = (Archivo*)list_get(lista_archivos, i);
+        file = (Archivo*)list_get(lista_archivos, i);
         if (file->comienzo == bloque_inicial) {
             return i; 
         }
@@ -273,39 +329,64 @@ bool bloques_contiguos_libres(int bloque_inicial, int bloque_final){
     }
     return true;
 }
-
-bool comparar_archivos_por_bloque_inicial(void* a, void* b) {
-    Archivo* archivo_a = *(Archivo**)a;
-    Archivo* archivo_b = *(Archivo**)b;
-    return archivo_a->comienzo - archivo_b->comienzo;
+void ordenar_archivos_por_comienzo(){
+    size_t num_archivos = list_size(lista_archivos);
+    Archivo** archivos_array = malloc(num_archivos * sizeof(Archivo*));
+    for (size_t i = 0; i < num_archivos; i++) {
+        archivos_array[i] = (Archivo*)list_get(lista_archivos, i);
+    }
+    qsort(archivos_array, num_archivos, sizeof(Archivo*), comparar_por_comienzo);
+    
+    for (size_t i = 0; i < num_archivos; i++) {
+        list_replace(lista_archivos, i, archivos_array[i]);
+    }
+    free(archivos_array);
 }
 
+int comparar_por_comienzo(const void* a, const void* b) {
+    Archivo* archivo_a = *(Archivo**)a;
+    Archivo* archivo_b = *(Archivo**)b;
+    if (archivo_a->comienzo < archivo_b->comienzo) return -1;
+    if (archivo_a->comienzo > archivo_b->comienzo) return 1;
+    return 0;
+}
 
 
 void escribir_datos_en_nuevos_bloques(int* bloques_originales, char** buffers_datos, int num_bloques, int* bloque_libre_actual) {
     FILE* archivo_bloques = fopen(blocks_path, "rb+");
+    if (!archivo_bloques) {
+        perror("Error al abrir el archivo de bloques");
+        return;
+    }
+
     for (int i = 0; i < num_bloques; i++) {
         Archivo* archivo = (Archivo*)list_get(lista_archivos, buscar_archivo_x_bloque_inicial(bloques_originales[i]));
-        int bloques_necesarios = archivo->comienzo + ((archivo->tamanio + block_size - 1) / block_size) - 1;
-
-        fseek(archivo_bloques, *bloque_libre_actual * block_size, SEEK_SET);
+        int bloque_final_archivo;
+        if(archivo->tamanio == 0){
+            bloque_final_archivo = archivo->comienzo;
+        }
+        else{
+            bloque_final_archivo = archivo->comienzo + ((archivo->tamanio + block_size - 1) / block_size) - 1;
+        }
+        fseek(archivo_bloques, (*bloque_libre_actual) * block_size, SEEK_SET);
         fwrite(buffers_datos[i], archivo->tamanio, 1, archivo_bloques);
         int contador_bloques = *bloque_libre_actual;
-        for (int j = 0; j < bloques_necesarios; j++) {
-            bitarray_clean_bit(bitmap, bloques_originales[i] + j);
-            bitarray_set_bit(bitmap, (*bloque_libre_actual) + j);
+        for (int bloque = archivo->comienzo; bloque <= bloque_final_archivo; bloque++) {
+            bitarray_clean_bit(bitmap, bloque);
+            bitarray_set_bit(bitmap, contador_bloques);
+            contador_bloques++;
         }
         archivo->comienzo = *bloque_libre_actual;
-        int bloque_fin= *bloque_libre_actual + ((archivo->tamanio + block_size - 1) / block_size) - 1;
-        log_warning(entradasalida_log, "ARCHIVO %s, REUBICADO EN INICIO: %i FINAL %i", archivo->nombre, *bloque_libre_actual, bloque_fin);
         t_config* new_file_config = config_create(archivo->ruta);
         config_set_value(new_file_config, "BLOQUE_INICIAL", int_to_char(archivo->comienzo));
         config_save(new_file_config);
         config_destroy(new_file_config);
-        *bloque_libre_actual += bloques_necesarios;
+        *bloque_libre_actual = contador_bloques;
     }
+
     fclose(archivo_bloques);
 }
+
 
 int limpiar_bloques_y_buscar_libres(int bloque_inicial, int bloque_final) {
     for (int i = bloque_inicial; i <= bloque_final; i++) {
@@ -315,7 +396,6 @@ int limpiar_bloques_y_buscar_libres(int bloque_inicial, int bloque_final) {
     while (leer_de_bitmap(siguiente_bloque) != 0) {
         siguiente_bloque++;
     }
-    log_warning(entradasalida_log, "PRIMER BLOQUE LIBRE: %i", siguiente_bloque);
     return siguiente_bloque;
 }
 
@@ -332,7 +412,7 @@ char** guardar_contenido_bloques(int* bloques_originales, int num_bloques) {
 }
 
 void compactar(int* bloque_inicial, int bloque_final) {
-    list_sort(lista_archivos, comparar_archivos_por_bloque_inicial);
+    ordenar_archivos_por_comienzo();
 
     int num_bloques = 0;
     int* bloques_originales = malloc(sizeof(int) * list_size(lista_archivos));
@@ -345,7 +425,8 @@ void compactar(int* bloque_inicial, int bloque_final) {
         }
     }
     buffers_datos = guardar_contenido_bloques(bloques_originales, num_bloques);
-   
+    
+
     int bloque_libre_actual = limpiar_bloques_y_buscar_libres(*bloque_inicial, bloque_final);
 
     escribir_datos_en_nuevos_bloques(bloques_originales, buffers_datos, num_bloques, &bloque_libre_actual);
@@ -358,6 +439,19 @@ void compactar(int* bloque_inicial, int bloque_final) {
     int bitmap_file = open(bitmap_path, O_RDWR);
     msync(bitmap->bitarray, bitmap_size, MS_SYNC);
     close(bitmap_file);
-
+    
     usleep(retraso_compactacion * 1000);
+}
+
+void guardar_lista_archivos(){
+    snprintf(lista_salida_path, sizeof(lista_salida_path), "%s/lista_archivos.txt", path_base_dialfs);
+    int archivo_salida = open(lista_salida_path, O_CREAT | O_RDWR, 0666);
+    char buffer[512];
+    ssize_t bytes_escritos;
+    for (int i = 0; i < list_size(lista_archivos); i++) {
+        Archivo* archivo = (Archivo*)list_get(lista_archivos, i);
+        int len = snprintf(buffer, sizeof(buffer), "%s %d %d\n", archivo->nombre, archivo->comienzo, archivo->tamanio);
+        bytes_escritos = write(archivo_salida, buffer, len);
+    }
+    close(archivo_salida);
 }
