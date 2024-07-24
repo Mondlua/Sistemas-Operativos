@@ -33,6 +33,7 @@ typedef enum {
     IO_BLOCK,
     REC_BLOCK_WAIT,
     REC_BLOCK_SIGNAL,
+    OUT_OF_MEM,
     EXIT_BLOCK
 } t_cpu_blockeo_enum;
 

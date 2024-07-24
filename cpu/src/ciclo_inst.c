@@ -465,7 +465,7 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
                     char* mensaje2 = malloc(tam_mensaje2);
                     sprintf(mensaje2, "%d/%s/%d/%d/%u", tamanio,es2,num_frame2,0,pcb->pid);     
                     enviar_a_mem(conexion_memoria_cpu, mensaje2,PED_ESCRITURA);
-                    log_info(cpu_log, "PID: %u - Accion:ESCRIBIR - Direccion fisica: %d - Tamaño %d",pcb->pid ,num_frame2,2);
+                    log_info(cpu_log, "PID: %u - Accion: ESCRIBIR - Direccion fisica: %d - Tamaño %d",pcb->pid ,num_frame2,2);
                     int i = recibir_operacion(conexion_memoria_cpu);
                     int pag2;
                     int frame_sig2;
@@ -523,8 +523,9 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             char* msj=recibir_mensaje(conexion_memoria_cpu,cpu_log);
             if(strcmp(msj, "outofmem") == 0)
             {
-               
-                enviar_pcb(pcb, kernel_socket);
+                ret.blockeo = OUT_OF_MEM;
+                return ret;
+                // enviar_pcb(pcb, kernel_socket);
             }
 
             break;
@@ -799,6 +800,14 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger, int socket_cli
 
         log_debug(cpu_log, "Envio el nombre del recurso afectado");
         enviar_mensaje(blockeo.nombre_recurso, socket_cliente);
+    }
+    if(blockeo.blockeo == OUT_OF_MEM)
+    {
+        hay_interrupcion = 0;
+        pthread_mutex_unlock(&lock_interrupt);
+        pcb->motivo_desalojo = 5;
+        log_debug(cpu_log, "PCB desalojado por out of mem");
+        enviar_pcb(pcb, socket_cliente);
     }
 }
 
