@@ -155,9 +155,9 @@ void borrar_archivo(char* nombre){
 
     config_destroy(file_config);
     if (unlink(archivo->ruta) == 0) {
-        printf("Archivo eliminado exitosamente.\n");
+        log_debug(entradasalida_log, "Archivo %s eliminado exitosamente.", nombre);
     } else {
-        perror("Error al eliminar el archivo");
+        log_error(entradasalida_log, "Error al eliminar el archivo");
     }
     FILE* archivo_bloques = fopen(blocks_path, "rb+");
     char* buffer = calloc(block_size, 1); //lleno de 0
@@ -201,9 +201,9 @@ void truncar_archivo(char* nombre, uint32_t tamanio, uint32_t pid){
     }
     else if (bloque_final > bloque_final_anterior) { //Agrandar
         if (!bloques_contiguos_libres(bloque_final_anterior, bloque_final)){
-            log_info(entradasalida_log, "PID: <%i> - Inicio Compactación.", pid);
+            log_info(entradasalida_log, "PID: %i - Inicio Compactación.", pid);
             compactar(&bloque_inicial, bloque_final_anterior, archivo);
-            log_info(entradasalida_log, "PID: <%i> - Fin Compactación.", pid);
+            log_info(entradasalida_log, "PID: %i - Fin Compactación.", pid);
             archivo->comienzo = bloque_inicial;
             config_set_value(file_config, "BLOQUE_INICIAL", int_to_char(bloque_inicial));
             bloque_final = bloque_inicial + cantidad_bloques - 1;
