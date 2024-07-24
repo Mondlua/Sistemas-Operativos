@@ -347,35 +347,35 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             }else{
             int tam_mensaje1 = sizeof(uint16_t)+sizeof(num_frame)+sizeof(desplazamiento)+sizeof(pid); 
             char* mensaje1 = malloc(tam_mensaje1);
-            sprintf(mensaje, "%d/%d/%d/%u", 2,num_frame,desplazamiento,pid); 
+            sprintf(mensaje1, "%d/%d/%d/%u", 2,num_frame,desplazamiento,pid); 
 
-            enviar_a_mem(conexion_memoria_cpu, mensaje, PED_LECTURA);
+            enviar_a_mem(conexion_memoria_cpu, mensaje1, PED_LECTURA);
 
             log_info(logger, "PID: %d - Ejecutando: MOV_IN %s %s", pcb->pid, registro_datos, registro_direccion);        
 
             int i = recibir_operacion(conexion_memoria_cpu);
-            char* msj = recibir_mensaje(conexion_memoria_cpu, cpu_log);
-            char* leo;
+            char* msj = recibir_pedido(conexion_memoria_cpu);
+              char leo[8];
             int fra_nuevo;
             
-            sscanf(buffer, "%s/%d", leo,&fra_nuevo);
+            sscanf(msj, "%7[^/]/%d", leo,&fra_nuevo);
             log_info(logger, "MOV_IN %s %s: La lectura fue <%s>", registro_datos, registro_direccion, leo); 
             asignar_registro(pcb->registros, registro_datos, atoi(leo));
             string_append(&leido, leo);
             int tam_mensaje2 = sizeof(uint16_t)+sizeof(fra_nuevo)+sizeof(int)+sizeof(pid); 
-            char* mensaje = malloc(tam_mensaje2);
-            sprintf(mensaje, "%d/%d/%d/%u", 2,fra_nuevo,0,pid); 
+            char* mensaje2= malloc(tam_mensaje2);
+            sprintf(mensaje2, "%d/%d/%d/%u", 2,fra_nuevo,0,pid); 
 
-            enviar_a_mem(conexion_memoria_cpu, mensaje, PED_LECTURA);
+            enviar_a_mem(conexion_memoria_cpu, mensaje2, PED_LECTURA);
 
             log_info(logger, "PID: %d - Ejecutando: MOV_IN %s %s", pcb->pid, registro_datos, registro_direccion);        
 
             int ii = recibir_operacion(conexion_memoria_cpu);
-            char* msjj = recibir_mensaje(conexion_memoria_cpu, cpu_log);
-            char* leo2;
+            char* msjj = recibir_pedido(conexion_memoria_cpu);
+            char leo2[8];
             int fra2;
             
-            sscanf(msjj, "%s/%d", leo2,&frame2);
+            sscanf(msjj, "%7[^/]/%d", leo2,&fra2);
             log_info(logger, "MOV_IN %s %s: La lectura fue <%s>", registro_datos, registro_direccion, leo2); 
             asignar_registro(pcb->registros, registro_datos, atoi(leo2));
             string_append(&leido, leo2);

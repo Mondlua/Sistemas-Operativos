@@ -311,7 +311,7 @@ int frame_sig_leer( uint32_t pid, int frame){
     t_tabla* tabla_pid = buscar_por_pid_return(pid);
     bool encontrado = false;
     for (int i = frame+1; i < bitarray->size; i++) {
-        if (bitarray_test_bit(bitarray, i) == 1 && bitarray_test_bit(escrito, i)==1) {
+        if (bitarray_test_bit(bitarray, i) == 1) {
             for(int x = 0; x< list_size(tabla_pid->tabla); x++){
                 if(list_get(tabla_pid->tabla,x) == i){
                     frame_siguiente = i;
@@ -319,10 +319,10 @@ int frame_sig_leer( uint32_t pid, int frame){
                     break;
                 }  
                     }
-                }
-            if (encontrado) {
+        }
+        if (encontrado) {
                 break;
-            }
+        }
     }
     if(frame_siguiente==-1){ // si hay libres pero por arriba del frame
     for (int i = 0; i < frame; i++) {
