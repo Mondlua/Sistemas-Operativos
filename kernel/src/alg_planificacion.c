@@ -240,6 +240,17 @@ bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_a
         
         return administrador_recursos_signal(pcb_desalojado, recurso_solicitado, milisegundos_restantes, kernel_argumentos);
     }
+    if(pcb_desalojado->motivo_desalojo == 5)
+    {
+        if(kernel_argumentos->algo_planning != FIFO)
+        {
+            frenar_timer(kernel_argumentos->timer_quantum);
+        }
+        
+        log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: OUT_OF_MEMORY", pcb_desalojado->pid);
+        mover_a_exit(pcb_desalojado, kernel_argumentos);
+        return true;
+    }
     return true;
 }
 
@@ -416,8 +427,8 @@ bool administrador_recursos_wait(t_pcb *pcb_solicitante, char* nombre_recurso, i
     if(recurso == NULL)
     {
         // El recurso no existe. Mando el proceso a EXIT y habilito la replanificacion
-        mover_a_exit(pcb_solicitante, kernel_argumentos);
         log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: INVALID_RESOURCE", pcb_solicitante->pid);
+        mover_a_exit(pcb_solicitante, kernel_argumentos);
         return true;
     }
 
@@ -470,8 +481,8 @@ bool administrador_recursos_signal(t_pcb *pcb_desalojado, char* recurso_solicita
     if(recurso == NULL)
     {
         // El recurso no existe. Mando el proceso a EXIT y habilito la replanificacion
-        mover_a_exit(pcb_desalojado, kernel_argumentos);
         log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: INVALID_RESOURCE", pcb_desalojado->pid);
+        mover_a_exit(pcb_desalojado, kernel_argumentos);
         return true;
     }
 
@@ -817,9 +828,9 @@ void pcb_a_exit_por_sol_invalida(t_queue_block* interfaz, t_planificacion* kerne
     t_pcb *pcb_desalojado = queue_pop(interfaz->block_queue);
     pthread_mutex_unlock(&kernel_argumentos->colas.mutex_block);
 
+    log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: INVALID_INTERFACE", pcb_desalojado->pid);
     mover_a_exit(pcb_desalojado, kernel_argumentos);
 
-    log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: INVALID_INTERFACE", pcb_desalojado->pid);
 }
 
 void procesar_entradasalida_terminada(t_queue_block *interfaz, t_planificacion *kernel_argumentos)
