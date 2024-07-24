@@ -340,42 +340,47 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             int i = recibir_operacion(conexion_memoria_cpu);
             char* msj = recibir_mensaje(conexion_memoria_cpu, cpu_log);
             int fra;
-            
-            sscanf(msj, "%s/%d", leido,&fra);
+            int pag;
+            sscanf(msj, "%s/%d/%d", leido,&fra,&pag);
             log_info(logger, "MOV_IN %s %s: La lectura fue <%s>", registro_datos, registro_direccion, leido); 
             asignar_registro(pcb->registros, registro_datos, atoi(leido));
             }else{
             int tam_mensaje1 = sizeof(uint16_t)+sizeof(num_frame)+sizeof(desplazamiento)+sizeof(pid); 
             char* mensaje1 = malloc(tam_mensaje1);
-            sprintf(mensaje, "%d/%d/%d/%u", 2,num_frame,desplazamiento,pid); 
+            sprintf(mensaje1, "%d/%d/%d/%u", 2,num_frame,desplazamiento,pid); 
 
-            enviar_a_mem(conexion_memoria_cpu, mensaje, PED_LECTURA);
+            enviar_a_mem(conexion_memoria_cpu, mensaje1, PED_LECTURA);
 
             log_info(logger, "PID: %d - Ejecutando: MOV_IN %s %s", pcb->pid, registro_datos, registro_direccion);        
 
             int i = recibir_operacion(conexion_memoria_cpu);
-            char* msj = recibir_mensaje(conexion_memoria_cpu, cpu_log);
-            char* leo;
+            char* msj = recibir_pedido(conexion_memoria_cpu);
+            char leo[8];
             int fra_nuevo;
+            int pag1;
+            sscanf(msj, "%7[^/]/%d/%d", leo,&fra_nuevo,&pag1);
+            t_dir_fisica* dir_fisica = mmu(pag1*tam_pag, pcb->pid);
+            int num_frame = dir_fisica->nro_frame;
             
-            sscanf(buffer, "%s/%d", leo,&fra_nuevo);
+
             log_info(logger, "MOV_IN %s %s: La lectura fue <%s>", registro_datos, registro_direccion, leo); 
             asignar_registro(pcb->registros, registro_datos, atoi(leo));
             string_append(&leido, leo);
-            int tam_mensaje2 = sizeof(uint16_t)+sizeof(fra_nuevo)+sizeof(int)+sizeof(pid); 
-            char* mensaje = malloc(tam_mensaje2);
-            sprintf(mensaje, "%d/%d/%d/%u", 2,fra_nuevo,0,pid); 
+            int tam_mensaje2 = sizeof(uint16_t)+sizeof(num_frame)+sizeof(int)+sizeof(pid); 
+            char* mensaje2= malloc(tam_mensaje2);
+            sprintf(mensaje2, "%d/%d/%d/%u", 2,num_frame,0,pid); 
 
-            enviar_a_mem(conexion_memoria_cpu, mensaje, PED_LECTURA);
+            enviar_a_mem(conexion_memoria_cpu, mensaje2, PED_LECTURA);
 
             log_info(logger, "PID: %d - Ejecutando: MOV_IN %s %s", pcb->pid, registro_datos, registro_direccion);        
 
             int ii = recibir_operacion(conexion_memoria_cpu);
-            char* msjj = recibir_mensaje(conexion_memoria_cpu, cpu_log);
-            char* leo2;
+            char* msjj = recibir_pedido(conexion_memoria_cpu);
+            char leo2[8];
             int fra2;
+            int pag2;
+            sscanf(msjj, "%7[^/]/%d", leo2,&fra2,&pag2);
             
-            sscanf(msjj, "%s/%d", leo2,&frame2);
             log_info(logger, "MOV_IN %s %s: La lectura fue <%s>", registro_datos, registro_direccion, leo2); 
             asignar_registro(pcb->registros, registro_datos, atoi(leo2));
             string_append(&leido, leo2);
@@ -428,7 +433,10 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
                 log_info(cpu_log, "ESCRIBIR: en Frame <%d> y Desp <%d>:<%s>", num_frame, desplazamiento, aescribir);
                 enviar_a_mem(conexion_memoria_cpu, mensaje,PED_ESCRITURA);
                 int i = recibir_operacion(conexion_memoria_cpu);
-                frame_siguiente = recibir_mensaje(conexion_memoria_cpu,cpu_log);
+                int pag;
+                int frame;
+                char* buffer = recibir_pedido(conexion_memoria_cpu);
+                sscanf(buffer, "%d/%d", &frame,&pag);
                 }
             }else
             {
@@ -444,16 +452,25 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
                     log_info(cpu_log, "PID: %u - Accion:ESCRIBIR - Direccion fisica: %d - Tamaño %d",pcb->pid ,num_frame+desplazamiento,2);
                     enviar_a_mem(conexion_memoria_cpu, mensaje1,PED_ESCRITURA);
                     int ii = recibir_operacion(conexion_memoria_cpu);
-                    frame_siguiente = recibir_mensaje(conexion_memoria_cpu,cpu_log);
-                    int frame_sig=atoi(frame_siguiente);
+                    int pag1;
+                    int frame_sig;
+                    char* buffer = recibir_pedido(conexion_memoria_cpu);
+                    sscanf(buffer, "%d/%d", &frame_sig,&pag1);
+                    printf("la pag es %d",pag1);
+                    int dir_log = pag1*tam_pag;
+                    t_dir_fisica* dir_fisica = mmu(dir_log, pcb->pid);
+                    int num_frame2 = dir_fisica->nro_frame;             
                     char* es2=decstring(aescribir,1,1);
-                    int tam_mensaje2 = sizeof(tamanio)+strlen(es2)+sizeof(frame_sig)+sizeof(pcb->pid)+sizeof(int); 
+                    int tam_mensaje2 = sizeof(tamanio)+strlen(es2)+sizeof(num_frame2)+sizeof(pcb->pid)+sizeof(int); 
                     char* mensaje2 = malloc(tam_mensaje2);
-                    sprintf(mensaje2, "%d/%s/%d/%d/%u", tamanio,es2,frame_sig,0,pcb->pid);     
+                    sprintf(mensaje2, "%d/%s/%d/%d/%u", tamanio,es2,num_frame2,0,pcb->pid);     
                     enviar_a_mem(conexion_memoria_cpu, mensaje2,PED_ESCRITURA);
-                    log_info(cpu_log, "PID: %u - Accion:ESCRIBIR - Direccion fisica: %d - Tamaño %d",pcb->pid ,frame_sig,2);
+                    log_info(cpu_log, "PID: %u - Accion:ESCRIBIR - Direccion fisica: %d - Tamaño %d",pcb->pid ,num_frame2,2);
                     int i = recibir_operacion(conexion_memoria_cpu);
-                    frame_siguiente = recibir_mensaje(conexion_memoria_cpu,cpu_log);
+                    int pag2;
+                    int frame_sig2;
+                    char* buffer1 = recibir_pedido(conexion_memoria_cpu);
+                    sscanf(buffer1, "%d/%d", &frame_sig2,&pag2);    
                 }
             }
             break; 

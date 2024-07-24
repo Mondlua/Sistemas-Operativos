@@ -97,12 +97,15 @@ void escribir_en_mem_cpu(char* aescribir, t_dir_fisica* dir_fisica, int tamanio 
         uint32_t escribir = (uint32_t)atoi(aescribir);
         memcpy((char*)memoria + (nro_frame * tam_pagina) + desplazamiento , &escribir, tam_bytes);
         log_info(memoria_log, "PID: %u - Accion:ESCRIBIR - Direccion fisica: %d - Tamaño %d",pid ,nro_frame+desplazamiento,tam_bytes);
+        bitarray_set_bit(escrito, nro_frame);
 
     }
     if(tamanio ==2){//uint32
         uint16_t escribir = (uint16_t)atoi(aescribir);
         memcpy((char*)memoria + (nro_frame * tam_pagina) + desplazamiento , &escribir, tam_bytes);
         log_info(memoria_log, "PID: %u - Accion:ESCRIBIR - Direccion fisica: %d - Tamaño %d",pid ,nro_frame+desplazamiento,tam_bytes);
+        bitarray_set_bit(escrito, nro_frame);
+
     }
     }
     else
@@ -271,7 +274,7 @@ int frame_sig_disp( uint32_t pid, int frame){
     bool encontrado = false;
 
     for (int i = frame+1; i < bitarray->size; i++) {
-        if (bitarray_test_bit(bitarray, i) == 1 && bitarray_test_bit(escrito, i) == 0) {
+        if (bitarray_test_bit(bitarray, i) == 1 /*&& bitarray_test_bit(escrito, i) == 0*/) {
            
 
             for(int x = 0; x< list_size(tabla_pid->tabla); x++){
@@ -289,7 +292,7 @@ int frame_sig_disp( uint32_t pid, int frame){
     }
     if(frame_siguiente_disp==-1){ // si hay libres pero por arriba del frame
     for (int i = 0; i < frame; i++) {
-        if (bitarray_test_bit(bitarray, i) == 1 && bitarray_test_bit(escrito, i) == 0) {
+        if (bitarray_test_bit(bitarray, i) == 1 /*&& bitarray_test_bit(escrito, i) == 0*/) {
             for(int x = 0; x< list_size(tabla_pid->tabla); x++){
                 if(list_get(tabla_pid->tabla,x) == i){
                     frame_siguiente_disp = i;
@@ -319,10 +322,10 @@ int frame_sig_leer( uint32_t pid, int frame){
                     break;
                 }  
                     }
-                }
-            if (encontrado) {
+        }
+        if (encontrado) {
                 break;
-            }
+        }
     }
     if(frame_siguiente==-1){ // si hay libres pero por arriba del frame
     for (int i = 0; i < frame; i++) {
@@ -339,7 +342,7 @@ int frame_sig_leer( uint32_t pid, int frame){
                 break;
             }
     }
-    }
+    }/*
    for (int i = frame+1; i < bitarray->size; i++) {
         if (bitarray_test_bit(bitarray, i) == 1 ) {
             for(int x = frame+1; x< list_size(tabla_pid->tabla); x++){
@@ -353,7 +356,7 @@ int frame_sig_leer( uint32_t pid, int frame){
             if (encontrado) {
                 break;
             }
-    }
+    }*/
     return frame_siguiente;
 }
 
