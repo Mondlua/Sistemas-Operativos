@@ -316,10 +316,29 @@ void atender_cliente(void *void_args)
             char* leido = leer_en_mem_cpu(tamanio, dir_fisica,piid);
             //log_info(logger, "PID: %u - Accion:LEER - Direccion fisica: %d - Tamaño %d",piid ,frame+desp,tamanio);
             int fr=frame_sig_leer(piid, frame);
-            int tam_mensaje = strlen(leido)+sizeof(fr); 
+            
+            int pag;
+            bool encontrado=false;
+            t_tabla* tabla_pid = buscar_por_pid_return(pid);
+            t_list* tabla_paginas_pid = tabla_pid->tabla;
+            //busca pag para armar la dir logica enn cpu
+            for (int i = fr; i < bitarray->size; i++) {
+                if (bitarray_test_bit(bitarray, i) == 1 ) {
+                    for(int x = 0; x< list_size(tabla_pid->tabla); x++){
+                        if(list_get(tabla_pid->tabla,x) == i){
+                        pag=x;
+                        encontrado=true;
+                        break;
+                        }  
+                    }
+                    if(encontrado==true){
+                        break;
+                    }
+                }
+            }
+            int tam_mensaje = strlen(leido)+sizeof(fr)+sizeof(pag); 
             char* mensaje = malloc(tam_mensaje);
-            sprintf(mensaje, "%s/%d", leido,fr); 
-
+            sprintf(mensaje, "%s/%d/%d", leido,fr,pag); 
             enviar_mensaje(mensaje, client_socket);  
             free(buffer);
             free(mensaje);
@@ -347,7 +366,33 @@ void atender_cliente(void *void_args)
 
             int frame_siguiente= frame_sig_disp(piid, frame);
            
-            enviar_mensaje(int_to_char(frame_siguiente), client_socket);
+            int pag;
+            bool encontrado=false;
+            t_tabla* tabla_pid = buscar_por_pid_return(pid);
+            t_list* tabla_paginas_pid = tabla_pid->tabla;
+            //busca pag para armar la dir logica enn cpu
+            for (int i = frame_siguiente; i < bitarray->size; i++) {
+                if (bitarray_test_bit(bitarray, i) == 1  ) {
+                    for(int x = 0; x< list_size(tabla_pid->tabla); x++){
+                        if(list_get(tabla_pid->tabla,x) == i){
+                        printf("la x es %d",x);
+
+                        pag=x;
+                        encontrado=true;
+                        break;
+                        }  
+                    }
+                    if(encontrado==true){
+                        break;
+                    }
+                }
+            }
+            printf("la pag es %d",pag);
+            
+            int tam_mensaje = sizeof(frame_siguiente)+sizeof(pag); 
+            char* mensaje = malloc(tam_mensaje);
+            sprintf(mensaje, "%d/%d",frame_siguiente,pag); 
+            enviar_mensaje(mensaje, client_socket);  
            
             free(buffer);
            
