@@ -143,10 +143,13 @@ void borrar_archivo(char* nombre){
     
     int bloque_inicial = config_get_int_value(file_config, "BLOQUE_INICIAL");
     int tamanio_archivo = config_get_int_value(file_config, "TAMANIO_ARCHIVO");
-
     int cantidad_bloques = (tamanio_archivo + block_size - 1) / block_size; //Es para redondear hacia arriba
-
-    for (int contador_bloques = bloque_inicial; contador_bloques < bloque_inicial + cantidad_bloques; contador_bloques++) {
+    int bloque_final;
+    if(cantidad_bloques == 1) {
+        bloque_final = bloque_inicial; 
+    }else{ bloque_final = bloque_inicial + cantidad_bloques - 1;}
+    
+    for (int contador_bloques = bloque_inicial; contador_bloques <= bloque_final; contador_bloques++) {
         bitarray_clean_bit(bitmap, contador_bloques);
     }
 
@@ -336,6 +339,7 @@ void eliminar_archivo_de_lista(int bloque_inicial){
 
 void destruir_file(void* elemento){
     Archivo* file = (Archivo*)elemento;
+    free(file->nombre);
     free(file->ruta);
     free(file);
 }
@@ -430,9 +434,11 @@ char** guardar_contenido_bloques(Archivo** bloques_originales, int num_bloques, 
     char** buffers_datos = malloc(sizeof(char*) * num_bloques);
 
     for (int i = 0; i < num_bloques; i++) {
-        buffers_datos[i] = malloc(block_size); 
-        fseek(archivo_bloques, bloques_originales[i]->comienzo * block_size, SEEK_SET);
-        fread(buffers_datos[i], block_size, 1, archivo_bloques);
+        int start =  bloques_originales[i]->comienzo * block_size;
+        int tamanio = start + bloques_originales[i]->tamanio;
+        buffers_datos[i] = malloc(tamanio); 
+        fseek(archivo_bloques, start, SEEK_SET);
+        fread(buffers_datos[i], tamanio, 1, archivo_bloques);
     }
     return buffers_datos;
 }
@@ -451,9 +457,11 @@ void escribir_datos_en_nuevos_bloques(Archivo** bloques_originales, char** buffe
         } else {
             bloque_final_archivo = archivo->comienzo + ((archivo->tamanio + block_size - 1) / block_size) - 1;
         }
-        fseek(archivo_bloques, (*bloque_libre_actual) * block_size, SEEK_SET);
-        fwrite(buffers_datos[i], block_size, 1, archivo_bloques);
 
+        int start =  (*bloque_libre_actual) * block_size;
+        int tamanio = start + bloques_originales[i]->tamanio;
+        fseek(archivo_bloques, start, SEEK_SET);
+        fwrite(buffers_datos[i], tamanio, 1, archivo_bloques);
         for (int bloque = archivo->comienzo; bloque <= bloque_final_archivo; bloque++) {
             bitarray_clean_bit(bitmap, bloque); 
         }
