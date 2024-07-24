@@ -125,7 +125,7 @@ void crear_archivo(char* nombre){
 
     config_set_value(new_file_config, "BLOQUE_INICIAL", int_to_char(bloque_libre));
     Archivo* file = malloc(sizeof(Archivo));
-    file->nombre = nombre;
+    file->nombre = strdup(nombre);
     file->ruta = strdup(new_file_path);
     file->comienzo = bloque_libre;
     file->tamanio = 0;
@@ -168,9 +168,7 @@ void borrar_archivo(char* nombre){
     fclose(archivo_bloques);
     free(buffer);
     
-    int bitmap_file = open(bitmap_path, O_RDWR);
     msync(bitmap->bitarray, bitmap_size, MS_SYNC);
-    close(bitmap_file);
     eliminar_archivo_de_lista(bloque_inicial);
     guardar_lista_archivos();
 }
@@ -216,9 +214,7 @@ void truncar_archivo(char* nombre, uint32_t tamanio, uint32_t pid){
     config_save(file_config);
     archivo->tamanio = tamanio;
     config_destroy(file_config);
-    int bitmap_file = open(bitmap_path, O_RDWR);
     msync(bitmap->bitarray, bitmap_size, MS_SYNC);
-    close(bitmap_file);
     guardar_lista_archivos();
 }
 
@@ -423,9 +419,7 @@ void compactar(int* bloque_inicial, int bloque_final, Archivo* file) {
     free(buffer_de_archivo_a_mover);
     fclose(archivo_bloques);
 
-    int bitmap_file = open(bitmap_path, O_RDWR);
     msync(bitmap->bitarray, bitmap_size, MS_SYNC);
-    close(bitmap_file);
     
     usleep(retraso_compactacion * 1000);
 }
