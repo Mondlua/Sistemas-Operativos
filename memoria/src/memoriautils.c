@@ -434,6 +434,45 @@ bool buscar_por_pid_bool(uint32_t pid) {
     return false; 
 }
 
+t_tabla* buscar_por_pid(uint32_t pid)
+{
+    int i = 0, tamanio = list_size(tabla_pags);
+    t_tabla* ret = NULL;
+    while(i<tamanio)
+    {
+        t_tabla* candidato = list_remove(tabla_pags, 0);
+        if(candidato != NULL && candidato->pid == pid)
+        {
+            ret = candidato;
+        }
+        list_add(tabla_pags, candidato);
+        i++;
+    }
+
+    return ret;
+}
+
+t_tabla* eliminar_tabla_pid(uint32_t pid)
+{
+    int i = 0, tamanio = list_size(tabla_pags);
+    t_tabla* ret = NULL;
+    while(i<tamanio)
+    {
+        t_tabla* candidato = list_remove(tabla_pags, 0);
+        if(candidato->pid == pid)
+        {
+            ret = candidato;
+        }
+        else
+        {
+            list_add(tabla_pags, candidato);
+        }
+        i++;
+    }
+
+    return ret;
+}
+
 char* cortar_string(char* cadena, int longitud){
     char* nueva_cadena = (char*)malloc((longitud + 1) * sizeof(char));
     if (nueva_cadena == NULL) {

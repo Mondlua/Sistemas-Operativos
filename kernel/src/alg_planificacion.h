@@ -78,6 +78,7 @@ instruccion_params* deserializar_io_fs_write_read_con_interfaz(t_buffer_ins* buf
 
 void mover_a_exit(t_pcb* pcb_desalojado, t_planificacion *kernel_argumentos);
 char* proceso_estado_a_string(t_proceso_estado estado);
+void solicitar_finalizacion_a_memoria(uint32_t pid, int socket_memoria);
 void mover_a_ready(t_pcb* pcb, t_planificacion* kernel_argumentos);
 void mover_a_prioridad(t_pcb* pcb, t_planificacion* kernel_argumentos);
 void logear_cola_ready(t_planificacion* kernel_argumentos);
