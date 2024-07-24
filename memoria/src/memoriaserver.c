@@ -10,9 +10,8 @@ void atender_cliente(void *void_args)
     t_log *logger = args->log;
     int client_socket = args->c_socket;
     char *server_name = args->server_name;
-    uint32_t pid;
     
-
+    uint32_t pid;
     retardo = config_get_int_value(memoria_config, "RETARDO_RESPUESTA");
 
     //MEMORIA a CPU
@@ -87,7 +86,7 @@ void atender_cliente(void *void_args)
         }
         case PID:{ //ENTRA ACA TAMBIEN
             char * pid_recibido =recibir_pc(client_socket);
-            pid = atoi(pid_recibido);
+             pid = atoi(pid_recibido);
             log_info(logger, "Mi PID:%u", pid);
             free(pid_recibido);
             break;
@@ -193,6 +192,7 @@ void atender_cliente(void *void_args)
 
             t_tabla* tabla_pid = buscar_por_pid_return(pid);
             int cant_pags;
+
             if(list_size(tabla_pid->tabla) != 0){
             cant_pags = list_size(tabla_pid->tabla);
             int tamanio_pid = cant_pags * tam_pagina;   
@@ -260,7 +260,7 @@ void atender_cliente(void *void_args)
                 if(tamanio%tam_pagina !=0){
                 cantframes_a_ocupar++;
                 }
-                for (size_t i = 0; i < bitarray->size; i++) {
+                for (int i = 0; i < bitarray->size; i++) {
                     if (bitarray_test_bit(bitarray, i) == 0) {
                         count++;
                     }
@@ -274,8 +274,10 @@ void atender_cliente(void *void_args)
                             bitarray_set_bit(bitarray, i);
                             list_add(tabla_pid->tabla, i);
                             frames_ocupados++;
+                            printf("la i es %d \n",i );
 
                         }
+                        printf("frames ocupados %d \n",frames_ocupados );
                          if (frames_ocupados == cantframes_a_ocupar) {
                             break;
                        }
@@ -312,11 +314,15 @@ void atender_cliente(void *void_args)
 
 
             char* leido = leer_en_mem_cpu(tamanio, dir_fisica,piid);
-            log_info(logger, "PID: %u - Accion:LEER - Direccion fisica: %d - Tamaño %d",piid ,frame+desp,tamanio);
+            //log_info(logger, "PID: %u - Accion:LEER - Direccion fisica: %d - Tamaño %d",piid ,frame+desp,tamanio);
+            int fr=frame_sig_leer(piid, frame);
+            int tam_mensaje = strlen(leido)+sizeof(fr); 
+            char* mensaje = malloc(tam_mensaje);
+            sprintf(mensaje, "%s/%d", leido,fr); 
 
-            enviar_mensaje(leido, client_socket);  
+            enviar_mensaje(mensaje, client_socket);  
             free(buffer);
-            free(leido);
+            free(mensaje);
             break;
         }
         case PED_ESCRITURA:{
@@ -324,22 +330,23 @@ void atender_cliente(void *void_args)
             char valor[8];
             int frame; 
             int desp;
-            uint32_t pid;
+            uint32_t piid;
             char* buffer = recibir_pedido(client_socket);
+            
             log_info(logger, "Me llego el Pedido de Escritura \n");  
 
-            sscanf(buffer, "%d/%7[^/]/%d/%d/%d", &tamanio,valor,&frame,&desp,&pid);
+            sscanf(buffer, "%d/%7[^/]/%d/%d/%u", &tamanio,valor,&frame,&desp,&piid);
+          
 
             t_dir_fisica* dir_fisica = malloc(sizeof(t_dir_fisica*));
             dir_fisica->nro_frame = frame;
             dir_fisica->desplazamiento = desp;
             usleep(retardo*1000);   
-            escribir_en_mem_cpu(valor, dir_fisica, tamanio, pid);
+            escribir_en_mem_cpu(valor, dir_fisica, tamanio, piid);
 
-            bitarray_set_bit(escrito, frame);
 
-            int frame_siguiente= frame_sig_disp(pid, frame);
-         
+            int frame_siguiente= frame_sig_disp(piid, frame);
+           
             enviar_mensaje(int_to_char(frame_siguiente), client_socket);
            
             free(buffer);
