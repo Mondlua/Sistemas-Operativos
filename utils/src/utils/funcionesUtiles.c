@@ -28,3 +28,24 @@ int find_queue(uint32_t elem, t_queue *cola)
     }
     return 0;
 }
+
+
+//INCLUYE EL END
+char* decstring(const char* str, int start, int end) {
+    //posicion inicial arranca en 0 
+
+    if (start < 0 || end < 0 || start > end || end >= strlen(str)) {
+        return NULL;
+    }
+
+    int length = end - start + 1;
+
+    char* substring = (char*)malloc((length + 1) *sizeof(char));
+    if (substring == NULL) {
+        return NULL; 
+    }
+
+    strncpy(substring, str + start, length);
+    substring[length] = '\0';
+    return substring;
+}

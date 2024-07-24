@@ -1,6 +1,8 @@
 #ifndef CICLOINST_H_
 #define CICLOINST_H_
 #include <utils/mensajesPropios.h>
+#include <utils/funcionesUtiles.h>
+
 #include <commons/collections/list.h>
 #include <commons/string.h>
 #include <utils/io_operation.h>
@@ -8,6 +10,7 @@
 #include <math.h>
 //#include "/home/utnso/tp-2024-1c-Operati2/memoria/src/main.h"
 
+extern int kernel_socket;
 typedef struct t_decode {
 instrucciones op_code;
 t_list* registroCpu;
