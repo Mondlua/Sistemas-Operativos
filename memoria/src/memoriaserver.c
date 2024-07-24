@@ -86,7 +86,7 @@ void atender_cliente(void *void_args)
         }
         case PID:{ //ENTRA ACA TAMBIEN
             char * pid_recibido =recibir_pc(client_socket);
-             pid = atoi(pid_recibido);
+            pid = atoi(pid_recibido);
             log_info(logger, "Mi PID:%u", pid);
             free(pid_recibido);
             break;
@@ -94,10 +94,16 @@ void atender_cliente(void *void_args)
         case PC:
         {
             char * pc_recibido = recibir_pc(client_socket);
+            log_debug(logger, "PC recibido: %s", pc_recibido);
             usleep(retardo*1000);
             uint32_t pc = atoi(pc_recibido);
 
-            t_tabla* tabla_pid = list_get(tabla_pags, pid);
+            t_tabla* tabla_pid = buscar_por_pid(pid);
+            if(tabla_pid == NULL)
+            {
+                log_debug(logger, "No encotre el proceso de pid %d", pid);
+                break;
+            }
 
             log_debug(logger, "PID obtenido: %d\n", tabla_pid->pid);
             char* instruccion = list_get(tabla_pid->instrucciones, pc);
@@ -432,10 +438,19 @@ void atender_cliente(void *void_args)
         case FINALIZACION:
         {
             char* pidc = recibir_mensaje(client_socket, logger);
+
+            log_debug(logger, "Pedido de finalizacion para el PID: %s", pidc);
             usleep(retardo*1000);
             uint32_t pid = atoi(pidc);
 
-            t_tabla* tabla_pid = list_remove(tabla_pags, buscar_por_pid_return(pid));
+            // t_tabla* tabla_pid = list_remove(tabla_pags, buscar_por_pid_return(pid));
+            t_tabla* tabla_pid = eliminar_tabla_pid(pid);
+            if(tabla_pid == NULL)
+            {
+                log_debug(logger, "No encontre la tabla del PID %d", pid);
+                break;
+            }
+
             for(int i=0; i<list_size(tabla_pid->tabla); i++){
                 int frame = list_get(tabla_pid->tabla, i);
                 bitarray_clean_bit(bitarray, frame);
@@ -496,4 +511,5 @@ void eliminar_linea_n(char* linea){
     }
     
 }
+
 

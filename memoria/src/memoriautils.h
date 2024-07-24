@@ -36,4 +36,7 @@ bool puede_escribir(uint32_t pid, int frame,int cant_pags );
 char** dividir_str_segun_pags(char* str, int cantpags, int desplazamiento, int resto);
 char* decstring(const char* str, int start, int end);
 char* concatenateStrings(char** strings, int numStrings);
+
+t_tabla* buscar_por_pid(uint32_t pid);
+t_tabla* eliminar_tabla_pid(uint32_t pid);
 #endif
