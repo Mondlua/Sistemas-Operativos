@@ -1,6 +1,8 @@
 #ifndef CICLOINST_H_
 #define CICLOINST_H_
 #include <utils/mensajesPropios.h>
+#include <utils/funcionesUtiles.h>
+
 #include <commons/collections/list.h>
 #include <commons/string.h>
 #include <utils/io_operation.h>
