@@ -718,7 +718,7 @@ void pcb_a_exit_por_sol_invalida(t_queue_block* interfaz, t_planificacion* kerne
 
     mover_a_exit(pcb_desalojado, kernel_argumentos);
 
-    log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: INVALID_INTERFACE", pcb_desalojado->pid);
+    log_info(kernel_argumentos->logger, "Finaliza el proceso %i - Motivo: INVALID_INTERFACE", pcb_desalojado->pid);
 }
 
 void procesar_entradasalida_terminada(t_queue_block *interfaz, t_planificacion *kernel_argumentos)
