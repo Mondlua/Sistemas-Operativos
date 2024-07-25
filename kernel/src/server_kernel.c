@@ -56,7 +56,6 @@ void atender_cliente(void *void_args)
 
         case AVISO_DESCONEXION:
         {
-            //char* interfaz_recibida = recibir_desconexion(client_socket, logger);
 
             t_queue_block* interfaz_desconectada = buscar_interfaz_por_socket(args->planificador, client_socket);
 
@@ -85,12 +84,6 @@ void atender_cliente(void *void_args)
 
             break;
         }
-        /*case AVISO_OPERACION_VALIDADA:
-        {
-            int logica_int = recibir_op_validada(client_socket);
-            log_debug(logger, "La ultima operacion solicitada ha sido validada");
-            break;
-        }*/
         case AVISO_OPERACION_FINALIZADA:
         {
             char* interfaz_recibida = recibir_op_finalizada(client_socket);

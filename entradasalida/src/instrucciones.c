@@ -120,32 +120,30 @@ void recibir_instruccion(char* tipo_interfaz)
         // OTRAS FUNCIONES
             default:
             printf("Tipo de operación no válido.\n");
+            free(instruccion->buffer->stream);
             free(instruccion->buffer);
             free(instruccion);
             continue;
             }
-            /*char* logica = "1";
-            aviso_segun_cod_op(logica, conexion_kernel, AVISO_OPERACION_VALIDADA);*/
             atender_cod_op(param, instruccion->codigo_operacion, pid);
+            free(instruccion->buffer->stream);
             free(instruccion->buffer);
             free(instruccion);
-            // if (param != NULL) {
-            // free(param);
-            // }
+            aviso_segun_cod_op(nombre_interfaz, conexion_kernel,AVISO_OPERACION_FINALIZADA);
         }
         else{
             aviso_segun_cod_op(nombre_interfaz, conexion_kernel, AVISO_OPERACION_INVALIDA);
             param = NULL;
+            free(instruccion->buffer->stream);
             free(instruccion->buffer);
             free(instruccion);
         }
-        aviso_segun_cod_op(nombre_interfaz, conexion_kernel,AVISO_OPERACION_FINALIZADA);
     }
 
 }
 
 void atender_cod_op(instruccion_params* parametros, instrucciones op_code, uint32_t pid){
-    log_info(entradasalida_log, "PID: <%i> - Operacion: <%s>", pid, op_code_a_string(op_code));
+    log_info(entradasalida_log, "PID: %i - Operacion: %s", pid, op_code_a_string(op_code));
     switch (op_code)
     {
     case IO_GEN_SLEEP:{
@@ -163,7 +161,8 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code, uint3
             log_error(entradasalida_log, "Error al asignar memoria para el prompt");
             break;
         }   
-        snprintf(prompt, 256, "Ingrese el texto de tamaño %u: ", tamanio);
+        log_debug(entradasalida_log, "Ingrese el texto de tamaño %i: ", tamanio);
+        snprintf(prompt, 256, " >> ");
         char* texto = readline(prompt);
         free(prompt); 
         if (texto == NULL) {
@@ -187,48 +186,65 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code, uint3
         instruccion_enviar->codigo_operacion = WRITE_IO;
         enviar_instruccion_IO_Mem(instruccion_enviar,parametros,conexion_memoria, pid);
         free(instruccion_enviar);
+        int nousar= recibir_operacion(conexion_memoria);
         char* imprimir = recibir_mensaje(conexion_memoria, entradasalida_log);
+        log_debug(entradasalida_log, "RECIBI EL MENSAJE : %s", imprimir);
         free(imprimir);
         break;
     }
     case IO_FS_CREATE:{
-        log_info(entradasalida_log, "PID: <%i> - Crear Archivo: <%s>", pid,  parametros->params.io_fs.nombre_archivo);
+        log_info(entradasalida_log, "PID: %i - Crear Archivo: %s", pid,  parametros->params.io_fs.nombre_archivo);
         crear_archivo(parametros->params.io_fs.nombre_archivo);
         break;
     }
     case IO_FS_DELETE:{
-        log_info(entradasalida_log, "PID: <%i> - Eliminar Archivo: <%s>", pid,  parametros->params.io_fs.nombre_archivo);
+        log_info(entradasalida_log, "PID: %i - Eliminar Archivo: %s", pid,  parametros->params.io_fs.nombre_archivo);
         borrar_archivo(parametros->params.io_fs.nombre_archivo);
         break;
     }
     case IO_FS_TRUNCATE:{
-        log_info(entradasalida_log, "PID: <%i> - Truncar Archivo: <%s> - Tamaño: <%i>", pid,  parametros->params.io_fs.nombre_archivo, parametros->registro_tamanio);
+        log_info(entradasalida_log, "PID: %i - Truncar Archivo: %s - Tamaño: %i", pid,  parametros->params.io_fs.nombre_archivo, parametros->registro_tamanio);
         truncar_archivo(parametros->params.io_fs.nombre_archivo, parametros->registro_tamanio, pid);
         break;
     }
     case IO_FS_WRITE:{
-        log_info(entradasalida_log, "PID: <%i> - Escribir Archivo: <%s> - Tamaño a Escribir: <%i> - Puntero Archivo: <%jd>", pid,  parametros->params.io_fs.nombre_archivo, parametros->registro_tamanio, (intmax_t)parametros->params.io_fs.registro_puntero_archivo);
+        log_info(entradasalida_log, "PID: %i - Escribir Archivo: %s - Tamaño a Escribir: %i - Puntero Archivo: %jd", pid,  parametros->params.io_fs.nombre_archivo, parametros->registro_tamanio, (intmax_t)parametros->params.io_fs.registro_puntero_archivo);
         t_paquete_instruccion* instruccion_enviar = malloc(sizeof(t_paquete_instruccion));
         instruccion_enviar->codigo_operacion = WRITE_IO_FS;
         enviar_instruccion_IO_Mem(instruccion_enviar,parametros,conexion_memoria, pid);
         free(instruccion_enviar);
+        int nousar= recibir_operacion(conexion_memoria);
         char* a_escribir = recibir_mensaje(conexion_memoria, entradasalida_log);
         escribir_archivo(parametros->params.io_fs.nombre_archivo, parametros->params.io_fs.registro_puntero_archivo, a_escribir, parametros->registro_tamanio);
         free(a_escribir);
         break;
     }
     case IO_FS_READ:{
-        log_info(entradasalida_log, "PID: <%i> - Leer Archivo: <%s> - Tamaño a Escribir: <%i> - Puntero Archivo: <%jd>", pid,  parametros->params.io_fs.nombre_archivo, parametros->registro_tamanio, (intmax_t)parametros->params.io_fs.registro_puntero_archivo);
+        log_info(entradasalida_log, "PID: %i - Leer Archivo: %s - Tamaño a Leer: %i - Puntero Archivo: %jd", pid,  parametros->params.io_fs.nombre_archivo, parametros->registro_tamanio, (intmax_t)parametros->params.io_fs.registro_puntero_archivo);
         char* leido = leer_archivo(parametros->params.io_fs.nombre_archivo, parametros->params.io_fs.registro_puntero_archivo, parametros->registro_tamanio);
         t_paquete_instruccion* instruccion_enviar = malloc(sizeof(t_paquete_instruccion));
         instruccion_enviar->codigo_operacion = READ_IO_FS;
         parametros->texto = leido;
         enviar_instruccion_IO_Mem(instruccion_enviar,parametros,conexion_memoria, pid);
+        free(instruccion_enviar);
         free(leido);
         break;
     }
     default:
+        log_error(entradasalida_log, "Operación no válida");
         break;
+    }
+    // Se liberan recursos dependiendo del tipo de operación
+    switch (op_code) {
+        case IO_GEN_SLEEP: break;
+        case IO_STDIN_READ:{free(parametros->registro_direccion); break;}
+        case IO_STDOUT_WRITE:{free(parametros->registro_direccion); break;}
+        case IO_FS_CREATE:{free(parametros->params.io_fs.nombre_archivo); break;}
+        case IO_FS_DELETE:{free(parametros->params.io_fs.nombre_archivo); break;}
+        case IO_FS_TRUNCATE:{free(parametros->params.io_fs.nombre_archivo); break;}
+        case IO_FS_WRITE:{free(parametros->params.io_fs.nombre_archivo); free(parametros->registro_direccion); break;}
+        case IO_FS_READ:{free(parametros->params.io_fs.nombre_archivo); free(parametros->registro_direccion); break;}
+        default: break;
     }
     free(parametros);
 }

@@ -19,7 +19,6 @@ void escribir_en_mem_io(char* aescribir, t_dir_fisica* dir_fisica, int tamanio, 
     int cant_pags_necesarias = tamanio/tam_pagina;
 
     int resto_desp=tamanio % tam_pagina;
-   
     int resto = 0;
     int cont = 0;
     if(resto_desp != 0){
@@ -44,7 +43,7 @@ void escribir_en_mem_io(char* aescribir, t_dir_fisica* dir_fisica, int tamanio, 
 
             memcpy((char*)memoria + (nro_frame * tam_pagina) + desplazamiento , aescribir, strlen(aescribir));
             bitarray_set_bit(escrito, nro_frame);  
-            
+
         }
         if(cant_pags_necesarias > 1 ){
 
@@ -57,14 +56,13 @@ void escribir_en_mem_io(char* aescribir, t_dir_fisica* dir_fisica, int tamanio, 
             int frame_sig=frame_sig_disp(pid, nro_frame);
             if(i!=cant_pags_necesarias-1){
             memcpy((char*)memoria + (frame_sig * tam_pagina) , arr[i], strlen(arr[i]));
-           
+
             bitarray_set_bit(escrito, frame_sig);
             nro_frame=frame_sig;
            }
            else{
             
             memcpy((char*)memoria + (frame_sig * tam_pagina), arr[i], strlen(arr[i]));
-          
             bitarray_set_bit(escrito, frame_sig);
            }
         }
@@ -120,7 +118,7 @@ char** dividir_str_segun_pags(char* str, int cantpags, int desplazamiento, int r
     int contador=0;
     int pos=0;
     char** arr=(char**)malloc(sizeof(char*)*(cantpags+resto));
-    
+
     if(resto==0 && desplazamiento == 0){
         while(contador<cantpags){
             char* substring= decstring(str,pos,pos+tam_pagina-1);
@@ -128,6 +126,7 @@ char** dividir_str_segun_pags(char* str, int cantpags, int desplazamiento, int r
             pos = pos + tam_pagina;
             contador++;
         }
+
     }
     if(resto!=0 && desplazamiento == 0){
        while(contador<cantpags-1){
@@ -140,7 +139,7 @@ char** dividir_str_segun_pags(char* str, int cantpags, int desplazamiento, int r
         arr[contador]=subs;
     }
     if(desplazamiento != 0 ){
-     
+
         //PRIMER PAG
         int tam_primera = tam_pagina-desplazamiento;
         char* substring= decstring(str,pos,tam_primera-1); 
@@ -156,7 +155,7 @@ char** dividir_str_segun_pags(char* str, int cantpags, int desplazamiento, int r
         }    
         //ULTIMA PAG
         char* subs=decstring(str,pos,strlen(str)-1);
-  
+
         arr[contador]=subs;
     }
 
@@ -222,24 +221,23 @@ char* leer_en_mem_io(int tamanio, t_dir_fisica* dir_fisica, uint32_t pid){
     char* leo=malloc(tam_pagina);
     if(cant_pags_necesarias > 1 || tamanio > tam_primera){
 
-    
+
     memcpy(leo, espacio_de_mem, tam_pagina-desplazamiento);
     string_append(&leido, leo);
 
-    
+
     for (int i = 1; i <cant_pags_necesarias ; i++) {
         if(i== cant_pags_necesarias-1){
         nro_frame = frame_sig_leer(pid, nro_frame);
         void* espacio_de_mem = (char*)memoria + (nro_frame * tam_pagina);
         char* leeo=malloc(tam_pagina);;
         int tam_ultimo=tamanio-(tam_pagina-desplazamiento)-(cant_pags_necesarias-2)*tam_pagina;
-   
+
         leeo[tam_ultimo] = '\0';
         memcpy(leeo, espacio_de_mem , tam_ultimo);
         
-      
         string_append(&leido,leeo);
-      
+
        }
        else{
         int frame = frame_sig_leer(pid, nro_frame);
@@ -248,16 +246,15 @@ char* leer_en_mem_io(int tamanio, t_dir_fisica* dir_fisica, uint32_t pid){
         char* leeo=malloc(tam_pagina);;
         memcpy(leeo, espacio_de_mem, tam_pagina);
 
-        
         string_append(&leido,leeo);
        }
     }
     }
     else{
-    
+
         leo[tamanio] = '\0';
         memcpy(leo, espacio_de_mem, tamanio);
-     
+
         string_append(&leido,leo);
       
     }
