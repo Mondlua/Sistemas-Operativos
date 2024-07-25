@@ -782,11 +782,6 @@ void verificar_potencial_envio(t_planificacion* kernel_argumentos, t_queue_block
 
     t_instruccion_params_opcode* parametros = dictionary_get(kernel_argumentos->parametros_en_espera, pid);
 
-    log_debug(kernel_argumentos->logger, "Parametros obtenidos para instruccion pendiente:");
-    log_debug(kernel_argumentos->logger, "OPCODE: %d", parametros->opcode);
-    log_debug(kernel_argumentos->logger, "Interfaz: %s", parametros->params->interfaz);
-    log_debug(kernel_argumentos->logger, "Nombre archivo: %s", parametros->params->params.io_fs.nombre_archivo);
-
     enviar_instruccion_a_interfaz(interfaz, parametros->params, parametros->opcode, pcb->pid);
     log_debug(kernel_argumentos->logger, "Se envia una solicitud de instruccion de un proceso que estaba en espera (%d), a la interfaz: %s", pcb->pid, interfaz->identificador);
 

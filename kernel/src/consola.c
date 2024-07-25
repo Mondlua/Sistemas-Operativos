@@ -49,7 +49,7 @@ void funciones(char* leido, t_planificacion *kernel_argumentos) {
 }
 
 void ejecutar_script(char* path, t_planificacion *kernel_argumentos){
-    char* complemento = "/home/cardo"; 
+    char* complemento = "/home/utnso"; 
     size_t len_path = strlen(path);
     size_t len_complemento = strlen(complemento);
     size_t len_total = len_path + len_complemento + 2;
