@@ -8,72 +8,45 @@ t_bitarray* bitarray;
 t_bitarray* escrito;
 
 
-void escribir_en_mem_io(char* aescribir, t_dir_fisica* dir_fisica, int tamanio, uint32_t pid ){
+void escribir_en_mem_io(char* aescribir, t_dir_fisica* dir_fisica, int cant_direcciones,int tamanio, uint32_t pid ){
+int desplazamiento = dir_fisica[0].desplazamiento;
+    int tam_primera = tam_pagina - desplazamiento;
 
+    int bytes_escritos = 0;
+    int offset = 0;
 
-    //string_n_append(&aescribir,"                                                 ", tamanio-strlen(aescribir));
+    if (puede_escribir(pid, dir_fisica[0].nro_frame, cant_direcciones)) {
+        for (int i = 0; i < cant_direcciones; i++) {
+            int nro_frame = dir_fisica[i].nro_frame;
+            int bytes_a_escribir = tam_pagina;
 
-    int nro_frame = dir_fisica->nro_frame;
-    int desplazamiento = dir_fisica->desplazamiento;
-  
-    int cant_pags_necesarias = tamanio/tam_pagina;
+            if (i == 0) {
+                bytes_a_escribir = tam_primera;
+            } else if (i == cant_direcciones - 1) {
+                bytes_a_escribir = tamanio - bytes_escritos;
+            }
 
-    int resto_desp=tamanio % tam_pagina;
-    int resto = 0;
-    int cont = 0;
-    if(resto_desp != 0){
-        cant_pags_necesarias++;
-        resto=1;
-    }
-    int pagina_comienza=0;
-    char** arr;
-    t_tabla* tabla_pid=buscar_por_pid_return(pid);
-    t_list* tabla=tabla_pid->tabla;
-    int tam_primera=tam_pagina - desplazamiento;
+            if (bytes_a_escribir > tamanio - bytes_escritos) {
+                bytes_a_escribir = tamanio - bytes_escritos;
+            }
 
-    if(tam_primera <= strlen(aescribir) && cant_pags_necesarias ==1){
-        cant_pags_necesarias++;
-    }
+            if (bytes_a_escribir > 0) {
+                memcpy((char*)memoria + (nro_frame * tam_pagina) + (i == 0 ? desplazamiento : 0), aescribir + offset, bytes_a_escribir);
+                bitarray_set_bit(escrito, nro_frame);
 
+                bytes_escritos += bytes_a_escribir;
+                offset += bytes_a_escribir;
 
-
-    if(puede_escribir(pid,nro_frame, cant_pags_necesarias)){
-
-        if((strlen(aescribir) < tam_primera) && cant_pags_necesarias == 1){
-
-            memcpy((char*)memoria + (nro_frame * tam_pagina) + desplazamiento , aescribir, strlen(aescribir));
-            bitarray_set_bit(escrito, nro_frame);  
-
+                if (bytes_escritos >= tamanio) {
+                    break;
+                }
+            }
         }
-        if(cant_pags_necesarias > 1 ){
 
-        arr=dividir_str_segun_pags(aescribir, cant_pags_necesarias, desplazamiento, resto); 
-
-        memcpy((char*)memoria + (nro_frame * tam_pagina) + desplazamiento , arr[0], strlen(arr[0]));
-        bitarray_set_bit(escrito, nro_frame);  
-
-        for(int i=1; i<cant_pags_necesarias;i++){
-            int frame_sig=frame_sig_disp(pid, nro_frame);
-            if(i!=cant_pags_necesarias-1){
-            memcpy((char*)memoria + (frame_sig * tam_pagina) , arr[i], strlen(arr[i]));
-
-            bitarray_set_bit(escrito, frame_sig);
-            nro_frame=frame_sig;
-           }
-           else{
-            
-            memcpy((char*)memoria + (frame_sig * tam_pagina), arr[i], strlen(arr[i]));
-            bitarray_set_bit(escrito, frame_sig);
-           }
-        }
-        }
-    log_info(memoria_log, "PID: %u - Accion:ESCRIBIR - Direccion fisica: %d - Tamaño %d",pid ,nro_frame+desplazamiento,tamanio);
-
-    }
-    else{
+        log_info(memoria_log, "PID: %u - Accion:ESCRIBIR - Direccion fisica: %d - Tamaño %d", pid, dir_fisica[0].nro_frame * tam_pagina + desplazamiento, tamanio);
+    } else {
         log_error(memoria_log, "No puede escribir");
     }
-        
 }
 
 
@@ -111,7 +84,6 @@ void escribir_en_mem_cpu(char* aescribir, t_dir_fisica* dir_fisica, int tamanio 
         log_error(memoria_log, "No puede escribir"); 
     }
 }
-
 
 char** dividir_str_segun_pags(char* str, int cantpags, int desplazamiento, int resto){
 
@@ -195,75 +167,52 @@ char* leer_en_mem_cpu(int tamanio, t_dir_fisica* dir_fisica, uint32_t pid){
     return leido;
 }
 
-char* leer_en_mem_io(int tamanio, t_dir_fisica* dir_fisica, uint32_t pid){
 
-    int nro_frame = dir_fisica->nro_frame;
-    int desplazamiento = dir_fisica->desplazamiento;
-   
-    int cant_pags_necesarias = tamanio/tam_pagina;
-    int resto_desplazamiento = tamanio % tam_pagina;
-    if(resto_desplazamiento != 0){
-        cant_pags_necesarias++;
-    }
-
-    t_tabla* tabla_pid = buscar_por_pid_return(pid);
-    t_list* tabla = tabla_pid->tabla;
-
-	char* leido =malloc(tam_pagina);
-    leido= string_new();
-    void* espacio_de_mem = (char*)memoria + (nro_frame * tam_pagina) + desplazamiento;
+char* leer_en_mem_io(int tamanio, t_dir_fisica* dir_fisica, int cant_direcciones, uint32_t pid) {
+    int desplazamiento = dir_fisica[0].desplazamiento;
     int tam_primera = tam_pagina - desplazamiento;
 
-    if(tamanio > tam_primera && cant_pags_necesarias == 1){
-        cant_pags_necesarias++;
+    char* leido = malloc(tamanio);
+    leido[0] = '\0'; // Inicializar la cadena
+
+    int bytes_leidos = 0;
+    int offset = 0;
+
+    for (int i = 0; i < cant_direcciones; i++) {
+        int nro_frame = dir_fisica[i].nro_frame;
+        int bytes_a_leer = tam_pagina;
+
+        if (i == 0) {
+            bytes_a_leer = tam_primera;
+        } else if (i == cant_direcciones - 1) {
+            bytes_a_leer = tamanio - bytes_leidos;
+        }
+
+        if (bytes_a_leer > tamanio - bytes_leidos) {
+            bytes_a_leer = tamanio - bytes_leidos;
+        }
+
+        if (bytes_a_leer > 0) {
+            char* temp = malloc(bytes_a_leer + 1);
+            memcpy(temp, (char*)memoria + (nro_frame * tam_pagina) + (i == 0 ? desplazamiento : 0), bytes_a_leer);
+            temp[bytes_a_leer] = '\0';
+            string_append(&leido, temp);
+            free(temp);
+
+            bytes_leidos += bytes_a_leer;
+            offset += bytes_a_leer;
+
+            if (bytes_leidos >= tamanio) {
+                break;
+            }
+        }
     }
 
-    char* leo=malloc(tam_pagina);
-    if(cant_pags_necesarias > 1 || tamanio > tam_primera){
-
-
-    memcpy(leo, espacio_de_mem, tam_pagina-desplazamiento);
-    string_append(&leido, leo);
-
-
-    for (int i = 1; i <cant_pags_necesarias ; i++) {
-        if(i== cant_pags_necesarias-1){
-        nro_frame = frame_sig_leer(pid, nro_frame);
-        void* espacio_de_mem = (char*)memoria + (nro_frame * tam_pagina);
-        char* leeo=malloc(tam_pagina);;
-        int tam_ultimo=tamanio-(tam_pagina-desplazamiento)-(cant_pags_necesarias-2)*tam_pagina;
-
-        leeo[tam_ultimo] = '\0';
-        memcpy(leeo, espacio_de_mem , tam_ultimo);
-        
-        string_append(&leido,leeo);
-
-       }
-       else{
-        int frame = frame_sig_leer(pid, nro_frame);
-        void* espacio_de_mem = (char*)memoria + (frame * tam_pagina);
-        nro_frame = frame;
-        char* leeo=malloc(tam_pagina);;
-        memcpy(leeo, espacio_de_mem, tam_pagina);
-
-        string_append(&leido,leeo);
-       }
-    }
-    }
-    else{
-
-        leo[tamanio] = '\0';
-        memcpy(leo, espacio_de_mem, tamanio);
-
-        string_append(&leido,leo);
-      
-    }
-    log_info(memoria_log, "PID: %u - Accion:LEER - Direccion fisica: %d - Tamaño %d",pid ,nro_frame+desplazamiento,tamanio);
-    
-    string_trim_right(&leido);
-
+    log_info(memoria_log, "PID: %u - Accion: LEER - Tamaño: %d", pid, tamanio);
     return leido;
 }
+
+
 
 int frame_sig_disp( uint32_t pid, int frame){
     int frame_siguiente_disp=-1;

@@ -122,7 +122,7 @@ void atender_cliente(void *void_args)
             log_info(memoria_log, "Escribir en memoria: %s", parametros_io->texto);
             usleep(retardo*1000);
             //GUARDAR TEXTO EN REGISTRO_DIRECCION
-            escribir_en_mem_io(parametros_io->texto, parametros_io->registro_direccion, parametros_io->registro_tamanio,pid);//VER CAMI EMI ACA SE TRABA
+            escribir_en_mem_io(parametros_io->texto, parametros_io->registro_direccion, parametros_io->cant_direcciones,parametros_io->registro_tamanio,pid);//VER CAMI EMI ACA SE TRABA
             log_info(memoria_log, "Escribi en memoria: %s", parametros_io->texto); //ACA NO LLEGA
             free(parametros_io);
             break;
@@ -133,7 +133,7 @@ void atender_cliente(void *void_args)
             parametros_io = recibir_registro_direccion_tamanio(client_socket);
             usleep(retardo*1000);
             //BUSCAR EN REGISTRO_DIRECCION Y LEER EL REGISTRO_TAMAÑO
-            char* mensaje = leer_en_mem_io(parametros_io->registro_tamanio, parametros_io->registro_direccion,pid); //ACA SE TRABA
+            char* mensaje = leer_en_mem_io(parametros_io->registro_tamanio, parametros_io->registro_direccion, parametros_io->cant_direcciones,pid); //ACA SE TRABA
             //MANDAR RESULTADO A IO
             enviar_mensaje(mensaje, client_socket);
             free(parametros_io);
@@ -146,7 +146,7 @@ void atender_cliente(void *void_args)
             parametros_io = recibir_registro_direccion_tamanio_con_texto(client_socket);
             usleep(retardo*1000);
             //GUARDAR TEXTO EN REGISTRO_DIRECCION
-            escribir_en_mem_io(parametros_io->texto, parametros_io->registro_direccion, parametros_io->registro_tamanio,pid); //VER CAMI EMI
+            escribir_en_mem_io(parametros_io->texto, parametros_io->registro_direccion, parametros_io->cant_direcciones,parametros_io->registro_tamanio,pid); //VER CAMI EMI
             log_info(memoria_log, "Escribi en memoria: %s", parametros_io->texto);
             free(parametros_io);
             break;
@@ -157,7 +157,7 @@ void atender_cliente(void *void_args)
             parametros_io = recibir_registro_direccion_tamanio(client_socket);
             usleep(retardo*1000);
             //BUSCAR EN REGISTRO_DIRECCION Y LEER EL REGISTRO_TAMAÑO
-            char* mensaje = leer_en_mem_io(parametros_io->registro_tamanio, parametros_io->registro_direccion,pid); //SE LEE RARO LA SEGUNDA VEZ
+            char* mensaje = leer_en_mem_io(parametros_io->registro_tamanio, parametros_io->registro_direccion,parametros_io->cant_direcciones, pid); //SE LEE RARO LA SEGUNDA VEZ
             //MANDAR RESULTADO A IO
             enviar_mensaje(mensaje, client_socket);
             free(parametros_io);
@@ -409,26 +409,17 @@ void atender_cliente(void *void_args)
             int desp2;
             int cantchar;
             int pid;
-            char* a_escribir = malloc(sizeof(frame1)+ sizeof(desp1)+sizeof(frame2)+ sizeof(desp2)+ sizeof(cantchar)+sizeof(pid)); 
-            a_escribir=recibir_pedido(client_socket);
-            sscanf(a_escribir, "%d/%d/%d/%d/%d/%u", &frame1,&desp1,&frame2,&desp2,&cantchar,&pid);
-         
-            t_dir_fisica* dir1=malloc(sizeof(t_dir_fisica)) ;//direc
-            t_dir_fisica* dir2= malloc(sizeof(t_dir_fisica)); //stri
-            dir1->nro_frame = frame1;
-            dir1->desplazamiento=desp1;
-            dir2->nro_frame = frame2;
-            dir2->desplazamiento=desp2;
-
+            char* a_escribir = recibir_pedido(client_socket);
+            sscanf(a_escribir,"%d/%d/%d/%d/%d/%u",&frame1,&desp1,&frame2,&desp2,&cantchar,&pid);
+            free(a_escribir);
+            
             usleep(retardo*1000);
             char* leido=malloc(cantchar);
-            memcpy(leido,(char*)memoria + (frame2* tam_pagina) + desp2 , cantchar); 
-            memcpy((char*)memoria + (frame1* tam_pagina) + desp1 , leido, cantchar); 
+            memcpy(leido, (char*)memoria + (frame2 * tam_pagina) + desp2, cantchar);
+            memcpy((char*)memoria + (frame1 * tam_pagina) + desp1, leido, cantchar); 
 
             free(leido);
 
-            free(dir1);
-            free(dir2);
             break;
         }
         case FINALIZACION:

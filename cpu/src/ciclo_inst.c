@@ -592,12 +592,25 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             log_info(cpu_log, "PID: %u - Ejecutando IO_STDIN_READ %s %s %s", pcb->pid, parametros->interfaz,registro_direccion, registro_tamanio);
 
             int dir_logica=(int)obtener_valor_registro(pcb->registros, registro_direccion);
-            printf("dir logica = %d", dir_logica);
-            printf("tamanio = <%s>", registro_tamanio);
+            parametros->registro_tamanio = (uint32_t)obtener_valor_registro(pcb->registros, registro_tamanio); 
             t_dir_fisica* dir_fisica =  mmu(dir_logica, pcb->pid);
-            parametros->registro_direccion =  malloc(sizeof(t_dir_fisica));
-            parametros->registro_direccion = dir_fisica;
-            parametros->registro_tamanio = (uint32_t)obtener_valor_registro(pcb->registros, registro_tamanio); //chequear
+            int tamanio_primera_pagina = tam_pag - dir_fisica->desplazamiento;
+            if(tamanio_primera_pagina >= parametros->registro_tamanio){
+                parametros->registro_direccion =  malloc(sizeof(t_dir_fisica));
+                *parametros->registro_direccion = *dir_fisica;
+                parametros->cant_direcciones = 1;
+            }
+            else{
+                int paginas_requeridas = (parametros->registro_tamanio + tam_pag - 1) / tam_pag;
+                parametros->registro_direccion = malloc(paginas_requeridas * sizeof(t_dir_fisica));
+                parametros->cant_direcciones = paginas_requeridas;
+                parametros->registro_direccion[0] = *dir_fisica;
+                for (int i = 1; i < paginas_requeridas; i++) {
+                    int pagina_actual = (dir_logica / tam_pag) + i;
+                    t_dir_fisica* dir_fisica_pagina = mmu(pagina_actual * tam_pag, pcb->pid);
+                    parametros->registro_direccion[i] = *dir_fisica_pagina;
+                }
+            }
             ret.io_opcode = IO_STDIN_READ;
             ret.blockeo = IO_BLOCK;
             ret.instrucciones = parametros;
@@ -612,11 +625,26 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
 
             log_info(cpu_log, "PID: %d - Ejecutando IO_STDOUT_WRITE %s %s %s", pcb->pid, parametros->interfaz, registro_direccion, registro_tamanio);
 
-            int dir_logica =(int)obtener_valor_registro(pcb->registros, registro_direccion);
-            t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
-            parametros->registro_direccion =  malloc(sizeof(t_dir_fisica));
-            parametros->registro_direccion = dir_fisica;
+            int dir_logica=(int)obtener_valor_registro(pcb->registros, registro_direccion);
             parametros->registro_tamanio = (uint32_t)obtener_valor_registro(pcb->registros, registro_tamanio); 
+            t_dir_fisica* dir_fisica =  mmu(dir_logica, pcb->pid);
+            int tamanio_primera_pagina = tam_pag - dir_fisica->desplazamiento;
+            if(tamanio_primera_pagina >= parametros->registro_tamanio){
+                parametros->registro_direccion =  malloc(sizeof(t_dir_fisica));
+                *parametros->registro_direccion = *dir_fisica;
+                parametros->cant_direcciones = 1;
+            }
+            else{
+                int paginas_requeridas = (parametros->registro_tamanio + tam_pag - 1) / tam_pag;
+                parametros->registro_direccion = malloc(paginas_requeridas * sizeof(t_dir_fisica));
+                parametros->cant_direcciones = paginas_requeridas;
+                parametros->registro_direccion[0] = *dir_fisica;
+                for (int i = 1; i < paginas_requeridas; i++) {
+                    int pagina_actual = (dir_logica / tam_pag) + i;
+                    t_dir_fisica* dir_fisica_pagina = mmu(pagina_actual * tam_pag, pcb->pid);
+                    parametros->registro_direccion[i] = *dir_fisica_pagina;
+                }
+            } 
             
             ret.io_opcode = IO_STDOUT_WRITE;
             ret.blockeo = IO_BLOCK;
@@ -642,7 +670,7 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             instruccion_params* parametros = malloc(sizeof(instruccion_params));
             parametros->interfaz = strdup(decode->interfaz);
             parametros->params.io_fs.nombre_archivo = strdup(decode->archivo);
-    
+            log_info(cpu_log, "PID: %d - Ejecutando IO_FS_DELETE %s %s", pcb->pid, parametros->interfaz, parametros->params.io_fs.nombre_archivo);
 
             ret.blockeo = IO_BLOCK;
             ret.io_opcode = IO_FS_DELETE;
@@ -657,7 +685,7 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             parametros->params.io_fs.nombre_archivo = strdup(decode->archivo);
             char* registro_tamanio = list_get(decode->registroCpu, 0);
             parametros->registro_tamanio = (uint32_t)obtener_valor_registro(pcb->registros, registro_tamanio);
-    
+            log_info(cpu_log, "PID: %d - Ejecutando IO_FS_TRUNCATE %s %s %i", pcb->pid, parametros->interfaz, parametros->params.io_fs.nombre_archivo, parametros->registro_tamanio);
             ret.blockeo = IO_BLOCK;
             ret.io_opcode = IO_FS_TRUNCATE;
             ret.instrucciones = parametros;
@@ -672,15 +700,29 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             char* registro_direccion = list_get(decode->registroCpu, 0);
             char* registro_tamanio = list_get(decode->registroCpu, 1);
             char* registro_puntero_archivo = list_get(decode->registroCpu, 2);
-            int dir_logica =(int)obtener_valor_registro(pcb->registros, registro_direccion);
-
-            t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
-            parametros->registro_direccion =  malloc(sizeof(t_dir_fisica));
-            parametros->registro_direccion = dir_fisica;
-            parametros->registro_tamanio = (uint32_t)obtener_valor_registro(pcb->registros, registro_tamanio);
+            int dir_logica=(int)obtener_valor_registro(pcb->registros, registro_direccion);
+            parametros->registro_tamanio = (uint32_t)obtener_valor_registro(pcb->registros, registro_tamanio); 
+            t_dir_fisica* dir_fisica =  mmu(dir_logica, pcb->pid);
+            int tamanio_primera_pagina = tam_pag - dir_fisica->desplazamiento;
+            if(tamanio_primera_pagina >= parametros->registro_tamanio){
+                parametros->registro_direccion =  malloc(sizeof(t_dir_fisica));
+                *parametros->registro_direccion = *dir_fisica;
+                parametros->cant_direcciones = 1;
+            }
+            else{
+                int paginas_requeridas = (parametros->registro_tamanio + tam_pag - 1) / tam_pag;
+                parametros->registro_direccion = malloc(paginas_requeridas * sizeof(t_dir_fisica));
+                parametros->cant_direcciones = paginas_requeridas;
+                parametros->registro_direccion[0] = *dir_fisica;
+                for (int i = 1; i < paginas_requeridas; i++) {
+                    int pagina_actual = (dir_logica / tam_pag) + i;
+                    t_dir_fisica* dir_fisica_pagina = mmu(pagina_actual * tam_pag, pcb->pid);
+                    parametros->registro_direccion[i] = *dir_fisica_pagina;
+                }
+            }
             parametros->params.io_fs.registro_puntero_archivo = (off_t)obtener_valor_registro(pcb->registros, registro_puntero_archivo);
 
-   
+            log_info(cpu_log, "PID: %d - Ejecutando IO_FS_WRITE %s %s %s %jd", pcb->pid, parametros->interfaz, registro_tamanio, registro_direccion, parametros->params.io_fs.registro_puntero_archivo);
     
             ret.blockeo = IO_BLOCK;
             ret.io_opcode = IO_FS_WRITE;
@@ -695,16 +737,28 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             char* registro_direccion = list_get(decode->registroCpu, 0);
             char* registro_tamanio = list_get(decode->registroCpu, 1);
             char* registro_puntero_archivo = list_get(decode->registroCpu, 2);
-            int dir_logica =(int)obtener_valor_registro(pcb->registros, registro_direccion);
-
-            t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
-            parametros->registro_direccion =  malloc(sizeof(t_dir_fisica));
-            parametros->registro_direccion = dir_fisica;
-            parametros->registro_tamanio = (uint32_t)obtener_valor_registro(pcb->registros, registro_tamanio);
+            int dir_logica=(int)obtener_valor_registro(pcb->registros, registro_direccion);
+            parametros->registro_tamanio = (uint32_t)obtener_valor_registro(pcb->registros, registro_tamanio); 
+            t_dir_fisica* dir_fisica =  mmu(dir_logica, pcb->pid);
+            int tamanio_primera_pagina = tam_pag - dir_fisica->desplazamiento;
+            if(tamanio_primera_pagina >= parametros->registro_tamanio){
+                parametros->registro_direccion =  malloc(sizeof(t_dir_fisica));
+                *parametros->registro_direccion = *dir_fisica;
+                parametros->cant_direcciones = 1;
+            }
+            else{
+                int paginas_requeridas = (parametros->registro_tamanio + tam_pag - 1) / tam_pag;
+                parametros->registro_direccion = malloc(paginas_requeridas * sizeof(t_dir_fisica));
+                parametros->cant_direcciones = paginas_requeridas;
+                parametros->registro_direccion[0] = *dir_fisica;
+                for (int i = 1; i < paginas_requeridas; i++) {
+                    int pagina_actual = (dir_logica / tam_pag) + i;
+                    t_dir_fisica* dir_fisica_pagina = mmu(pagina_actual * tam_pag, pcb->pid);
+                    parametros->registro_direccion[i] = *dir_fisica_pagina;
+                }
+            }
             parametros->params.io_fs.registro_puntero_archivo = (off_t)obtener_valor_registro(pcb->registros, registro_puntero_archivo);
-   
-
-            log_info(cpu_log, "PID: %d - Ejecutando IO_FS_READ %s %s %s", pcb->pid, parametros->interfaz, registro_tamanio, registro_direccion);
+            log_info(cpu_log, "PID: %d - Ejecutando IO_FS_READ %s %s %s %jd", pcb->pid, parametros->interfaz, registro_tamanio, registro_direccion, parametros->params.io_fs.registro_puntero_archivo);
 
             ret.io_opcode = IO_FS_READ;
             ret.blockeo = IO_BLOCK;
