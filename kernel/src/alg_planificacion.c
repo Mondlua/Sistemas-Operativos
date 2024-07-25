@@ -666,10 +666,10 @@ t_instruccion_params_opcode recibir_solicitud_cpu(int socket_servidor, t_pcb* pc
     t_paquete_instruccion* instruccion = malloc(sizeof(t_paquete_instruccion));
     instruccion->buffer = malloc(sizeof(t_buffer_ins));
     
-    printf("Antes de los recv\n");
+ 
     recv(socket_servidor, &(instruccion->codigo_operacion), sizeof(instrucciones), MSG_WAITALL);
     recv(socket_servidor, &(instruccion->buffer->size), sizeof(uint32_t), MSG_WAITALL);
-    printf("Recibido!\n");
+ 
     
     instruccion->buffer->stream = malloc(instruccion->buffer->size);
     

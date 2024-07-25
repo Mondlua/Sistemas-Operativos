@@ -9,13 +9,13 @@ instruccion_params* deserializar_io_gen_sleep(t_buffer_ins* buffer) {
 
 instruccion_params* deserializar_registro_direccion_tamanio(t_buffer_ins* buffer) {
     instruccion_params* parametros = malloc(sizeof(instruccion_params));
-    parametros->registro_direccion = malloc(sizeof(t_dir_fisica));
     void* stream = buffer->stream;
-    memcpy(&(parametros->registro_direccion->nro_frame), stream, sizeof(int));
-    stream += sizeof(int);
-    memcpy(&(parametros->registro_direccion->desplazamiento), stream, sizeof(int));
-    stream += sizeof(int);
     memcpy(&(parametros->registro_tamanio), stream, sizeof(uint32_t));
+    stream += sizeof(uint32_t);
+    memcpy(&(parametros->cant_direcciones), stream, sizeof(int));
+    stream += sizeof(int);
+    parametros->registro_direccion = malloc(sizeof(t_dir_fisica) * parametros->cant_direcciones);
+    memcpy(parametros->registro_direccion,stream, sizeof(t_dir_fisica) * parametros->cant_direcciones);
     return parametros;
 }
 
@@ -49,8 +49,6 @@ instruccion_params* deserializar_io_fs_truncate(t_buffer_ins* buffer) {
 
 instruccion_params* deserializar_io_fs_write_read(t_buffer_ins* buffer) {
     instruccion_params* parametros = malloc(sizeof(instruccion_params));
-    parametros->registro_direccion = malloc(sizeof(t_dir_fisica));
-    
     uint32_t offset = 0;
     uint32_t archivo_len;
     memcpy(&archivo_len, buffer->stream + offset, sizeof(uint32_t));
@@ -58,12 +56,13 @@ instruccion_params* deserializar_io_fs_write_read(t_buffer_ins* buffer) {
     parametros->params.io_fs.nombre_archivo = malloc(archivo_len);
     memcpy(parametros->params.io_fs.nombre_archivo, buffer->stream + offset, archivo_len);
     offset += archivo_len;
-    memcpy(&(parametros->registro_direccion->nro_frame), buffer->stream + offset, sizeof(int));
-    offset += sizeof(int);
-    memcpy(&(parametros->registro_direccion->desplazamiento), buffer->stream + offset, sizeof(int));
-    offset += sizeof(int);
     memcpy(&(parametros->registro_tamanio), buffer->stream + offset, sizeof(uint32_t));
     offset += sizeof(uint32_t);
+    memcpy(&(parametros->cant_direcciones), buffer->stream + offset, sizeof(int));
+    offset += sizeof(int);
+    parametros->registro_direccion = malloc(sizeof(t_dir_fisica) * parametros->cant_direcciones);
+    memcpy(parametros->registro_direccion,buffer->stream + offset, sizeof(t_dir_fisica) * parametros->cant_direcciones);
+    offset += parametros->cant_direcciones * sizeof(t_dir_fisica);
     memcpy(&(parametros->params.io_fs.registro_puntero_archivo), buffer->stream + offset, sizeof(off_t));
     
     return parametros;
@@ -169,7 +168,7 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code, uint3
             log_error(entradasalida_log, "Error al leer el texto");
             break;
         }
-    // Si el texto es más largo que el tamaño esperado, truncar
+       // Si el texto es más largo que el tamaño esperado, truncar
         if (strlen(texto) > tamanio) {
             texto[tamanio] = '\0'; // Truncar el texto al tamaño permitido
         }

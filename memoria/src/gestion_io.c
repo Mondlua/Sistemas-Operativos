@@ -9,12 +9,13 @@ instruccion_params* recibir_registro_direccion_tamanio_con_texto(int client_sock
     instruccion_params* parametros = malloc(sizeof(instruccion_params));
     parametros->registro_direccion = malloc(sizeof(t_dir_fisica));
     void* stream = instruccion->buffer->stream;
-    memcpy(&(parametros->registro_direccion->nro_frame), stream, sizeof(int));
-    stream += sizeof(int);
-    memcpy(&(parametros->registro_direccion->desplazamiento), stream, sizeof(int));
-    stream += sizeof(int);
     memcpy(&(parametros->registro_tamanio), stream, sizeof(uint32_t));
     stream += sizeof(uint32_t);
+    memcpy(&(parametros->cant_direcciones), stream, sizeof(int));
+    stream += sizeof(int);
+    parametros->registro_direccion = malloc(sizeof(t_dir_fisica) * parametros->cant_direcciones);
+    memcpy(parametros->registro_direccion,stream, sizeof(t_dir_fisica) * parametros->cant_direcciones);
+    stream += sizeof(t_dir_fisica) * parametros->cant_direcciones;
     uint32_t tamanio_texto = parametros->registro_tamanio;
     parametros->texto = malloc(tamanio_texto + 1); // +1 para el carácter nulo
     memcpy(parametros->texto, stream, tamanio_texto);
@@ -34,11 +35,12 @@ instruccion_params* recibir_registro_direccion_tamanio(int client_socket){
     instruccion_params* parametros = malloc(sizeof(instruccion_params));
     parametros->registro_direccion = malloc(sizeof(t_dir_fisica));
     void* stream = instruccion->buffer->stream;
-    memcpy(&(parametros->registro_direccion->nro_frame), stream, sizeof(int));
+    memcpy(&(parametros->registro_tamanio), stream, sizeof(uint32_t));
+    stream += sizeof(uint32_t);
+    memcpy(&(parametros->cant_direcciones), stream, sizeof(int));
     stream += sizeof(int);
-    memcpy(&(parametros->registro_direccion->desplazamiento), stream, sizeof(int));
-    stream += sizeof(int);
-    memcpy(&(parametros->registro_tamanio), stream, sizeof(cpu_registros));
+    parametros->registro_direccion = malloc(sizeof(t_dir_fisica) * parametros->cant_direcciones);
+    memcpy(parametros->registro_direccion,stream, sizeof(t_dir_fisica) * parametros->cant_direcciones);
     free(instruccion->buffer->stream);
     free(instruccion->buffer);
     free(instruccion);

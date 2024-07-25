@@ -28,6 +28,7 @@ typedef struct
     char* texto;
     t_dir_fisica* registro_direccion;
     uint32_t registro_tamanio;
+    int cant_direcciones;
      union {
         struct {
             int unidades_trabajo;
