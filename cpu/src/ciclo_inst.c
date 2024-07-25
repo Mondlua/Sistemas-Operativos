@@ -319,6 +319,16 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             int desplazamiento = dir_fisica->desplazamiento;
             uint32_t pid=pcb->pid;
 
+
+            int cant_pags =1;
+            char* frame_siguiente;
+            int tam_primera=tam_pag - desplazamiento;
+            char* leido =malloc(tamanio);
+            leido= string_new();
+            if(tam_primera<tamanio){
+                cant_pags++;
+            }
+            if(cant_pags==1){
             int tam_mensaje = sizeof(tamanio)+sizeof(num_frame)+sizeof(desplazamiento)+sizeof(pid); 
             char* mensaje = malloc(tam_mensaje);
             sprintf(mensaje, "%d/%d/%d/%u", tamanio,num_frame,desplazamiento,pid); 
@@ -328,9 +338,54 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             log_info(logger, "PID: %d - Ejecutando: MOV_IN %s %s", pcb->pid, registro_datos, registro_direccion);        
 
             int i = recibir_operacion(conexion_memoria_cpu);
-            char* leido = recibir_mensaje(conexion_memoria_cpu, cpu_log);
+            char* msj = recibir_mensaje(conexion_memoria_cpu, cpu_log);
+            int fra;
+            int pag;
+            sscanf(msj, "%s/%d/%d", leido,&fra,&pag);
             log_info(logger, "MOV_IN %s %s: La lectura fue <%s>", registro_datos, registro_direccion, leido); 
             asignar_registro(pcb->registros, registro_datos, atoi(leido));
+            }else{
+            int tam_mensaje1 = sizeof(uint16_t)+sizeof(num_frame)+sizeof(desplazamiento)+sizeof(pid); 
+            char* mensaje1 = malloc(tam_mensaje1);
+            sprintf(mensaje1, "%d/%d/%d/%u", 2,num_frame,desplazamiento,pid); 
+
+            enviar_a_mem(conexion_memoria_cpu, mensaje1, PED_LECTURA);
+
+            log_info(logger, "PID: %d - Ejecutando: MOV_IN %s %s", pcb->pid, registro_datos, registro_direccion);        
+
+            int i = recibir_operacion(conexion_memoria_cpu);
+            char* msj = recibir_pedido(conexion_memoria_cpu);
+            char leo[8];
+            int fra_nuevo;
+            int pag1;
+            sscanf(msj, "%7[^/]/%d/%d", leo,&fra_nuevo,&pag1);
+            t_dir_fisica* dir_fisica = mmu(pag1*tam_pag, pcb->pid);
+            int num_frame = dir_fisica->nro_frame;
+            
+
+            log_info(logger, "MOV_IN %s %s: La lectura fue <%s>", registro_datos, registro_direccion, leo); 
+            asignar_registro(pcb->registros, registro_datos, atoi(leo));
+            string_append(&leido, leo);
+            int tam_mensaje2 = sizeof(uint16_t)+sizeof(num_frame)+sizeof(int)+sizeof(pid); 
+            char* mensaje2= malloc(tam_mensaje2);
+            sprintf(mensaje2, "%d/%d/%d/%u", 2,num_frame,0,pid); 
+
+            enviar_a_mem(conexion_memoria_cpu, mensaje2, PED_LECTURA);
+
+            log_info(logger, "PID: %d - Ejecutando: MOV_IN %s %s", pcb->pid, registro_datos, registro_direccion);        
+
+            int ii = recibir_operacion(conexion_memoria_cpu);
+            char* msjj = recibir_pedido(conexion_memoria_cpu);
+            char leo2[8];
+            int fra2;
+            int pag2;
+            sscanf(msjj, "%7[^/]/%d", leo2,&fra2,&pag2);
+            
+            log_info(logger, "MOV_IN %s %s: La lectura fue <%s>", registro_datos, registro_direccion, leo2); 
+            asignar_registro(pcb->registros, registro_datos, atoi(leo2));
+            string_append(&leido, leo2);
+            }
+           
             free(leido);
             
             break;
@@ -355,25 +410,67 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
 
             char* aescribir = malloc(sizeof(char*));
             aescribir= int_to_char(valor);
-
-            int cant_pags = tamanio/tam_pag;
+            int cant_pags =1;
             bool salir=false;
-            if(cant_pags <=1){        
-                t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
+            char* frame_siguiente;
+            t_dir_fisica* dir_fisica = mmu(dir_logica, pcb->pid);
 
-                int num_frame = dir_fisica->nro_frame;
-                int desplazamiento = dir_fisica->desplazamiento;
+            int num_frame = dir_fisica->nro_frame;
+            int desplazamiento = dir_fisica->desplazamiento;
+            int tam_primera=tam_pag - desplazamiento;
+           
+            if(tam_primera<tamanio){
+                cant_pags++;
+            }
+            if(cant_pags ==1){    
                 if(num_frame==-1){
                     salir=true;
                 }
                 if(salir==false){
                 int tam_mensaje = sizeof(tamanio)+sizeof(aescribir)+sizeof(num_frame)+sizeof(desplazamiento)+sizeof(pcb->pid); 
                 char* mensaje = malloc(tam_mensaje);
-                sprintf(mensaje, "%d/%s/%d/%d/%d", tamanio,aescribir,num_frame,desplazamiento,pcb->pid);     
+                sprintf(mensaje, "%d/%s/%d/%d/%u", tamanio,aescribir,num_frame,desplazamiento,pcb->pid);     
                 log_info(cpu_log, "ESCRIBIR: en Frame <%d> y Desp <%d>:<%s>", num_frame, desplazamiento, aescribir);
                 enviar_a_mem(conexion_memoria_cpu, mensaje,PED_ESCRITURA);
                 int i = recibir_operacion(conexion_memoria_cpu);
-                char* frame_siguiente = recibir_mensaje(conexion_memoria_cpu,cpu_log);
+                int pag;
+                int frame;
+                char* buffer = recibir_pedido(conexion_memoria_cpu);
+                sscanf(buffer, "%d/%d", &frame,&pag);
+                }
+            }else
+            {
+                if(num_frame==-1){
+                    salir=true;
+                }
+                if(salir==false){
+                    tamanio=2;
+                    char* es=decstring(aescribir,0,0);
+                    int tam_mensaje1 = sizeof(tamanio)+strlen(es)+sizeof(num_frame)+sizeof(desplazamiento)+sizeof(pcb->pid); 
+                    char* mensaje1 = malloc(tam_mensaje1);
+                    sprintf(mensaje1, "%d/%s/%d/%d/%u", tamanio,es,num_frame,desplazamiento,pcb->pid);     
+                    log_info(cpu_log, "PID: %u - Accion:ESCRIBIR - Direccion fisica: %d - Tamaño %d",pcb->pid ,num_frame+desplazamiento,2);
+                    enviar_a_mem(conexion_memoria_cpu, mensaje1,PED_ESCRITURA);
+                    int ii = recibir_operacion(conexion_memoria_cpu);
+                    int pag1;
+                    int frame_sig;
+                    char* buffer = recibir_pedido(conexion_memoria_cpu);
+                    sscanf(buffer, "%d/%d", &frame_sig,&pag1);
+                    printf("la pag es %d",pag1);
+                    int dir_log = pag1*tam_pag;
+                    t_dir_fisica* dir_fisica = mmu(dir_log, pcb->pid);
+                    int num_frame2 = dir_fisica->nro_frame;             
+                    char* es2=decstring(aescribir,1,1);
+                    int tam_mensaje2 = sizeof(tamanio)+strlen(es2)+sizeof(num_frame2)+sizeof(pcb->pid)+sizeof(int); 
+                    char* mensaje2 = malloc(tam_mensaje2);
+                    sprintf(mensaje2, "%d/%s/%d/%d/%u", tamanio,es2,num_frame2,0,pcb->pid);     
+                    enviar_a_mem(conexion_memoria_cpu, mensaje2,PED_ESCRITURA);
+                    log_info(cpu_log, "PID: %u - Accion: ESCRIBIR - Direccion fisica: %d - Tamaño %d",pcb->pid ,num_frame2,2);
+                    int i = recibir_operacion(conexion_memoria_cpu);
+                    int pag2;
+                    int frame_sig2;
+                    char* buffer1 = recibir_pedido(conexion_memoria_cpu);
+                    sscanf(buffer1, "%d/%d", &frame_sig2,&pag2);    
                 }
             }
             break; 
@@ -422,7 +519,14 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
             char* mensaje = malloc(sizeof(tamanio_resize)+sizeof(pcb->pid));
             sprintf(mensaje, "%d/%u", tamanio_resize,pcb->pid);       
             enviar_a_mem(conexion_memoria_cpu, mensaje,CPU_RESIZE);
-           
+            int a= recibir_operacion(conexion_memoria_cpu);
+            char* msj=recibir_mensaje(conexion_memoria_cpu,cpu_log);
+            if(strcmp(msj, "outofmem") == 0)
+            {
+                ret.blockeo = OUT_OF_MEM;
+                return ret;
+                // enviar_pcb(pcb, kernel_socket);
+            }
 
             break;
         }
@@ -633,6 +737,7 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger, int socket_cli
         //log_debug(logger, "Numero Instruccion: %d", decodeado->op_code);
 
         blockeo = execute(decodeado,pcb, logger);
+        
         loggear_registros(pcb, logger);
     }
 
@@ -695,6 +800,14 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger, int socket_cli
 
         log_debug(cpu_log, "Envio el nombre del recurso afectado");
         enviar_mensaje(blockeo.nombre_recurso, socket_cliente);
+    }
+    if(blockeo.blockeo == OUT_OF_MEM)
+    {
+        hay_interrupcion = 0;
+        pthread_mutex_unlock(&lock_interrupt);
+        pcb->motivo_desalojo = 5;
+        log_debug(cpu_log, "PCB desalojado por out of mem");
+        enviar_pcb(pcb, socket_cliente);
     }
 }
 
