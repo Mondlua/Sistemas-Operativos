@@ -187,7 +187,7 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code, uint3
         free(instruccion_enviar);
         int nousar= recibir_operacion(conexion_memoria);
         char* imprimir = recibir_mensaje(conexion_memoria, entradasalida_log);
-        log_debug(entradasalida_log, "RECIBI EL MENSAJE : %s", imprimir);
+        log_debug(entradasalida_log, " >> %s", imprimir);
         free(imprimir);
         break;
     }
