@@ -171,6 +171,9 @@ bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_a
         return true;
     }
 
+    free(pcb_outdated->registros);
+    free(pcb_outdated);
+
     // Meto el pcb a la cola correspondiente
     if(pcb_desalojado->motivo_desalojo == 0) // Desalojado por haber ejecutado EXIT
     {
@@ -239,6 +242,17 @@ bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_a
         log_debug(kernel_argumentos->logger, "Se recibe una solicitud de SIGNAL al recurso: %s", recurso_solicitado);
         
         return administrador_recursos_signal(pcb_desalojado, recurso_solicitado, milisegundos_restantes, kernel_argumentos);
+    }
+    if(pcb_desalojado->motivo_desalojo == 5)
+    {
+        if(kernel_argumentos->algo_planning != FIFO)
+        {
+            frenar_timer(kernel_argumentos->timer_quantum);
+        }
+        
+        log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: OUT_OF_MEMORY", pcb_desalojado->pid);
+        mover_a_exit(pcb_desalojado, kernel_argumentos);
+        return true;
     }
     return true;
 }
@@ -416,8 +430,8 @@ bool administrador_recursos_wait(t_pcb *pcb_solicitante, char* nombre_recurso, i
     if(recurso == NULL)
     {
         // El recurso no existe. Mando el proceso a EXIT y habilito la replanificacion
-        mover_a_exit(pcb_solicitante, kernel_argumentos);
         log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: INVALID_RESOURCE", pcb_solicitante->pid);
+        mover_a_exit(pcb_solicitante, kernel_argumentos);
         return true;
     }
 
@@ -470,8 +484,8 @@ bool administrador_recursos_signal(t_pcb *pcb_desalojado, char* recurso_solicita
     if(recurso == NULL)
     {
         // El recurso no existe. Mando el proceso a EXIT y habilito la replanificacion
-        mover_a_exit(pcb_desalojado, kernel_argumentos);
         log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: INVALID_RESOURCE", pcb_desalojado->pid);
+        mover_a_exit(pcb_desalojado, kernel_argumentos);
         return true;
     }
 
@@ -716,9 +730,9 @@ void pcb_a_exit_por_sol_invalida(t_queue_block* interfaz, t_planificacion* kerne
     t_pcb *pcb_desalojado = queue_pop(interfaz->block_queue);
     pthread_mutex_unlock(&kernel_argumentos->colas.mutex_block);
 
+    log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: INVALID_INTERFACE", pcb_desalojado->pid);
     mover_a_exit(pcb_desalojado, kernel_argumentos);
 
-    log_info(kernel_argumentos->logger, "Finaliza el proceso %i - Motivo: INVALID_INTERFACE", pcb_desalojado->pid);
 }
 
 void procesar_entradasalida_terminada(t_queue_block *interfaz, t_planificacion *kernel_argumentos)
@@ -827,6 +841,7 @@ void mover_a_exit(t_pcb* pcb_desalojado, t_planificacion *kernel_argumentos)
     pthread_mutex_unlock(&kernel_argumentos->colas.mutex_exit);
 
     // eliminar_recursos_afectados(pcb_desalojado, kernel_argumentos);
+    solicitar_finalizacion_a_memoria(pcb_desalojado->pid, kernel_argumentos->socket_memoria);
 
     char* estado = proceso_estado_a_string(aux);
     log_info(kernel_argumentos->logger, "PID: %d - Estado anterior: %s - Estado actual: EXIT", pcb_desalojado->pid, estado);
@@ -835,13 +850,31 @@ void mover_a_exit(t_pcb* pcb_desalojado, t_planificacion *kernel_argumentos)
     free(pcb_desalojado);
 }
 
-// void eliminar_recursos_afectados(t_pcb* pcb, t_planificacion* kernel_argumentos)
-// {
-//     char* pid = string_itoa(pcb->pid);
-//     t_list* lista_del_proceso = dictionary_remove(kernel_argumentos->recursos_tomados, pid);
+void solicitar_finalizacion_a_memoria(uint32_t pid, int socket_memoria)
+{
+    char* mensaje = string_itoa(pid);
 
-//     log_debug(kernel_argumentos->logger, "El recurso %s tenia tomados %d recursos cuando termino su ejecucion");
-// }
+	t_paquete* paquete = malloc(sizeof(t_paquete));
+
+	paquete->codigo_operacion = FINALIZACION;
+	paquete->buffer = malloc(sizeof(t_buffer));
+	paquete->buffer->size = strlen(mensaje) + 1;
+	paquete->buffer->stream = malloc(paquete->buffer->size);
+	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
+
+	int bytes = paquete->buffer->size + 2*sizeof(int);
+
+	void* a_enviar = serializar_paquete(paquete, bytes);
+
+    int resultado_send = send(socket_memoria, a_enviar, bytes, MSG_NOSIGNAL);  // Evita la generación de SIGPIPE
+
+    if (resultado_send == -1) {
+        fprintf(stderr, "Error al enviar el mensaje: socket cerrado.\n");
+    }
+
+    free(a_enviar);
+    eliminar_paquete(paquete);
+}
 
 char* proceso_estado_a_string(t_proceso_estado estado)
 {
