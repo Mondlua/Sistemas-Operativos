@@ -74,10 +74,29 @@ void recibir_instruccion(char* tipo_interfaz)
         t_paquete_instruccion* instruccion = malloc(sizeof(t_paquete_instruccion));
         instruccion->buffer = malloc(sizeof(t_buffer_ins));
         uint32_t pid = -1;
-        recv(conexion_kernel, &(instruccion->codigo_operacion), sizeof(instrucciones), MSG_WAITALL);
+        int bytes_recibidos = recv(conexion_kernel, &(instruccion->codigo_operacion), sizeof(instrucciones), MSG_WAITALL);
+        if (bytes_recibidos == 0) {
+            perror("\nEl cliente ha cerrado la conexión.\n");
+            free(instruccion->buffer);
+            free(instruccion);
+            free(nombre_interfaz);
+            if(strcmp(tipo_interfaz, "DIALFS") == 0){
+                bitarray_destroy(bitmap);
+                list_destroy_and_destroy_elements(lista_archivos, destruir_file);
+            }
+            config_destroy(entradasalida_config);
+            log_destroy(entradasalida_log);
+            return;
+        } 
         recv(conexion_kernel, &(pid), sizeof(uint32_t), MSG_WAITALL);
         recv(conexion_kernel, &(instruccion->buffer->size), sizeof(uint32_t), MSG_WAITALL);
         instruccion->buffer->stream = malloc(instruccion->buffer->size);
+        if (instruccion->buffer->stream == NULL) {
+            perror("Error al asignar memoria para stream");
+            free(instruccion->buffer);
+            free(instruccion);
+            exit(EXIT_FAILURE);
+        }
         recv(conexion_kernel, instruccion->buffer->stream, instruccion->buffer->size, MSG_WAITALL);
         instruccion_params* param;
         

@@ -6,10 +6,9 @@
 #include <stdio.h>
 #include <utils/catedra/client.h>
 #include <utils/catedra/inicio.h>
-#include <instrucciones.h>
-#include "DialFS.h"
+#include "instrucciones.h"
 
-void extraer_segun_tipo_io(t_config* config, char* tipo_interfaz);
-void conectar_con_memoria(t_config* config);
+void extraer_segun_tipo_io(char* tipo_interfaz);
+void conectar_con_memoria();
 
 #endif

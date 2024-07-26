@@ -609,8 +609,10 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
                     int pagina_actual = (dir_logica / tam_pag) + i;
                     t_dir_fisica* dir_fisica_pagina = mmu(pagina_actual * tam_pag, pcb->pid);
                     parametros->registro_direccion[i] = *dir_fisica_pagina;
+                    free(dir_fisica_pagina);
                 }
             }
+            free(dir_fisica); 
             ret.io_opcode = IO_STDIN_READ;
             ret.blockeo = IO_BLOCK;
             ret.instrucciones = parametros;
@@ -643,9 +645,10 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
                     int pagina_actual = (dir_logica / tam_pag) + i;
                     t_dir_fisica* dir_fisica_pagina = mmu(pagina_actual * tam_pag, pcb->pid);
                     parametros->registro_direccion[i] = *dir_fisica_pagina;
+                    free(dir_fisica_pagina);
                 }
-            } 
-            
+            }
+            free(dir_fisica);
             ret.io_opcode = IO_STDOUT_WRITE;
             ret.blockeo = IO_BLOCK;
             ret.instrucciones = parametros;
@@ -718,8 +721,10 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
                     int pagina_actual = (dir_logica / tam_pag) + i;
                     t_dir_fisica* dir_fisica_pagina = mmu(pagina_actual * tam_pag, pcb->pid);
                     parametros->registro_direccion[i] = *dir_fisica_pagina;
+                    free(dir_fisica_pagina);
                 }
             }
+            free(dir_fisica);
             parametros->params.io_fs.registro_puntero_archivo = (off_t)obtener_valor_registro(pcb->registros, registro_puntero_archivo);
 
             log_info(cpu_log, "PID: %d - Ejecutando IO_FS_WRITE %s %s %s %jd", pcb->pid, parametros->interfaz, registro_tamanio, registro_direccion, parametros->params.io_fs.registro_puntero_archivo);
@@ -755,8 +760,10 @@ t_cpu_blockeo execute(t_decode* decode, t_pcb* pcb, t_log *logger){
                     int pagina_actual = (dir_logica / tam_pag) + i;
                     t_dir_fisica* dir_fisica_pagina = mmu(pagina_actual * tam_pag, pcb->pid);
                     parametros->registro_direccion[i] = *dir_fisica_pagina;
+                    free(dir_fisica_pagina);
                 }
             }
+            free(dir_fisica);
             parametros->params.io_fs.registro_puntero_archivo = (off_t)obtener_valor_registro(pcb->registros, registro_puntero_archivo);
             log_info(cpu_log, "PID: %d - Ejecutando IO_FS_READ %s %s %s %jd", pcb->pid, parametros->interfaz, registro_tamanio, registro_direccion, parametros->params.io_fs.registro_puntero_archivo);
 
