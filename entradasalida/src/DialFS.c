@@ -14,13 +14,13 @@ void inicio_filesystem() {
     snprintf(blocks_path, sizeof(blocks_path), "%s/bloques.dat", path_base_dialfs);
     int blocks_file = open(blocks_path, O_CREAT | O_RDWR, 0666);
     if (blocks_file < 0) {
-        perror("Error al crear bloques.dat");
+        log_error(log_aux, "Error al crear bloques.dat");
         exit(EXIT_FAILURE);
     }
 
     off_t tamanio_archivo = (off_t) block_size * block_size;
     if (ftruncate(blocks_file, tamanio_archivo) < 0) {
-        perror("No se pudo establecer el tamanio del archivo");
+        log_error(log_aux, "No se pudo establecer el tamanio del archivo");
         close(blocks_file);
         exit(EXIT_FAILURE);
     }
@@ -34,27 +34,27 @@ void inicio_filesystem() {
     if (stat(bitmap_path, &st) == 0) { // Si el archivo existe
         bitmap_file = open(bitmap_path, O_RDWR);
         if (bitmap_file < 0) {
-            perror("Error al abrir bitmap.dat");
+            log_error(log_aux, "Error al abrir bitmap.dat");
             exit(EXIT_FAILURE);
         }
         bitmap_size = st.st_size;
     } else { // Si el archivo no existe, crea el bitmap inicial, crea el archivo y lo guarda
         bitmap_file = open(bitmap_path, O_CREAT | O_RDWR, 0666);
         if (bitmap_file < 0) {
-            perror("Error al abrir bitmap.dat");
+            log_error(log_aux, "Error al abrir bitmap.dat");
             exit(EXIT_FAILURE);
         }
 
         bitmap_size = (block_count + 7) / 8; // Redondea hacia arriba los bytes
         char* bitmap_data = (char *)calloc(bitmap_size, sizeof(char)); // sizeof de un char es 1 byte
         if (bitmap_data == NULL) {
-            perror("Error al asignar memoria para bitmap_data");
+            log_error(log_aux, "Error al asignar memoria para bitmap_data");
             close(bitmap_file);
             exit(EXIT_FAILURE);
         }
         bitmap = bitarray_create_with_mode(bitmap_data, bitmap_size, LSB_FIRST);
         if (bitmap == NULL) {
-            perror("Error al crear bitmap");
+            log_error(log_aux, "Error al crear bitmap");
             free(bitmap_data);
             close(bitmap_file);
             exit(EXIT_FAILURE);
@@ -65,7 +65,7 @@ void inicio_filesystem() {
 
         char* bitmap_mmap = mmap(NULL, bitmap_size, PROT_READ | PROT_WRITE, MAP_SHARED, bitmap_file, 0);
         if (bitmap_mmap == MAP_FAILED) {
-            perror("Error al mapear bitmap.dat");
+            log_error(log_aux, "Error al mapear bitmap.dat");
             free(bitmap_data);
             bitarray_destroy(bitmap);
             close(bitmap_file);
@@ -80,7 +80,7 @@ void inicio_filesystem() {
     // Mapear el archivo bitmap a memoria
     char* bitmap_mmap = mmap(NULL, bitmap_size, PROT_READ | PROT_WRITE, MAP_SHARED, bitmap_file, 0);
     if (bitmap_mmap == MAP_FAILED) {
-        perror("Error al mapear bitmap.dat 2.0");
+        log_error(log_aux, "Error al mapear bitmap.dat");
         close(bitmap_file);
         exit(EXIT_FAILURE);
     }
@@ -90,7 +90,7 @@ void inicio_filesystem() {
     bitmap = bitarray_create_with_mode(bitmap_mmap, bitmap_size, LSB_FIRST);
     
     if (bitmap == NULL) {
-        perror("Error al crear bitmap con mmap");
+        log_error(log_aux, "Error al crear bitmap con mmap");
         munmap(bitmap_mmap, bitmap_size);
         close(bitmap_file);
         exit(EXIT_FAILURE);
@@ -138,7 +138,7 @@ void crear_archivo(char* nombre){
     
     uint32_t bloque_libre = buscar_bloque_libre();
     if (bloque_libre == -1) {
-        printf("No hay bloques libres disponibles.\n");
+        log_debug(log_aux, "No hay bloques libres disponibles.");
         munmap(bitmap->bitarray, bitmap_size);
         exit(EXIT_FAILURE);
     }
@@ -178,9 +178,9 @@ void borrar_archivo(char* nombre){
 
     config_destroy(file_config);
     if (unlink(archivo->ruta) == 0) {
-        log_debug(entradasalida_log, "Archivo %s eliminado exitosamente.", nombre);
+        log_debug(log_aux, "Archivo %s eliminado exitosamente.", nombre);
     } else {
-        log_error(entradasalida_log, "Error al eliminar el archivo");
+        log_error(log_aux, "Error al eliminar el archivo");
     }
     FILE* archivo_bloques = fopen(blocks_path, "rb+");
     char* buffer = calloc(block_size, 1); //lleno de 0
@@ -197,7 +197,11 @@ void borrar_archivo(char* nombre){
 
 void truncar_archivo(char* nombre, uint32_t tamanio, uint32_t pid){
     usleep(tiempo_unidad_trabajo * 1000);
-
+    FILE* archivo_bloques = fopen(blocks_path, "rb");
+    if (!archivo_bloques) {
+        log_error(log_aux, "Error al abrir bloques.dat");
+        exit(EXIT_FAILURE);
+    }
     Archivo* archivo = buscar_archivo_por_nombre(nombre);
     t_config* file_config = config_create(archivo->ruta);
     int bloque_inicial = config_get_int_value(file_config, "BLOQUE_INICIAL");
@@ -218,6 +222,12 @@ void truncar_archivo(char* nombre, uint32_t tamanio, uint32_t pid){
         for (int i = bloque_final + 1; i <= bloque_final_anterior; i++) {
             bitarray_clean_bit(bitmap, i);
         }
+        int start = bloque_final * block_size;
+        int tamanio_cero = (bloque_final_anterior - bloque_final) * block_size;
+        char *ceros = calloc(tamanio_cero, 1);
+        fseek(archivo_bloques, start, SEEK_SET);
+        fwrite(ceros, tamanio_cero, 1, archivo_bloques);
+        free(ceros);
     }
     else if (bloque_final > bloque_final_anterior) { //Agrandar
         if (!bloques_contiguos_libres(bloque_final_anterior, bloque_final)){
@@ -242,6 +252,7 @@ void truncar_archivo(char* nombre, uint32_t tamanio, uint32_t pid){
     msync(bitmap->bitarray, bitmap_size, MS_SYNC);
     guardar_lista_archivos();
     free(tamanio_config);
+    fclose(archivo_bloques);
 }
 
 void escribir_archivo(char* nombre, off_t puntero, char* a_escribir, uint32_t tamanio){
@@ -272,7 +283,7 @@ void escribir_archivo(char* nombre, off_t puntero, char* a_escribir, uint32_t ta
             fwrite(buffer_cero, 1, bytes_restantes, archivo_bloques);
             free(buffer_cero);
         } else {
-            perror("Error al asignar memoria para buffer de ceros");
+            log_error(log_aux, "Error al asignar memoria para buffer de ceros");
         }
     } else {
         fwrite(a_escribir, 1, bytes_a_escribir, archivo_bloques);
@@ -289,7 +300,7 @@ char* leer_archivo(char* nombre, off_t puntero, uint32_t tamanio){
     }
     FILE* archivo_bloques = fopen(blocks_path, "rb");
     if (!archivo_bloques) {
-        perror("Error al abrir bloques.dat");
+        log_error(log_aux, "Error al abrir bloques.dat");
         return NULL;
     }
 
@@ -303,14 +314,14 @@ char* leer_archivo(char* nombre, off_t puntero, uint32_t tamanio){
     fseeko(archivo_bloques, (archivo->comienzo * block_size) + puntero, SEEK_SET);
     char* buffer = malloc(tamanio + 1);
     if (buffer == NULL) {
-        perror("Error al asignar memoria para el buffer");
+        log_error(log_aux, "Error al asignar memoria para el buffer");
         fclose(archivo_bloques);
         return NULL;  // No se pudo asignar memoria
     }
     size_t bytes_leidos = fread(buffer, 1, tamanio, archivo_bloques);
     if (bytes_leidos < tamanio) {
         if (ferror(archivo_bloques)) {
-            perror("Error al leer el archivo");
+            log_error(log_aux, "Error al leer el archivo");
             free(buffer);
             fclose(archivo_bloques);
             return NULL;
@@ -364,7 +375,7 @@ void eliminar_archivo_de_lista(int bloque_inicial){
     if (posicion_a_borrar != -1) {
         list_remove_and_destroy_element(lista_archivos, posicion_a_borrar, destruir_file);
     } else {
-        printf("Archivo no encontrado en la lista.\n");
+        log_error(log_aux, "Archivo no encontrado en la lista.\n");
     }
 }
 
@@ -446,7 +457,7 @@ void compactar(int* bloque_inicial, int bloque_final, Archivo* file) {
     fwrite(buffer_de_archivo_a_mover, file->tamanio, 1, archivo_bloques);
 
     *bloque_inicial = bloque_libre_actual;
-     free(bloques_originales);
+    free(bloques_originales);
     for (int i = 0; i < num_bloques; i++) {
         free(buffers_datos[i]);
     }
@@ -461,11 +472,23 @@ void compactar(int* bloque_inicial, int bloque_final, Archivo* file) {
 
 char** guardar_contenido_bloques(Archivo** bloques_originales, int num_bloques, FILE* archivo_bloques) {
     char** buffers_datos = malloc(sizeof(char*) * num_bloques);
-
+    if (buffers_datos == NULL) {
+        log_error(log_aux, "Error al asignar memoria para buffers_datos");
+        exit(EXIT_FAILURE);
+    }
+    memset(buffers_datos, 0, sizeof(char*) * num_bloques);
     for (int i = 0; i < num_bloques; i++) {
         int start =  bloques_originales[i]->comienzo * block_size;
         int tamanio = start + bloques_originales[i]->tamanio;
-        buffers_datos[i] = malloc(tamanio); 
+        buffers_datos[i] = malloc(tamanio);
+        if (buffers_datos[i] == NULL) {
+            log_error(log_aux, "Error al asignar memoria para buffers_datos[i]");
+            for (int j = 0; j < i; j++) {
+                free(buffers_datos[j]);
+            }
+            free(buffers_datos);
+            return NULL;
+        }
         fseek(archivo_bloques, start, SEEK_SET);
         fread(buffers_datos[i], tamanio, 1, archivo_bloques);
     }
@@ -475,6 +498,14 @@ char** guardar_contenido_bloques(Archivo** bloques_originales, int num_bloques, 
         int tamanio = start + bloques_originales[i]->tamanio;
         fseek(archivo_bloques, start, SEEK_SET);
         char* ceros = calloc(tamanio, 1); // Crear un buffer lleno de ceros para rellenar los espacios que movi
+        if (ceros == NULL) {
+            log_error(log_aux, "Error al asignar memoria para ceros");
+            for (int j = 0; j < i; j++) {
+                free(buffers_datos[j]);
+            }
+            free(buffers_datos);
+            return NULL;
+        }
         fwrite(ceros, tamanio, 1, archivo_bloques);
         free(ceros); // Liberar el buffer de ceros
     }
@@ -483,7 +514,7 @@ char** guardar_contenido_bloques(Archivo** bloques_originales, int num_bloques, 
 
 void escribir_datos_en_nuevos_bloques(Archivo** bloques_originales, char** buffers_datos, int num_bloques, int* bloque_libre_actual, FILE* archivo_bloques) {
     if (!archivo_bloques) {
-        perror("Error al abrir el archivo de bloques");
+        log_error(log_aux, "Error al abrir el archivo de bloques");
         return;
     }
 

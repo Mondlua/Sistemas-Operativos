@@ -76,7 +76,7 @@ void recibir_instruccion(char* tipo_interfaz)
         uint32_t pid = -1;
         int bytes_recibidos = recv(conexion_kernel, &(instruccion->codigo_operacion), sizeof(instrucciones), MSG_WAITALL);
         if (bytes_recibidos == 0) {
-            perror("\nEl cliente ha cerrado la conexión.\n");
+            log_error(log_aux, "El cliente ha cerrado la conexión.\n");
             free(instruccion->buffer);
             free(instruccion);
             free(nombre_interfaz);
@@ -85,6 +85,7 @@ void recibir_instruccion(char* tipo_interfaz)
                 list_destroy_and_destroy_elements(lista_archivos, destruir_file);
             }
             config_destroy(entradasalida_config);
+            log_destroy(log_aux);
             log_destroy(entradasalida_log);
             return;
         } 
@@ -92,7 +93,7 @@ void recibir_instruccion(char* tipo_interfaz)
         recv(conexion_kernel, &(instruccion->buffer->size), sizeof(uint32_t), MSG_WAITALL);
         instruccion->buffer->stream = malloc(instruccion->buffer->size);
         if (instruccion->buffer->stream == NULL) {
-            perror("Error al asignar memoria para stream");
+            log_error(log_aux, "Error al asignar memoria para stream");
             free(instruccion->buffer);
             free(instruccion);
             exit(EXIT_FAILURE);
@@ -104,15 +105,15 @@ void recibir_instruccion(char* tipo_interfaz)
             switch (instruccion->codigo_operacion)
             {
             case IO_GEN_SLEEP:{
-            param = deserializar_io_gen_sleep(instruccion->buffer);
+                param = deserializar_io_gen_sleep(instruccion->buffer);
             break;
             }
             case IO_STDIN_READ:{
-            param = deserializar_registro_direccion_tamanio(instruccion->buffer);
+                param = deserializar_registro_direccion_tamanio(instruccion->buffer);
             break;
             }
             case IO_STDOUT_WRITE:{
-            param = deserializar_registro_direccion_tamanio(instruccion->buffer);
+                param = deserializar_registro_direccion_tamanio(instruccion->buffer);
             break;
             }
             case IO_FS_CREATE: {
@@ -169,25 +170,24 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code, uint3
         int unidades_trabajo_recibidas = parametros->params.io_gen_sleep.unidades_trabajo;
         result = unidades_trabajo_recibidas * tiempo_unidad_trabajo * 1000; 
         usleep(result);
-        log_debug(entradasalida_log, "Termine de dormir %dms", result);
+        log_debug(log_aux, "Termine de dormir %dms", result);
         break;
     }
     case IO_STDIN_READ:{
         uint32_t tamanio = parametros->registro_tamanio;
-        char* prompt = (char*)malloc(256); // Para un mensaje de entrada personalizado
+        char* prompt = (char*)malloc(256);
         if (prompt == NULL) {
-            log_error(entradasalida_log, "Error al asignar memoria para el prompt");
+            log_error(log_aux, "Error al asignar memoria para el prompt");
             break;
         }   
-        log_debug(entradasalida_log, "Ingrese el texto de tamaño %i: ", tamanio);
+        log_debug(log_aux, "Ingrese el texto de tamaño %i: ", tamanio);
         snprintf(prompt, 256, " >> ");
         char* texto = readline(prompt);
         free(prompt); 
         if (texto == NULL) {
-            log_error(entradasalida_log, "Error al leer el texto");
+            log_error(log_aux, "Error al leer el texto");
             break;
         }
-       // Si el texto es más largo que el tamaño esperado, truncar
         if (strlen(texto) > tamanio) {
             texto[tamanio] = '\0'; // Truncar el texto al tamaño permitido
         }
@@ -206,7 +206,11 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code, uint3
         free(instruccion_enviar);
         int nousar= recibir_operacion(conexion_memoria);
         char* imprimir = recibir_mensaje(conexion_memoria, entradasalida_log);
-        log_debug(entradasalida_log, " >> %s", imprimir);
+        if(imprimir == NULL){
+            log_error(log_aux, "Error al recibir el mensaje!");
+            break;
+        }
+        log_debug(log_aux, " >> %s", imprimir);
         free(imprimir);
         break;
     }
@@ -233,6 +237,10 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code, uint3
         free(instruccion_enviar);
         int nousar= recibir_operacion(conexion_memoria);
         char* a_escribir = recibir_mensaje(conexion_memoria, entradasalida_log);
+        if(a_escribir == NULL){
+            log_error(log_aux, "Error al recibir el mensaje!");
+            break;
+        }
         escribir_archivo(parametros->params.io_fs.nombre_archivo, parametros->params.io_fs.registro_puntero_archivo, a_escribir, parametros->registro_tamanio);
         free(a_escribir);
         break;
@@ -241,7 +249,7 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code, uint3
         log_info(entradasalida_log, "PID: %i - Leer Archivo: %s - Tamaño a Leer: %i - Puntero Archivo: %jd", pid,  parametros->params.io_fs.nombre_archivo, parametros->registro_tamanio, (intmax_t)parametros->params.io_fs.registro_puntero_archivo);
         char* leido = leer_archivo(parametros->params.io_fs.nombre_archivo, parametros->params.io_fs.registro_puntero_archivo, parametros->registro_tamanio);
         if (leido == NULL) {
-            log_error(entradasalida_log, "Error al leer el archivo %s", parametros->params.io_fs.nombre_archivo);
+            log_error(log_aux, "Error al leer el archivo %s", parametros->params.io_fs.nombre_archivo);
             break;
         }
         t_paquete_instruccion* instruccion_enviar = malloc(sizeof(t_paquete_instruccion));
@@ -253,7 +261,7 @@ void atender_cod_op(instruccion_params* parametros, instrucciones op_code, uint3
         break;
     }
     default:
-        log_error(entradasalida_log, "Operación no válida");
+        log_error(log_aux, "Operación no válida");
         break;
     }
     // Se liberan recursos dependiendo del tipo de operación

@@ -27,6 +27,7 @@ typedef struct
 extern t_bitarray* bitmap;
 extern t_list* lista_archivos;
 extern t_log* entradasalida_log;
+extern t_log* log_aux;
 extern int block_size;
 extern int block_count;
 extern int tiempo_unidad_trabajo;
