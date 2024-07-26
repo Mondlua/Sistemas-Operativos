@@ -56,6 +56,7 @@ void ejecutar_script(char* path, t_planificacion *kernel_argumentos){
     char* ruta_completa = malloc(len_total);
     if (ruta_completa == NULL) {
         log_error(kernel_argumentos->logger, "Error: No se pudo asignar memoria para la ruta completa.");
+        free(ruta_completa);
         return;
     }
     strcpy(ruta_completa, complemento);
@@ -67,6 +68,7 @@ void ejecutar_script(char* path, t_planificacion *kernel_argumentos){
     FILE* file = fopen(ruta_completa, "r");
     if (file == NULL) {
         log_error(kernel_argumentos->logger, "No se pudo abrir el archivo: %s", path);
+        free(ruta_completa);
         return;
     }
 
@@ -87,6 +89,7 @@ void ejecutar_script(char* path, t_planificacion *kernel_argumentos){
 
     free(linea);
     fclose(file);
+    free(ruta_completa);
     log_info(kernel_argumentos->logger, ">> Finalizó la ejecución del script %s", path);
 }
 
