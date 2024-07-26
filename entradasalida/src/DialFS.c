@@ -243,6 +243,12 @@ void truncar_archivo(char* nombre, uint32_t tamanio, uint32_t pid){
         for (int i = bloque_inicial; i <= bloque_final; i++) {
             bitarray_set_bit(bitmap, i);
         }
+        int start = bloque_final_anterior * block_size;
+        int tamanio_cero = (bloque_final - bloque_final_anterior) * block_size;
+        char *ceros = calloc(tamanio_cero, 1);
+        fseek(archivo_bloques, start, SEEK_SET);
+        fwrite(ceros, tamanio_cero, 1, archivo_bloques);
+        free(ceros);
     }
     char * tamanio_config = int_to_char(tamanio);
     config_set_value(file_config, "TAMANIO_ARCHIVO", tamanio_config);
