@@ -155,6 +155,8 @@ bool planificador_recepcion_pcb(t_pcb *pcb_desalojado, t_planificacion *kernel_a
     if(queue_is_empty(kernel_argumentos->colas.exec))
     {
         log_debug(kernel_argumentos->logger, "El proceso recibido fue terminado por el usuario");
+        free(pcb_desalojado->registros);
+        free(pcb_desalojado);
         return true;
     }
 
@@ -656,6 +658,7 @@ void enviar_instruccion_a_interfaz(t_queue_block* interfaz_destino, instruccion_
     instruccion_enviar->codigo_operacion = codigo_op;
     enviar_instruccion(instruccion_enviar, parametros, interfaz_destino->socket_interfaz, pid);
 
+    free(parametros->interfaz);
     free(parametros);
     free(instruccion_enviar);
 }
@@ -868,6 +871,7 @@ void solicitar_finalizacion_a_memoria(uint32_t pid, int socket_memoria)
     }
 
     free(a_enviar);
+    free(mensaje);
     eliminar_paquete(paquete);
 }
 

@@ -92,6 +92,7 @@ void atender_cliente(void *void_args)
             t_queue_block *interfaz = dictionary_get(args->planificador->colas.lista_block, interfaz_recibida);
 
             procesar_entradasalida_terminada(interfaz, args->planificador);
+            free(interfaz_recibida);
 
             break;
         }
