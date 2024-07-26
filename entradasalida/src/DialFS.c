@@ -283,7 +283,15 @@ void escribir_archivo(char* nombre, off_t puntero, char* a_escribir, uint32_t ta
 char* leer_archivo(char* nombre, off_t puntero, uint32_t tamanio){
     usleep(tiempo_unidad_trabajo * 1000);
     Archivo* archivo = buscar_archivo_por_nombre(nombre);
+    if (!archivo) {
+        fprintf(stderr, "Error: Archivo no encontrado.\n");
+        return NULL;
+    }
     FILE* archivo_bloques = fopen(blocks_path, "rb");
+    if (!archivo_bloques) {
+        perror("Error al abrir bloques.dat");
+        return NULL;
+    }
 
     off_t posicion_final = (archivo->comienzo * block_size) + puntero + tamanio;
     off_t tamanio_archivo = archivo->comienzo * block_size + archivo->tamanio;
@@ -303,6 +311,9 @@ char* leer_archivo(char* nombre, off_t puntero, uint32_t tamanio){
     if (bytes_leidos < tamanio) {
         if (ferror(archivo_bloques)) {
             perror("Error al leer el archivo");
+            free(buffer);
+            fclose(archivo_bloques);
+            return NULL;
         }
     }
     
