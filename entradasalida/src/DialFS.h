@@ -24,7 +24,8 @@ typedef struct
     int comienzo; //Bloque inicial
 }Archivo;
 
-
+extern t_bitarray* bitmap;
+extern t_list* lista_archivos;
 extern t_log* entradasalida_log;
 extern int block_size;
 extern int block_count;

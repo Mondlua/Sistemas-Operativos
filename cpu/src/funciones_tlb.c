@@ -57,6 +57,7 @@ int manejar_tlb_miss(uint32_t pid, int numero_pagina) {
 
     int frame = recibir_frame(conexion_memoria_cpu);
     log_info(cpu_log, "Obtener Marco: PID: <%i> - Página: <%i> - Marco: <%i>", pid, numero_pagina, frame);
+    free(mensaje);
     return frame;
 }
 

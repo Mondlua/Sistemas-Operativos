@@ -47,7 +47,19 @@ void inicio_filesystem() {
 
         bitmap_size = (block_count + 7) / 8; // Redondea hacia arriba los bytes
         char* bitmap_data = (char *)calloc(bitmap_size, sizeof(char)); // sizeof de un char es 1 byte
+        if (bitmap_data == NULL) {
+            perror("Error al asignar memoria para bitmap_data");
+            close(bitmap_file);
+            exit(EXIT_FAILURE);
+        }
         bitmap = bitarray_create_with_mode(bitmap_data, bitmap_size, LSB_FIRST);
+        if (bitmap == NULL) {
+            perror("Error al crear bitmap");
+            free(bitmap_data);
+            close(bitmap_file);
+            exit(EXIT_FAILURE);
+        }
+
 
         ftruncate(bitmap_file, bitmap_size);
 
@@ -72,7 +84,17 @@ void inicio_filesystem() {
         close(bitmap_file);
         exit(EXIT_FAILURE);
     }
+    if (bitmap != NULL) {
+        bitarray_destroy(bitmap);
+    }
     bitmap = bitarray_create_with_mode(bitmap_mmap, bitmap_size, LSB_FIRST);
+    
+    if (bitmap == NULL) {
+        perror("Error al crear bitmap con mmap");
+        munmap(bitmap_mmap, bitmap_size);
+        close(bitmap_file);
+        exit(EXIT_FAILURE);
+    }
     close(bitmap_file); 
 
     snprintf(lista_salida_path, sizeof(lista_salida_path), "%s/lista_archivos.txt", path_base_dialfs);
@@ -122,8 +144,8 @@ void crear_archivo(char* nombre){
     }
     bitarray_set_bit(bitmap, bloque_libre);
     msync(bitmap->bitarray, bitmap_size, MS_SYNC); // Sincroniza los cambios del bitmap
-
-    config_set_value(new_file_config, "BLOQUE_INICIAL", int_to_char(bloque_libre));
+    char* bloque_inicial_config = int_to_char(bloque_libre);
+    config_set_value(new_file_config, "BLOQUE_INICIAL", bloque_inicial_config);
     Archivo* file = malloc(sizeof(Archivo));
     file->nombre = strdup(nombre);
     file->ruta = strdup(new_file_path);
@@ -132,6 +154,7 @@ void crear_archivo(char* nombre){
     list_add(lista_archivos, file);
     config_save(new_file_config);
     config_destroy(new_file_config);
+    free(bloque_inicial_config);
     guardar_lista_archivos();
 }
 
@@ -167,7 +190,6 @@ void borrar_archivo(char* nombre){
     }
     fclose(archivo_bloques);
     free(buffer);
-    
     msync(bitmap->bitarray, bitmap_size, MS_SYNC);
     eliminar_archivo_de_lista(bloque_inicial);
     guardar_lista_archivos();
@@ -203,19 +225,23 @@ void truncar_archivo(char* nombre, uint32_t tamanio, uint32_t pid){
             compactar(&bloque_inicial, bloque_final_anterior, archivo);
             log_info(entradasalida_log, "PID: %i - Fin Compactación.", pid);
             archivo->comienzo = bloque_inicial;
-            config_set_value(file_config, "BLOQUE_INICIAL", int_to_char(bloque_inicial));
+            char * bloque_inicial_config = int_to_char(bloque_inicial);
+            config_set_value(file_config, "BLOQUE_INICIAL", bloque_inicial_config);
+            free(bloque_inicial_config);
             bloque_final = bloque_inicial + cantidad_bloques - 1;
         }
         for (int i = bloque_inicial; i <= bloque_final; i++) {
             bitarray_set_bit(bitmap, i);
         }
     }
-    config_set_value(file_config, "TAMANIO_ARCHIVO", int_to_char(tamanio));
+    char * tamanio_config = int_to_char(tamanio);
+    config_set_value(file_config, "TAMANIO_ARCHIVO", tamanio_config);
     config_save(file_config);
     archivo->tamanio = tamanio;
     config_destroy(file_config);
     msync(bitmap->bitarray, bitmap_size, MS_SYNC);
     guardar_lista_archivos();
+    free(tamanio_config);
 }
 
 void escribir_archivo(char* nombre, off_t puntero, char* a_escribir, uint32_t tamanio){
@@ -301,9 +327,8 @@ uint8_t leer_de_bitmap(uint32_t nroBloque){
 }
 
 Archivo* buscar_archivo_por_nombre(char* nombre) {
-    Archivo* archivo = malloc(sizeof(Archivo));
     for (int i = 0; i < list_size(lista_archivos); i++) {
-        archivo = (Archivo*)list_get(lista_archivos, i);
+        Archivo* archivo = (Archivo*)list_get(lista_archivos, i);
         if (strcmp(archivo->nombre, nombre) == 0) {
             return archivo;
         }
@@ -312,9 +337,8 @@ Archivo* buscar_archivo_por_nombre(char* nombre) {
 }
 
 int buscar_archivo_x_bloque_inicial(int bloque_inicial){
-    Archivo* file = malloc(sizeof(Archivo));
     for (int i = 0; i < list_size(lista_archivos); i++) {
-        file = (Archivo*)list_get(lista_archivos, i);
+        Archivo*file = (Archivo*)list_get(lista_archivos, i);
         if (file->comienzo == bloque_inicial) {
             return i; 
         }
@@ -434,6 +458,15 @@ char** guardar_contenido_bloques(Archivo** bloques_originales, int num_bloques, 
         fseek(archivo_bloques, start, SEEK_SET);
         fread(buffers_datos[i], tamanio, 1, archivo_bloques);
     }
+
+    for (int i = 0; i < num_bloques; i++) {
+        int start =  bloques_originales[i]->comienzo * block_size;
+        int tamanio = start + bloques_originales[i]->tamanio;
+        fseek(archivo_bloques, start, SEEK_SET);
+        char* ceros = calloc(tamanio, 1); // Crear un buffer lleno de ceros para rellenar los espacios que movi
+        fwrite(ceros, tamanio, 1, archivo_bloques);
+        free(ceros); // Liberar el buffer de ceros
+    }
     return buffers_datos;
 }
 
@@ -470,9 +503,11 @@ void escribir_datos_en_nuevos_bloques(Archivo** bloques_originales, char** buffe
         *bloque_libre_actual = contador_bloques; // Avanzar al siguiente bloque libre
 
         t_config* new_file_config = config_create(archivo->ruta);
-        config_set_value(new_file_config, "BLOQUE_INICIAL", int_to_char(archivo->comienzo));
+        char * bloque_inicial_config = int_to_char(archivo->comienzo);
+        config_set_value(new_file_config, "BLOQUE_INICIAL", bloque_inicial_config);
         config_save(new_file_config);
         config_destroy(new_file_config);
+        free(bloque_inicial_config);
     }
 
 }

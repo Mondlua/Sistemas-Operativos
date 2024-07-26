@@ -16,6 +16,7 @@
 extern char* nombre_interfaz;
 extern int conexion_kernel;
 extern int conexion_memoria;
+extern t_config* entradasalida_config;  
 
 
 void recibir_instruccion(char*interfaz);
