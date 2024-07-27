@@ -212,9 +212,10 @@ void finalizar_proceso(uint32_t pid, t_planificacion *kernel_argumentos){
             }
             cola = 0;
         }
-        list_add(colas_bloqueo, cola_bloqueo);
+        // list_add(colas_bloqueo, cola_bloqueo);
         i++;
     }
+    list_destroy(colas_bloqueo);
 
     if(pcb_a_eliminar != NULL)
     {
@@ -318,6 +319,7 @@ void eliminar_proceso_recurso(t_pcb* pcb, char* nombre_recurso, t_planificacion*
     log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: INTERRUPTED_BY_USER", pcb->pid);
     mover_a_exit(pcb, kernel_argumentos);
     free(nombre_recurso);
+    free(pid);
 }
 
 // void borrar_recurso_eliminado_de_cola(t_queue_block* cola, char* pid)
