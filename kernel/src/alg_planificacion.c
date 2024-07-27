@@ -535,14 +535,11 @@ void eliminar_recurso_de_lista_global(uint32_t pid, char* recurso_afectado, t_pl
     if(lista_proceso != NULL)
     {
         int i = 0, tamanio = list_size(lista_proceso);
-        printf("Tamanio de la lista: %d\n", tamanio);
         char*  nombre_recurso;
         while(i<tamanio)
         {
-            printf("i=%d\n", i);
             nombre_recurso = list_remove(lista_proceso, 0);
             
-            printf("Recurso: %s\n", nombre_recurso);
             if(string_equals_ignore_case(nombre_recurso, recurso_afectado))
             {
                 log_debug(kernel_argumentos->logger, "%s liberado de la lista global para el proceso %d!", nombre_recurso, pid);
@@ -639,7 +636,7 @@ void agregar_a_cola_interfaz(t_planificacion* kernel_argumentos, instruccion_par
     param->opcode = op_code;
     param->params = parametros;
     dictionary_put(kernel_argumentos->parametros_en_espera, pid, param);
-    //free(pid);
+    free(pid);
 }
 
 interfaz* buscar_interfaz_por_nombre(char* nombre_interfaz) {
@@ -662,6 +659,11 @@ void enviar_instruccion_a_interfaz(t_queue_block* interfaz_destino, instruccion_
     instruccion_enviar->codigo_operacion = codigo_op;
     enviar_instruccion(instruccion_enviar, parametros, interfaz_destino->socket_interfaz, pid);
 
+    if(codigo_op == IO_STDIN_READ || codigo_op == IO_STDOUT_WRITE)
+    {
+        free(parametros->registro_direccion);
+    }
+    
     free(parametros->interfaz);
     free(parametros);
     free(instruccion_enviar);

@@ -78,7 +78,9 @@ void atender_cliente(void *void_args)
             tabla->pid = pid;
             tabla->tabla = list_create();
             tabla->instrucciones = lista_arch;
+            pthread_mutex_lock(&mutex_tabla_pags);
             list_add(tabla_pags, tabla);
+            pthread_mutex_unlock(&mutex_tabla_pags);
             log_info(memoria_log, "PID: <%d> - Tamaño: <%d>", pid, list_size(tabla->instrucciones));       
             free(pathpid);
 
