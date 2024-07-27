@@ -221,7 +221,7 @@ int frame_sig_leer( uint32_t pid, int frame){
                     encontrado = true;
                     break;
                 }  
-                    }
+            }
         }
         if (encontrado) {
                 break;
@@ -241,6 +241,7 @@ int frame_sig_leer( uint32_t pid, int frame){
             if (encontrado) {
                 break;
             }
+    }
     }
 
     return frame_siguiente;

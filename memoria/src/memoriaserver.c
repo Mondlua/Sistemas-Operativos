@@ -23,7 +23,7 @@ void atender_cliente(void *void_args)
 
         if (cop == -1)
         {
-            log_warning(log_aux, "DISCONNECT!");
+            log_warning(log_aux_mem, "DISCONNECT!");
             return;
         }
 
@@ -92,7 +92,7 @@ void atender_cliente(void *void_args)
         case PID:{ //ENTRA ACA TAMBIEN
             char * pid_recibido =recibir_pc(client_socket);
             pid = atoi(pid_recibido);
-            log_info(log_aux, "Mi PID:%u", pid);
+            log_info(log_aux_mem, "Mi PID:%u", pid);
             free(pid_recibido);
             break;
         }
@@ -112,7 +112,7 @@ void atender_cliente(void *void_args)
             char* instruccion = list_get(tabla_pid->instrucciones, pc);
             eliminar_linea_n(instruccion);
             enviar_mensaje(instruccion, client_socket);
-            log_debug(log_aux, "Mando la instruccion: %s\n", instruccion);
+            log_debug(log_aux_mem, "Mando la instruccion: %s\n", instruccion);
             free(pc_recibido);;
             break;
         }
@@ -414,7 +414,7 @@ void atender_cliente(void *void_args)
         {
             char* pidc = recibir_mensaje(client_socket, logger);
 
-            log_debug(log_aux, "Pedido de finalizacion para el PID: %s", pidc);
+            log_debug(log_aux_mem, "Pedido de finalizacion para el PID: %s", pidc);
             usleep(retardo*1000);
             uint32_t pid = atoi(pidc);
 

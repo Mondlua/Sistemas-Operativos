@@ -17,11 +17,11 @@ void atender_cliente(void *void_args)
     while (kernel_socket != -1)
     {   
         op_code cop = recibir_operacion(args->c_socket);
-        log_debug(log_aux, "[%s] Paquete recibido con opcode %d en: %d", server_name, cop, args->c_socket);
+        log_debug(log_aux_cpu, "[%s] Paquete recibido con opcode %d en: %d", server_name, cop, args->c_socket);
 
         if (cop == -1)
         {
-            log_warning(log_aux, "DISCONNECT!");
+            log_warning(log_aux_cpu, "DISCONNECT!");
             return;
         }
 
@@ -44,7 +44,7 @@ void atender_cliente(void *void_args)
             uint32_t pid = recibir_int_a_interrupt(args->c_socket);
 
             pthread_mutex_lock(&args->lock_interrupt);
-            log_debug(log_aux, "Se recibe un pedido de interrucpcion para el PID: %d", pid);
+            log_debug(log_aux_cpu, "Se recibe un pedido de interrucpcion para el PID: %d", pid);
             hay_interrupcion = 1;
             pthread_mutex_unlock(&args->lock_interrupt);
 
@@ -52,14 +52,14 @@ void atender_cliente(void *void_args)
         }
         default:
         {
-            log_error(log_aux, "Algo anduvo mal en el server de %s", server_name);
+            log_error(log_aux_cpu, "Algo anduvo mal en el server de %s", server_name);
             
             break;
         }
         }
     }
 
-    log_warning(log_aux, "El cliente se desconecto de %s server", server_name);
+    log_warning(log_aux_cpu, "El cliente se desconecto de %s server", server_name);
     free(args);
     return;
 }
