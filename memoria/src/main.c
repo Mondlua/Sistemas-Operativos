@@ -33,12 +33,12 @@ int main(void) {
         bitarray_clean_bit(bitarray, i); 
     }
     //INICIALIZO BITARRAY ESCRITO//
-    char* escrito_data = malloc(num_frames); 
+    /*char* escrito_data = malloc(num_frames); 
     escrito = bitarray_create_with_mode(escrito_data, num_frames, LSB_FIRST);
     
     for(int i=0; i<num_frames; i++){
         bitarray_clean_bit(escrito, i); 
-    }
+    }*/
 
     //TABLA//
     tabla_pags = list_create();
@@ -47,7 +47,7 @@ int main(void) {
     // Inicio server 
 
     memoria_server = iniciar_servidor(puerto, memoria_log);
-    log_info(memoria_log, "MEMORIA lista para recibir clientes");
+    log_info(log_aux, "MEMORIA lista para recibir clientes");
     sem_init(&semaforo_mem, 0, 0);
 
     t_atender_cliente_args* args = malloc(sizeof(t_atender_cliente_args));
