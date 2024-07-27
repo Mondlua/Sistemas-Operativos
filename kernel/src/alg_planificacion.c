@@ -663,6 +663,19 @@ void enviar_instruccion_a_interfaz(t_queue_block* interfaz_destino, instruccion_
     {
         free(parametros->registro_direccion);
     }
+    if(codigo_op == IO_FS_READ || codigo_op == IO_FS_WRITE)
+    {
+        free(parametros->registro_direccion);
+        free(parametros->params.io_fs.nombre_archivo);
+    }
+    if(codigo_op == IO_FS_TRUNCATE)
+    {
+        free(parametros->params.io_fs.nombre_archivo);
+    }
+    if(codigo_op == IO_FS_CREATE || codigo_op == IO_FS_DELETE)
+    {
+        free(parametros->params.io_fs.nombre_archivo);
+    }
     
     free(parametros->interfaz);
     free(parametros);
