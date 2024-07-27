@@ -3,13 +3,14 @@
 t_log* memoria_log;
 t_config* memoria_config;
 sem_t semaforo_mem;
+t_log* log_aux_mem;
 
 int main(void) {
     
     char* puerto;
     int memoria_server;
  
-
+    log_aux_mem = iniciar_logger("memoria_aux.log","memoria_aux");
     memoria_log = iniciar_logger("memoria.log","memoria");
     memoria_config = iniciar_config("memoria.config");
 
@@ -47,7 +48,7 @@ int main(void) {
     // Inicio server 
 
     memoria_server = iniciar_servidor(puerto, memoria_log);
-    log_info(log_aux, "MEMORIA lista para recibir clientes");
+    log_info(log_aux_mem, "MEMORIA lista para recibir clientes");
     sem_init(&semaforo_mem, 0, 0);
 
     t_atender_cliente_args* args = malloc(sizeof(t_atender_cliente_args));
@@ -61,6 +62,6 @@ int main(void) {
 
     pthread_join(hilo,NULL);
      
-    
+    log_destroy(log_aux_mem);
     return 0;
 }

@@ -807,7 +807,7 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger, int socket_cli
         hay_interrupcion = 0;
         pthread_mutex_unlock(&lock_interrupt);
         pcb->motivo_desalojo = 1;
-        log_debug(log_aux, "Envio PCB interrumpido por fin de quantum");
+        log_debug(log_aux_cpu, "Envio PCB interrumpido por fin de quantum");
         enviar_pcb(pcb, socket_cliente);
         return;
     }
@@ -816,7 +816,7 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger, int socket_cli
         hay_interrupcion = 0;
         pthread_mutex_unlock(&lock_interrupt);
         pcb->motivo_desalojo = 0;
-        log_debug(log_aux, "Envio PCB terminado.");
+        log_debug(log_aux_cpu, "Envio PCB terminado.");
         enviar_pcb(pcb, socket_cliente);
         return;
     }
@@ -825,14 +825,14 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger, int socket_cli
         hay_interrupcion = 0;
         pthread_mutex_unlock(&lock_interrupt);
         pcb->motivo_desalojo = 2;
-        log_debug(log_aux, "Envio PCB desalojado por solicitud a interfaz");
+        log_debug(log_aux_cpu, "Envio PCB desalojado por solicitud a interfaz");
         enviar_pcb(pcb, socket_cliente);
 
         t_paquete_instruccion* paquete = malloc(sizeof(t_paquete_instruccion));
         paquete->codigo_operacion = blockeo.io_opcode;
-        log_debug(log_aux, "OPCODE enviado: %d", paquete->codigo_operacion);
+        log_debug(log_aux_cpu, "OPCODE enviado: %d", paquete->codigo_operacion);
         enviar_instruccion_a_Kernel(paquete, blockeo.instrucciones, socket_cliente);
-        log_debug(log_aux, "Instruccion enviada al socket: %d.", socket_cliente);
+        log_debug(log_aux_cpu, "Instruccion enviada al socket: %d.", socket_cliente);
         free(blockeo.instrucciones->interfaz);
         free(blockeo.instrucciones);
         free(paquete);
@@ -843,10 +843,10 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger, int socket_cli
         hay_interrupcion = 0;
         pthread_mutex_unlock(&lock_interrupt);
         pcb->motivo_desalojo = 3;
-        log_debug(log_aux, "Envio PCB desalojado por WAIT");
+        log_debug(log_aux_cpu, "Envio PCB desalojado por WAIT");
         enviar_pcb(pcb, socket_cliente);
 
-        log_debug(log_aux, "Envio el nombre del recurso afectado");
+        log_debug(log_aux_cpu, "Envio el nombre del recurso afectado");
         enviar_mensaje(blockeo.nombre_recurso, socket_cliente);
         // enviar_nombre_recurso(blockeo.nombre_recurso, socket_cliente);
     }
@@ -855,10 +855,10 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger, int socket_cli
         hay_interrupcion = 0;
         pthread_mutex_unlock(&lock_interrupt);
         pcb->motivo_desalojo = 4;
-        log_debug(log_aux, "Envio PCB desalojado por SIGNAL");
+        log_debug(log_aux_cpu, "Envio PCB desalojado por SIGNAL");
         enviar_pcb(pcb, socket_cliente);
 
-        log_debug(log_aux, "Envio el nombre del recurso afectado");
+        log_debug(log_aux_cpu, "Envio el nombre del recurso afectado");
         enviar_mensaje(blockeo.nombre_recurso, socket_cliente);
     }
     if(blockeo.blockeo == OUT_OF_MEM)
@@ -866,23 +866,23 @@ void realizar_ciclo_inst(int conexion, t_pcb* pcb, t_log* logger, int socket_cli
         hay_interrupcion = 0;
         pthread_mutex_unlock(&lock_interrupt);
         pcb->motivo_desalojo = 5;
-        log_debug(log_aux, "PCB desalojado por out of mem");
+        log_debug(log_aux_cpu, "PCB desalojado por out of mem");
         enviar_pcb(pcb, socket_cliente);
     }
 }
 
 void loggear_registros(t_pcb* pcb, t_log* logger)
 {
-    log_debug(log_aux, "Estado del proceso PID <%d>:", pcb->pid);
-    log_debug(log_aux, "AX: %d", pcb->registros->AX);
-    log_debug(log_aux, "BX: %d", pcb->registros->BX);
-    log_debug(log_aux, "CX: %d", pcb->registros->CX);
-    log_debug(log_aux, "DX: %d", pcb->registros->DX);
-    log_debug(log_aux, "EAX: %d", pcb->registros->EAX);
-    log_debug(log_aux, "EBX: %d", pcb->registros->EBX);
-    log_debug(log_aux, "ECX: %d", pcb->registros->ECX);
-    log_debug(log_aux, "EDX: %d", pcb->registros->EDX);
-    log_debug(log_aux, "SI: %d", pcb->registros->SI);
-    log_debug(log_aux, "DI: %d", pcb->registros->DI);
-    log_debug(log_aux, "PC: %d", pcb->registros->PC);
+    log_debug(log_aux_cpu, "Estado del proceso PID <%d>:", pcb->pid);
+    log_debug(log_aux_cpu, "AX: %d", pcb->registros->AX);
+    log_debug(log_aux_cpu, "BX: %d", pcb->registros->BX);
+    log_debug(log_aux_cpu, "CX: %d", pcb->registros->CX);
+    log_debug(log_aux_cpu, "DX: %d", pcb->registros->DX);
+    log_debug(log_aux_cpu, "EAX: %d", pcb->registros->EAX);
+    log_debug(log_aux_cpu, "EBX: %d", pcb->registros->EBX);
+    log_debug(log_aux_cpu, "ECX: %d", pcb->registros->ECX);
+    log_debug(log_aux_cpu, "EDX: %d", pcb->registros->EDX);
+    log_debug(log_aux_cpu, "SI: %d", pcb->registros->SI);
+    log_debug(log_aux_cpu, "DI: %d", pcb->registros->DI);
+    log_debug(log_aux_cpu, "PC: %d", pcb->registros->PC);
 }
