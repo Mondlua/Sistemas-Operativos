@@ -49,7 +49,7 @@ void funciones(char* leido, t_planificacion *kernel_argumentos) {
 }
 
 void ejecutar_script(char* path, t_planificacion *kernel_argumentos){
-    char* complemento = "/home/utnso"; 
+    char* complemento = "/home/utnso/c-comenta-pruebas"; 
     size_t len_path = strlen(path);
     size_t len_complemento = strlen(complemento);
     size_t len_total = len_path + len_complemento + 2;
@@ -409,6 +409,7 @@ void logear_colas_block(t_planificacion* kernel_argumentos)
     
     if(kernel_argumentos->colas.cantidad_procesos_block == 0)
     {
+        pthread_mutex_unlock(&kernel_argumentos->colas.mutex_block);
         return;
     }
 

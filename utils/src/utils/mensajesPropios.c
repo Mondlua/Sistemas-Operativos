@@ -179,7 +179,7 @@ void enviar_pcb(t_pcb* pcb, int socket_cliente){
     // agregar_a_paquete(paquete, &(pcb->recursos_waiteados), strlen(pcb->recursos_waiteados));
     enviar_paquete(paquete, socket_cliente);
     eliminar_paquete(paquete);
-    printf("Paquete enviado a socket: %d\n", socket_cliente);
+    // printf("Paquete enviado a socket: %d\n", socket_cliente);
 }
 
 t_pcb* recibir_pcb(int socket_cliente) {
