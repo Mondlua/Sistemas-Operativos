@@ -42,6 +42,7 @@ int main(void) {
 
     //TABLA//
     tabla_pags = list_create();
+    pthread_mutex_init(&mutex_tabla_pags, NULL);
 
     // Inicio server 
 

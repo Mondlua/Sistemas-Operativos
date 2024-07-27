@@ -65,6 +65,7 @@ void atender_cliente(void *void_args)
             }
 
             log_debug(logger, "Se deconecta la interfaz: %s", interfaz_desconectada->identificador);
+            eliminar_procesos_bloqueados_por_interfaz(interfaz_desconectada, args->planificador);
             queue_destroy(interfaz_desconectada->block_queue);
             list_destroy(interfaz_desconectada->block_dictionary);
             free(interfaz_desconectada->identificador);
@@ -142,14 +143,30 @@ t_queue_block* buscar_interfaz_por_socket(t_planificacion* kernel_argumentos, in
     int i = 0, tamanio = list_size(lista);
     while(i < tamanio)
     {
-        t_queue_block* candidato = list_get(lista, i);
+        t_queue_block* candidato = list_remove(lista, 0);
         if(candidato->socket_interfaz == socket)
         {
             ret = candidato;
         }
         i++;
     }
+    list_destroy(lista);
     
     return ret;
+}
+
+void eliminar_procesos_bloqueados_por_interfaz(t_queue_block* interfaz_desconectada, t_planificacion *kernel_argumentos)
+{
+    if(queue_is_empty(interfaz_desconectada->block_queue))
+    {
+        return;
+    }
+    int i = 0, tamanio = queue_size(interfaz_desconectada->block_queue);
+    while(i<tamanio)
+    {
+        t_pcb* pcb_bloqueado = queue_pop(interfaz_desconectada->block_queue);
+        mover_a_exit(pcb_bloqueado, kernel_argumentos);
+        i++;
+    }
 }
 

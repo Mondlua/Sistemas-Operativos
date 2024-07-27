@@ -6,6 +6,7 @@ t_list* tabla_pags; //tabla general
 void* memoria;
 t_bitarray* bitarray;
 t_bitarray* escrito;
+pthread_mutex_t mutex_tabla_pags;
 
 
 void escribir_en_mem_io(char* aescribir, t_dir_fisica* dir_fisica, int cant_direcciones,int tamanio, uint32_t pid ){
@@ -356,32 +357,39 @@ bool puede_escribir(uint32_t pid, int frame,int cant_pags ){
 
 t_tabla* buscar_por_pid_return(uint32_t pid) {
 
+    pthread_mutex_lock(&mutex_tabla_pags);
     if(tabla_pags != NULL){
     t_link_element* current = tabla_pags->head;
     while (current != NULL) {
         t_tabla* current_tabla = (t_tabla*)current->data;
         if (current_tabla->pid == pid) {
+            pthread_mutex_unlock(&mutex_tabla_pags);
             return current_tabla; 
         }
         current = current->next;
     }
     }
+    pthread_mutex_unlock(&mutex_tabla_pags);
     return NULL; 
 }
 bool buscar_por_pid_bool(uint32_t pid) {
+    pthread_mutex_lock(&mutex_tabla_pags);
     t_link_element* current = tabla_pags->head;
     while (current != NULL) {
         t_tabla* current_tabla = (t_tabla*)current->data;
         if (current_tabla->pid == pid) {
+            pthread_mutex_unlock(&mutex_tabla_pags);
             return true;
         }
         current = current->next;
     }
+    pthread_mutex_unlock(&mutex_tabla_pags);
     return false; 
 }
 
 t_tabla* buscar_por_pid(uint32_t pid)
 {
+    pthread_mutex_lock(&mutex_tabla_pags);
     int i = 0, tamanio = list_size(tabla_pags);
     t_tabla* ret = NULL;
     while(i<tamanio)
@@ -394,12 +402,13 @@ t_tabla* buscar_por_pid(uint32_t pid)
         list_add(tabla_pags, candidato);
         i++;
     }
-
+    pthread_mutex_unlock(&mutex_tabla_pags);
     return ret;
 }
 
 t_tabla* eliminar_tabla_pid(uint32_t pid)
 {
+    pthread_mutex_lock(&mutex_tabla_pags);
     int i = 0, tamanio = list_size(tabla_pags);
     t_tabla* ret = NULL;
     while(i<tamanio)
@@ -415,7 +424,7 @@ t_tabla* eliminar_tabla_pid(uint32_t pid)
         }
         i++;
     }
-
+    pthread_mutex_unlock(&mutex_tabla_pags);
     return ret;
 }
 

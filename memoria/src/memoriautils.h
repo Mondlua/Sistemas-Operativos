@@ -18,6 +18,7 @@ extern t_list* tabla_pags;
 extern void* memoria;
 extern t_bitarray* bitarray;
 extern t_bitarray* escrito;
+extern pthread_mutex_t mutex_tabla_pags;
 
 
 int buscar_frame_disp(t_bitarray* bit, int tam);

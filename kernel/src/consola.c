@@ -394,6 +394,7 @@ void logear_cola_estado(t_queue* cola, pthread_mutex_t mutex, char* nombre_cola,
             {
                 string_append(&lista, ", ");
             }
+            queue_push(cola, pcb);
             i++;
         }
         log_info(logger, "   %s: [%s]", nombre_cola, lista);
@@ -432,7 +433,7 @@ void logear_colas_block(t_planificacion* kernel_argumentos)
                 t_pcb* pcb = queue_pop(elemento->block_queue);
                 char* pid = string_itoa(pcb->pid);
                 string_append(&cadena_general, pid);
-                if(ultimo && (j != k - 1))
+                if(!ultimo && (j != k - 1))
                 {
                     string_append(&cadena_general, ", ");
                 }
@@ -448,7 +449,7 @@ void logear_colas_block(t_planificacion* kernel_argumentos)
                 t_pcb* pcb = list_get(elemento->block_dictionary, j);
                 char* pid = string_itoa(pcb->pid);
                 string_append(&cadena_general, pid);
-                if(ultimo && (j != k - 1))
+                if(!ultimo && (j != k - 1))
                 {
                     string_append(&cadena_general, ", ");
                 }
