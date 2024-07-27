@@ -434,6 +434,7 @@ bool administrador_recursos_wait(t_pcb *pcb_solicitante, char* nombre_recurso, i
         // El recurso no existe. Mando el proceso a EXIT y habilito la replanificacion
         log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: INVALID_RESOURCE", pcb_solicitante->pid);
         mover_a_exit(pcb_solicitante, kernel_argumentos);
+        free(nombre_recurso);
         return true;
     }
 
@@ -488,6 +489,7 @@ bool administrador_recursos_signal(t_pcb *pcb_desalojado, char* recurso_solicita
         // El recurso no existe. Mando el proceso a EXIT y habilito la replanificacion
         log_info(kernel_argumentos->logger, "Finaliza el proceso %d - Motivo: INVALID_RESOURCE", pcb_desalojado->pid);
         mover_a_exit(pcb_desalojado, kernel_argumentos);
+        free(recurso_solicitado);
         return true;
     }
 
@@ -545,6 +547,7 @@ void eliminar_recurso_de_lista_global(uint32_t pid, char* recurso_afectado, t_pl
             {
                 log_debug(kernel_argumentos->logger, "%s liberado de la lista global para el proceso %d!", nombre_recurso, pid);
                 free(nombre_recurso);
+                free(pid_proceso);
                 return;
             }
             else
@@ -561,6 +564,7 @@ void eliminar_recurso_de_lista_global(uint32_t pid, char* recurso_afectado, t_pl
 void procesar_desbloqueo_factible(char* recurso_solicitado, t_planificacion *kernel_argumentos)
 {
     t_queue_block *recurso = dictionary_get(kernel_argumentos->colas.lista_block, recurso_solicitado);
+    free(recurso_solicitado);
     log_debug(kernel_argumentos->logger, "Recurso obtenido del diccionario: %s", recurso->identificador);
 
     if(!list_is_empty(recurso->block_dictionary))
